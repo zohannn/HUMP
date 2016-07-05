@@ -1,0 +1,17 @@
+// *** Settings of the humanoid *** //
+
+// Head
+//#define HEAD @HEAD@
+//#define NECK @NECK@
+// Pelvis
+//#define PELVIS @PELVIS@
+// Right leg
+//#define RIGHT_UPPER_LEG @RIGHT_UPPER_LEG@
+//#define RIGHT_LOWER_LEG @RIGHT_LOWER_LEG@
+//#define RIGHT_FOOT @RIGHT_FOOT@
+// Left leg
+//#define LEFT_UPPER_LEG @LEFT_UPPER_LEG@
+//#define LEFT_LOWER_LEG @LEFT_LOWER_LEG@
+//#define LEFT_FOOT @LEFT_FOOT@
+// Hand
+#define HAND @HAND@
