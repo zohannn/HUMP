@@ -16,19 +16,24 @@ struct SufDesc;
 using namespace Ipopt;
 
 
+/** Class AmplSuffixHandler */
 class AmplSuffixHandler : public ReferencedObject
 {
 public:
+    /** Default Constructor */
   AmplSuffixHandler();
 
+  /**  A descructor */
   ~AmplSuffixHandler();
 
+  /** Type pf suffix */
   enum Suffix_Type
   {
     Index_Type,
     Number_Type
   };
 
+  /** Source of the suffix */
   enum Suffix_Source
   {
     Variable_Source,
@@ -37,6 +42,8 @@ public:
     Problem_Source
   };
 
+
+  /** Add the available suffix */
   void AddAvailableSuffix(std::string suffix_string, Suffix_Source source, Suffix_Type type)
   {
     suffix_ids_.push_back(suffix_string);
@@ -45,12 +52,13 @@ public:
     //      suffix_values_.push_back();
   }
 
+  /** Get the value of the integer suffix */
   const Index* GetIntegerSuffixValues(std::string suffix_string, Suffix_Source source) const;
-
+  /** Get the value of the number suffix */
   const Number* GetNumberSuffixValues(std::string suffix_string, Suffix_Source source) const;
-
+  /** Get the values of the integer suffix */
   std::vector<Index> GetIntegerSuffixValues(Index n, std::string suffix_string, Suffix_Source source) const;
-
+  /** Get the value of the number suffix */
   std::vector<Number> GetNumberSuffixValues(Index n, std::string suffix_string, Suffix_Source source) const;
 
 private:
@@ -95,6 +103,7 @@ private:
 class AmplOptionsList : public ReferencedObject
 {
 public:
+    /** type of the option for AMPL*/
   enum AmplOptionType {
     String_Option,
     Number_Option,
@@ -108,23 +117,28 @@ public:
 class AmplOption : public ReferencedObject
   {
   public:
+    /** Default Constructor */
     AmplOption(const std::string ipopt_option_name,
                AmplOptionType type,
                const std::string description);
 
+    /** A destructor */
     ~AmplOption()
     {
       delete [] description_;
     }
 
+    /** this method returns the option name */
     const std::string& IpoptOptionName() const
     {
       return ipopt_option_name_;
     }
+    /** this method returns the type */
     AmplOptionType Type() const
     {
       return type_;
     }
+    /** this method returns the description*/
     char* Description() const
     {
       return description_;
@@ -153,9 +167,11 @@ class AmplOption : public ReferencedObject
     char* description_;
   }; // class AmplOption
 
+    /** Class PrivatInfo*/
   class PrivatInfo
   {
   public:
+      /** Default Constructor */
     PrivatInfo(const std::string ipopt_name,
                SmartPtr<OptionsList> options,
                SmartPtr<const Journalist> jnlst,
@@ -166,18 +182,24 @@ class AmplOption : public ReferencedObject
         jnlst_(jnlst),
         nerror_(nerror)
     {}
+
+    /** this method returns the name */
     const std::string& IpoptName() const
     {
       return ipopt_name_;
     }
+    /** this method returns the option */
     const SmartPtr<OptionsList>& Options() const
     {
       return options_;
     }
+    /** this method returns the journalist */
     const SmartPtr<const Journalist>& Jnlst() const
     {
       return jnlst_;
     }
+
+    /** this method returns the error*/
     void** NError()
     {
       return nerror_;

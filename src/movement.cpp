@@ -57,6 +57,7 @@ Movement::Movement(int type, int arm){
     this->grip_code = 0;
 
     this->arm = arm;
+    this->executed = false;
 
 }
 /**
@@ -110,6 +111,7 @@ Movement::Movement(int type, int arm, objectPtr obj)
     this->obj_eng=objectPtr(new Object());
     this->grip_code = 0;
     this->arm=arm;
+    this->executed = false;
 
 
 }
@@ -229,6 +231,7 @@ Movement::Movement(int type, int arm, objectPtr obj, int grip_id, bool prec)
     }
 
     this->arm=arm;
+    this->executed = false;
 }
 /**
  * @brief Movement::Movement
@@ -347,6 +350,7 @@ Movement::Movement(int type, int arm,
     }
 
     this->arm=arm;
+    this->executed = false;
 
 }
 
@@ -366,6 +370,7 @@ Movement::Movement(const Movement &mov){
     this->obj = objectPtr(new Object(*mov.obj.get()));
     this->obj_init = objectPtr(new Object(*mov.obj_init.get()));
     this->obj_eng = objectPtr(new Object(*mov.obj_eng.get()));
+    this->executed = mov.executed;
 }
 
 // destructors
@@ -439,6 +444,15 @@ void Movement::setStrType(string str){
 void Movement::setArm(int a){
 
     this->arm = a;
+}
+
+/**
+ * @brief Movement::setExecuted
+ * @param exec
+ */
+void Movement::setExecuted(bool exec){
+
+    this->executed=exec;
 }
 
 //getters
@@ -561,6 +575,15 @@ string Movement::getArmInfo(){
         break;
     }
 
+}
+
+/**
+ * @brief Movement::getExecuted
+ * @return
+ */
+bool Movement::getExecuted(){
+
+    return this->executed;
 }
 
 

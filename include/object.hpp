@@ -61,7 +61,6 @@ public:
     void getXt(std::vector<float>& xt);
     void getYt(std::vector<float>& yt);
     void getZt(std::vector<float>& zt);
-
     void RPY_matrix(Matrix3f& Rot);
 
 
@@ -88,9 +87,6 @@ private:
     void getTar_right_matrix(Matrix4f& mat);
     void getTar_left_matrix(Matrix4f& mat);
     void getEngage_matrix(Matrix4f& mat);
-
-    void getRPY(Matrix4f Trans, std::vector<float> &rpy); // get RPY angles from the transformation matrix
-
 
 
 

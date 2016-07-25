@@ -160,12 +160,6 @@ Humanoid::Humanoid(string name, pos ppos, orient oor, dim ssize, arm aspecs, hum
     this->mat_left = Matrix4f::Constant(1);
     this->mat_r_hand = Matrix4f::Constant(1);
     this->mat_l_hand = Matrix4f::Constant(1);
-    /*
-    this->mat_left(0,0) = 1.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 0.0;
-    this->mat_left(0,0) = 0.0; this->mat_left(0,1) = -1.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 100.0;
-    this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = -1.0; this->mat_left(0,3) = 0.0;
-    this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 1.0;
-*/
 
 }
 
@@ -220,12 +214,7 @@ Humanoid::Humanoid(string name, pos ppos, orient oor, dim ssize, arm aspecs, bar
     this->mat_left = Matrix4f::Identity(4,4);
     this->mat_r_hand = Matrix4f::Identity(4,4);
     this->mat_l_hand = Matrix4f::Identity(4,4);
-    /*
-        this->mat_left(0,0) = 1.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 0.0;
-        this->mat_left(0,0) = 0.0; this->mat_left(0,1) = -1.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 100.0;
-        this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = -1.0; this->mat_left(0,3) = 0.0;
-        this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 1.0;
-*/
+
 }
 /**
  * @brief Humanoid::Humanoid
@@ -283,13 +272,7 @@ Humanoid::Humanoid(string name, pos ppos, orient oor, dim ssize, arm aspecs, bar
         this->mat_left = Matrix4f::Identity(4,4);
         this->mat_r_hand = Matrix4f::Identity(4,4);
         this->mat_l_hand = Matrix4f::Identity(4,4);
-        /*
-        this->mat_left(0,0) = 1.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 0.0;
-        this->mat_left(0,0) = 0.0; this->mat_left(0,1) = -1.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 100.0;
-        this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = -1.0; this->mat_left(0,3) = 0.0;
-        this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 1.0;
 
-        */
 }
 /**
  * @brief Humanoid::Humanoid
@@ -360,12 +343,7 @@ Humanoid::Humanoid(string name, pos ppos, orient oor, dim ssize, arm aspecs, bar
     this->mat_left = Matrix4f::Identity(4,4);
     this->mat_r_hand = Matrix4f::Identity(4,4);
     this->mat_l_hand = Matrix4f::Identity(4,4);
-    /*
-    this->mat_left(0,0) = 1.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 0.0;
-    this->mat_left(0,0) = 0.0; this->mat_left(0,1) = -1.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 100.0;
-    this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = -1.0; this->mat_left(0,3) = 0.0;
-    this->mat_left(0,0) = 0.0; this->mat_left(0,1) = 0.0; this->mat_left(0,2) = 0.0; this->mat_left(0,3) = 1.0;
-*/
+
 
 }
 #endif
@@ -544,7 +522,6 @@ void Humanoid::setBarrettHand(barrett_hand& specs){
  */
 void Humanoid::setRightPosture(std::vector<float> &r){
 
-    //this->rightPosture=r;
     std::copy(r.begin(),r.end(),this->rightPosture.begin());
 }
 /**
@@ -553,7 +530,6 @@ void Humanoid::setRightPosture(std::vector<float> &r){
  */
 void Humanoid::setLeftPosture(std::vector<float> &l){
 
-    //this->leftPosture=l;
     std::copy(l.begin(),l.end(),this->leftPosture.begin());
 }
 
@@ -563,7 +539,6 @@ void Humanoid::setLeftPosture(std::vector<float> &l){
  */
 void Humanoid::setRightHomePosture(std::vector<float> &r){
 
-    //this->rightHomePosture=r;
     std::copy(r.begin(),r.end(),this->rightHomePosture.begin());
 }
 /**
@@ -572,35 +547,25 @@ void Humanoid::setRightHomePosture(std::vector<float> &r){
  */
 void Humanoid::setLeftHomePosture(std::vector<float> &l){
 
-    //this->leftHomePosture=l;
-
     std::copy(l.begin(),l.end(),this->leftHomePosture.begin());
 }
 
 void Humanoid::setRightMinLimits(std::vector<float> &min_rl){
-
-    //this->min_rightLimits = min_rl;
 
     std::copy(min_rl.begin(),min_rl.end(),this->min_rightLimits.begin());
 }
 
 void Humanoid::setRightMaxLimits(std::vector<float> &max_rl){
 
-    //this->max_rightLimits = max_rl;
-
     std::copy(max_rl.begin(),max_rl.end(),this->max_rightLimits.begin());
 }
 
 void Humanoid::setLeftMinLimits(std::vector<float> &min_ll){
 
-    //this->min_leftLimits = min_ll;
-
     std::copy(min_ll.begin(),min_ll.end(),this->min_leftLimits.begin());
 }
 
 void Humanoid::setLeftMaxLimits(std::vector<float> &max_ll){
-
-    //this->max_leftLimits = max_ll;
 
     std::copy(max_ll.begin(),max_ll.end(),this->max_leftLimits.begin());
 }
@@ -884,13 +849,7 @@ void Humanoid::getRightPosture(std::vector<float>& p){
     p = std::vector<float>(JOINTS_ARM+JOINTS_HAND);
 
     std::copy(this->rightPosture.begin(),this->rightPosture.end(),p.begin());
-/*
-    for(std::vector<float>::iterator i = this->rightPosture.begin(); i !=this->rightPosture.end();++i){
 
-        p.push_back(*i);
-
-    }
-    */
 }
 /**
  * @brief Humanoid::getRightArmPosture
@@ -902,15 +861,6 @@ void Humanoid::getRightArmPosture(std::vector<float> &p){
 
     std::copy(this->rightPosture.begin(),this->rightPosture.end()-JOINTS_HAND,p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->rightPosture.begin(); i !=this->rightPosture.end()-JOINTS_HAND;++i){
-
-        p.push_back(*i);
-
-    }
-
-    */
 }
 
 /**
@@ -922,13 +872,6 @@ void Humanoid::getRightHandPosture(std::vector<float> &p){
      p = std::vector<float>(JOINTS_HAND);
 
     std::copy(this->rightPosture.begin()+JOINTS_ARM,this->rightPosture.end(),p.begin());
-/*
-    for(std::vector<float>::iterator i = this->rightPosture.begin()+JOINTS_ARM; i !=this->rightPosture.end();++i){
-
-        p.push_back(*i);
-
-    }
-    */
 
 }
 
@@ -942,14 +885,6 @@ void Humanoid::getLeftPosture(std::vector<float>& p){
 
     std::copy(this->leftPosture.begin(),this->leftPosture.end(),p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->leftPosture.begin(); i !=this->leftPosture.end();++i){
-
-        p.push_back(*i);
-    }
-
-    */
 }
 /**
  * @brief Humanoid::getLeftArmPosture
@@ -960,14 +895,6 @@ void Humanoid::getLeftArmPosture(std::vector<float> &p){
      p = std::vector<float>(JOINTS_ARM);
 
     std::copy(this->leftPosture.begin(),this->leftPosture.end()-JOINTS_HAND,p.begin());
-/*
-
-    for(std::vector<float>::iterator i = this->leftPosture.begin(); i !=this->leftPosture.end()-JOINTS_HAND;++i){
-
-        p.push_back(*i);
-    }
-
-    */
 
 }
 /**
@@ -980,13 +907,6 @@ void Humanoid::getLeftHandPosture(std::vector<float> &p){
 
     std::copy(this->leftPosture.begin()+JOINTS_ARM,this->leftPosture.end(),p.begin());
 
-/*
-    for(std::vector<float>::iterator i = this->leftPosture.begin()+JOINTS_ARM; i !=this->leftPosture.end();++i){
-
-        p.push_back(*i);
-    }
-
-    */
 }
 
 /**
@@ -999,14 +919,6 @@ void Humanoid::getRightHomePosture(std::vector<float>& p){
 
     std::copy(this->rightHomePosture.begin(),this->rightHomePosture.end(),p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->rightHomePosture.begin(); i !=this->rightHomePosture.end();++i){
-
-        p.push_back(*i);
-    }
-
-    */
 }
 /**
  * @brief Humanoid::getLeftHomePosture
@@ -1018,14 +930,6 @@ void Humanoid::getLeftHomePosture(std::vector<float>& p){
 
     std::copy(this->leftHomePosture.begin(),this->leftHomePosture.end(),p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->leftHomePosture.begin(); i !=this->leftHomePosture.end();++i){
-
-        p.push_back(*i);
-    }
-
-    */
 }
 
 
@@ -1035,13 +939,6 @@ void Humanoid::getRightMinLimits(std::vector<float> &p){
 
     std::copy(this->min_rightLimits.begin(),this->min_rightLimits.end(),p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->min_rightLimits.begin(); i !=this->min_rightLimits.end();++i){
-
-        p.push_back(*i);
-    }
-    */
 }
 
 void Humanoid::getRightMaxLimits(std::vector<float> &p){
@@ -1050,14 +947,7 @@ void Humanoid::getRightMaxLimits(std::vector<float> &p){
 
     std::copy(this->max_rightLimits.begin(),this->max_rightLimits.end(),p.begin());
 
-    /*
 
-    for(std::vector<float>::iterator i = this->max_rightLimits.begin(); i !=this->max_rightLimits.end();++i){
-
-        p.push_back(*i);
-    }
-
-    */
 }
 
 void Humanoid::getLeftMinLimits(std::vector<float> &p){
@@ -1066,14 +956,6 @@ void Humanoid::getLeftMinLimits(std::vector<float> &p){
 
     std::copy(this->min_leftLimits.begin(),this->min_leftLimits.end(),p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->min_leftLimits.begin(); i !=this->min_leftLimits.end();++i){
-
-        p.push_back(*i);
-    }
-
-    */
 
 }
 
@@ -1083,13 +965,6 @@ void Humanoid::getLeftMaxLimits(std::vector<float> &p){
 
     std::copy(this->max_leftLimits.begin(),this->max_leftLimits.end(),p.begin());
 
-    /*
-
-    for(std::vector<float>::iterator i = this->max_leftLimits.begin(); i !=this->max_leftLimits.end();++i){
-
-        p.push_back(*i);
-    }
-    */
 }
 
 void Humanoid::getRightVelocities(std::vector<float> &p){

@@ -44,11 +44,29 @@ public:
     objectPtr getObjectEngaged();
     bool getSolved();
     bool getPartOfTask();
+    int getErrLog();
 
 
 private:
 
     bool solved; //true if the problem has been solved
+    /*
+     * Reach-to-grasp
+     * err_log = 0,   the problems have been successfully solved
+     * err_log = 10,  final posture reach-to-grasp not solved
+     * err_log = 20,  bounce posture reach-to-grasp not solved
+     *
+     * Engage
+     * err_log = 130, final posture engage sub-disengage not solved
+     * err_log = 13,  final posture engage not solved
+     * err_log = 131, final posture engage sub-engage not solved
+     * err_log = 23,  bounce posture engage not solved
+     *
+     * Go home
+     * err_log = 25, bounce posture go home not solved
+     *
+     * */
+    int err_log;
     bool part_of_task; // true if the problem is part of the task
     float dHOr; // distance between the right hand and the center of the object
     float dHOl; // distance between the left hand and the center of the object
@@ -99,7 +117,7 @@ private:
                                 targetPtr tar, objectPtr obj,
                                 std::vector<float> tolsArm, MatrixXf tolsHand, MatrixXf tolsObstacles,
                                 float tolTarPos, float tolTarOr,std::vector<float> lambda,
-                                std::vector<float> tols_table,int arm_code);
+                                bool obstacle_avoidance,int arm_code);
 
     bool writeFilesBouncePosture(int move_type,humanoidPtr hh, float dHO, int griptype, int steps, float totalTime,
                                  std::vector<float> minAuxLimits, std::vector<float> maxAuxLimits,
@@ -107,8 +125,8 @@ private:
                                  std::vector<float> initialGuess,std::vector<objectPtr> objs,
                                  targetPtr tar, objectPtr obj,
                                  boundaryConditions b, std::vector<float> tolsArm, MatrixXf tolsHand,
-                                 std::vector< MatrixXf > tolsTarget, std::vector< MatrixXf > tolsObstacles,std::vector<float> lambda,
-                                 std::vector<float> tols_table, int arm_code);
+                                 std::vector< MatrixXf > tolsTarget, std::vector< MatrixXf > tolsObstacles, std::vector<float> lambda,
+                                 bool target_avoidance, bool obstacle_avoidance, int arm_code);
 
 
     bool amplRead(string& datFile, string& modFile, string& nlFile); // write the .nl file

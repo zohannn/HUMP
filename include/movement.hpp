@@ -33,6 +33,7 @@ public:
     void setObjectInit(objectPtr obj);
     void setObjectEng(objectPtr obj_eng);
     void setArm(int a);
+    void setExecuted(bool exec);
 
 
     //getters
@@ -46,6 +47,7 @@ public:
     string getInfoLine();
     int getArm();
     string getArmInfo();
+    bool getExecuted();
 
 private:
     int arm;  // 0 (both arms), 1 (right-arm), 2 (left-arm)
@@ -56,6 +58,7 @@ private:
     objectPtr obj; // object involved involved in the movement
     objectPtr obj_init; // object at the beginning of the movement
     objectPtr obj_eng; // object involved in the engagement
+    bool executed; // true if the movement has been executed
 
     // Types of Movements and related code
     // ||||||||||||||||||||||||||

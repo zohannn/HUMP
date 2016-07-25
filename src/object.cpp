@@ -216,9 +216,6 @@ bool Object::setOr(orient oor, bool update_features){
 
     if (update_features){
 
-        float x;
-        float y;
-        float z;
         Matrix4f trans_tar_right;
         Matrix4f trans_tar_left;
         Matrix4f trans_engage;
@@ -230,17 +227,7 @@ bool Object::setOr(orient oor, bool update_features){
         Matrix4f trans_obj_tar_left;
         Matrix4f trans_obj_engage;
 
-        x = this->m_pos.Xpos;
-        y = this->m_pos.Ypos;
-        z = this->m_pos.Zpos;
-        Matrix3f Rot;
-        this->RPY_matrix(Rot);
-
-        trans_obj(0,0) = Rot(0,0); trans_obj(0,1) = Rot(0,1); trans_obj(0,2) = Rot(0,2); trans_obj(0,3) = x;
-        trans_obj(1,0) = Rot(1,0); trans_obj(1,1) = Rot(1,1); trans_obj(1,2) = Rot(1,2); trans_obj(1,3) = y;
-        trans_obj(2,0) = Rot(2,0); trans_obj(2,1) = Rot(2,1); trans_obj(2,2) = Rot(2,2); trans_obj(2,3) = z;
-        trans_obj(3,0) = 0;        trans_obj(3,1) = 0;        trans_obj(3,2) = 0;        trans_obj(3,3) = 1;
-
+        CommonFunctions::getTrans_matrix(trans_obj,this->m_or,this->m_pos);
         this->getTar_right_matrix(trans_tar_right);
         this->getTar_left_matrix(trans_tar_left);
         this->getEngage_matrix(trans_engage);
@@ -253,30 +240,27 @@ bool Object::setOr(orient oor, bool update_features){
 
         // update the new orientation of the object and update the features
         this->m_or = oor;
-        this->RPY_matrix(Rot);
-        trans_obj(0,0) = Rot(0,0); trans_obj(0,1) = Rot(0,1); trans_obj(0,2) = Rot(0,2);
-        trans_obj(1,0) = Rot(1,0); trans_obj(1,1) = Rot(1,1); trans_obj(1,2) = Rot(1,2);
-        trans_obj(2,0) = Rot(2,0); trans_obj(2,1) = Rot(2,1); trans_obj(2,2) = Rot(2,2);
+        CommonFunctions::getTrans_matrix(trans_obj,this->m_or,this->m_pos);
 
         trans_tar_right = trans_obj * trans_obj_tar_right; // updated matrix of target right
-        std::vector<float> rpy1;
-        this->getRPY(trans_tar_right,rpy1);
+        std::vector<float> rpy_tar_right;
+        CommonFunctions::getRPY(trans_tar_right,rpy_tar_right);
         orient new_tar_right_or;
-        new_tar_right_or.roll = rpy1.at(0); new_tar_right_or.pitch = rpy1.at(1); new_tar_right_or.yaw = rpy1.at(2);
+        new_tar_right_or.roll = rpy_tar_right.at(0); new_tar_right_or.pitch = rpy_tar_right.at(1); new_tar_right_or.yaw = rpy_tar_right.at(2);
         this->p_targetRight->setOr(new_tar_right_or);
 
         trans_tar_left = trans_obj * trans_obj_tar_left; // updated matrix of target left
-        std::vector<float> rpy2;
-        this->getRPY(trans_tar_left,rpy2);
+        std::vector<float> rpy_tar_left;
+        CommonFunctions::getRPY(trans_tar_left,rpy_tar_left);
         orient new_tar_left_or;
-        new_tar_left_or.roll = rpy2.at(0); new_tar_left_or.pitch = rpy2.at(1); new_tar_left_or.yaw = rpy2.at(2);
+        new_tar_left_or.roll = rpy_tar_left.at(0); new_tar_left_or.pitch = rpy_tar_left.at(1); new_tar_left_or.yaw = rpy_tar_left.at(2);
         this->p_targetLeft->setOr(new_tar_left_or);
 
         trans_engage = trans_obj * trans_obj_engage; // updated matrix of engage point
-        std::vector<float> rpy3;
-        this->getRPY(trans_engage,rpy3);
+        std::vector<float> rpy_engage;
+        CommonFunctions::getRPY(trans_engage,rpy_engage);
         orient new_engage_or;
-        new_engage_or.roll = rpy3.at(0); new_engage_or.pitch = rpy3.at(1); new_engage_or.yaw = rpy3.at(2);
+        new_engage_or.roll = rpy_engage.at(0); new_engage_or.pitch = rpy_engage.at(1); new_engage_or.yaw = rpy_engage.at(2);
         this->p_engage->setOr(new_engage_or);
 
         return true;
@@ -288,33 +272,6 @@ bool Object::setOr(orient oor, bool update_features){
     }
 }
 
-/**
- * @brief Object::getRPY
- * @param Trans
- * @param rpy
- */
-void Object::getRPY(Matrix4f Trans, std::vector<float> &rpy){
-
-    rpy = std::vector<float>(3);
-
-
-    if(abs(Trans(0,0) < 1e-10) && (abs(Trans(1,0) < 1e-10))){
-
-        rpy.at(0) = 0; // [rad]
-        rpy.at(1) = atan2(-Trans(2,0),Trans(0,0)); // [rad]
-        rpy.at(2) = atan2(-Trans(1,2),Trans(1,1)); // [rad]
-
-    }else{
-
-        rpy.at(0) = atan2(Trans(1,0),Trans(0,0)); // [rad]
-        float sp = sin(rpy.at(0));
-        float cp = cos(rpy.at(0));
-        rpy.at(1) = atan2(-Trans(2,0), cp*Trans(0,0)+sp*Trans(1,0)); // [rad]
-        rpy.at(2) = atan2(sp*Trans(0,2)-cp*Trans(1,2),cp*Trans(1,1)-sp*Trans(0,1)); // [rad]
-
-    }
-
-}
 
 /**
  * @brief Object::setSize
@@ -528,9 +485,7 @@ string Object::getInfoLine(){
  * @return
  */
 float Object::getNorm(){
-
-
-    return sqrt(pow((m_pos.Xpos),2)+pow((m_pos.Ypos),2)+pow((m_pos.Zpos),2));
+    return CommonFunctions::getNorm(this->m_pos);
 }
 
 /**
@@ -539,13 +494,7 @@ float Object::getNorm(){
  */
 void Object::getXt(std::vector<float> &xt){
 
-    Matrix3f Rot;
-    this->RPY_matrix(Rot);
-    Vector3f v = Rot.col(0);
-
-    xt.push_back(v(0));
-    xt.push_back(v(1));
-    xt.push_back(v(2));
+    CommonFunctions::getRotAxis(xt,this->getOr(),0);
 
 }
 
@@ -555,13 +504,7 @@ void Object::getXt(std::vector<float> &xt){
  */
 void Object::getYt(std::vector<float> &yt){
 
-    Matrix3f Rot;
-    this->RPY_matrix(Rot);
-    Vector3f v = Rot.col(1);
-
-    yt.push_back(v(0));
-    yt.push_back(v(1));
-    yt.push_back(v(2));
+    CommonFunctions::getRotAxis(yt,this->getOr(),1);
 }
 
 /**
@@ -570,13 +513,7 @@ void Object::getYt(std::vector<float> &yt){
  */
 void Object::getZt(std::vector<float> &zt){
 
-    Matrix3f Rot;
-    this->RPY_matrix(Rot);
-    Vector3f v = Rot.col(2);
-
-    zt.push_back(v(0));
-    zt.push_back(v(1));
-    zt.push_back(v(2));
+    CommonFunctions::getRotAxis(zt,this->getOr(),2);
 }
 
 /**
@@ -585,36 +522,14 @@ void Object::getZt(std::vector<float> &zt){
  */
 void Object::RPY_matrix(Matrix3f &Rot){
 
-    float roll = this->m_or.roll;
-    float pitch = this->m_or.pitch;
-    float yaw = this->m_or.yaw;
-
-    Rot(0,0) = cos(roll)*cos(pitch);  Rot(0,1) = cos(roll)*sin(pitch)*sin(yaw)-sin(roll)*cos(yaw); Rot(0,2) = sin(roll)*sin(yaw)+cos(roll)*sin(pitch)*cos(yaw);
-    Rot(1,0) = sin(roll)*cos(pitch);  Rot(1,1) = cos(roll)*cos(yaw)+sin(roll)*sin(pitch)*sin(yaw); Rot(1,2) = sin(roll)*sin(pitch)*cos(yaw)-cos(roll)*sin(yaw);
-    Rot(2,0) = -sin(pitch);           Rot(2,1) = cos(pitch)*sin(yaw);                              Rot(2,2) = cos(pitch)*cos(yaw);
-
-
+    CommonFunctions::getRPY_matrix(Rot,this->m_or);
 }
 /**
  * @brief Object::getTar_right_matrix
  * @param mat
  */
-void Object::getTar_right_matrix(Matrix4f& mat){
-
-    float x = this->p_targetRight->getPos().Xpos;
-    float y = this->p_targetRight->getPos().Ypos;
-    float z = this->p_targetRight->getPos().Zpos;
-
-    float roll =  this->p_targetRight->getOr().roll;
-    float pitch = this->p_targetRight->getOr().pitch;
-    float yaw = this->p_targetRight->getOr().yaw;
-
-    mat(0,0) = cos(roll)*cos(pitch); mat(0,1) = cos(roll)*sin(pitch)*sin(yaw)-sin(roll)*cos(yaw);   mat(0,2) = sin(roll)*sin(yaw)+cos(roll)*sin(pitch)*cos(yaw); mat(0,3) = x;
-    mat(1,0) = sin(roll)*cos(pitch); mat(1,1) = cos(roll)*cos(yaw)+sin(roll)*sin(pitch)*sin(yaw);   mat(1,2) = sin(roll)*sin(pitch)*cos(yaw)-cos(roll)*sin(yaw); mat(1,3) = y;
-    mat(2,0) = -sin(pitch);          mat(2,1) = cos(pitch)*sin(yaw);                                mat(2,2) = cos(pitch)*cos(yaw);                              mat(2,3) = z;
-    mat(3,0) = 0;                    mat(3,1) = 0;                                                  mat(3,2) = 0;                                                mat(3,3) = 1;
-
-
+void Object::getTar_right_matrix(Matrix4f& mat){    
+    CommonFunctions::getTrans_matrix(mat,this->p_targetRight->getOr(),this->p_targetRight->getPos());
 }
 
 /**
@@ -623,21 +538,7 @@ void Object::getTar_right_matrix(Matrix4f& mat){
  */
 void Object::getTar_left_matrix(Matrix4f &mat){
 
-
-    float x = this->p_targetLeft->getPos().Xpos;
-    float y = this->p_targetLeft->getPos().Ypos;
-    float z = this->p_targetLeft->getPos().Zpos;
-
-    float roll =  this->p_targetLeft->getOr().roll;
-    float pitch = this->p_targetLeft->getOr().pitch;
-    float yaw = this->p_targetLeft->getOr().yaw;
-
-    mat(0,0) = cos(roll)*cos(pitch); mat(0,1) = cos(roll)*sin(pitch)*sin(yaw)-sin(roll)*cos(yaw);   mat(0,2) = sin(roll)*sin(yaw)+cos(roll)*sin(pitch)*cos(yaw); mat(0,3) = x;
-    mat(1,0) = sin(roll)*cos(pitch); mat(1,1) = cos(roll)*cos(yaw)+sin(roll)*sin(pitch)*sin(yaw);   mat(1,2) = sin(roll)*sin(pitch)*cos(yaw)-cos(roll)*sin(yaw); mat(1,3) = y;
-    mat(2,0) = -sin(pitch);          mat(2,1) = cos(pitch)*sin(yaw);                                mat(2,2) = cos(pitch)*cos(yaw);                              mat(2,3) = z;
-    mat(3,0) = 0;                    mat(3,1) = 0;                                                  mat(3,2) = 0;                                                mat(3,3) = 1;
-
-
+    CommonFunctions::getTrans_matrix(mat,this->p_targetLeft->getOr(),this->p_targetLeft->getPos());
 }
 
 /**
@@ -646,20 +547,7 @@ void Object::getTar_left_matrix(Matrix4f &mat){
  */
 void Object::getEngage_matrix(Matrix4f &mat){
 
-
-    float x = this->p_engage->getPos().Xpos;
-    float y = this->p_engage->getPos().Ypos;
-    float z = this->p_engage->getPos().Zpos;
-
-    float roll =  this->p_engage->getOr().roll;
-    float pitch = this->p_engage->getOr().pitch;
-    float yaw = this->p_engage->getOr().yaw;
-
-    mat(0,0) = cos(roll)*cos(pitch); mat(0,1) = cos(roll)*sin(pitch)*sin(yaw)-sin(roll)*cos(yaw);   mat(0,2) = sin(roll)*sin(yaw)+cos(roll)*sin(pitch)*cos(yaw); mat(0,3) = x;
-    mat(1,0) = sin(roll)*cos(pitch); mat(1,1) = cos(roll)*cos(yaw)+sin(roll)*sin(pitch)*sin(yaw);   mat(1,2) = sin(roll)*sin(pitch)*cos(yaw)-cos(roll)*sin(yaw); mat(1,3) = y;
-    mat(2,0) = -sin(pitch);          mat(2,1) = cos(pitch)*sin(yaw);                                mat(2,2) = cos(pitch)*cos(yaw);                              mat(2,3) = z;
-    mat(3,0) = 0;                    mat(3,1) = 0;                                                  mat(3,2) = 0;                                                mat(3,3) = 1;
-
+    CommonFunctions::getTrans_matrix(mat,this->p_engage->getOr(),this->p_engage->getPos());
 }
 
 

@@ -109,13 +109,7 @@ orient Target::getOr() const{
  */
 void Target::getXt(std::vector<float> &xt){
 
-    Matrix3f Rot;
-    this->RPY_matrix(Rot);
-    Vector3f v = Rot.col(0);
-
-    xt.push_back(v(0));
-    xt.push_back(v(1));
-    xt.push_back(v(2));
+    CommonFunctions::getRotAxis(xt,this->getOr(),0);
 
 }
 /**
@@ -124,13 +118,7 @@ void Target::getXt(std::vector<float> &xt){
  */
 void Target::getYt(std::vector<float> &yt){
 
-    Matrix3f Rot;
-    this->RPY_matrix(Rot);
-    Vector3f v = Rot.col(1);
-
-    yt.push_back(v(0));
-    yt.push_back(v(1));
-    yt.push_back(v(2));
+    CommonFunctions::getRotAxis(yt,this->getOr(),1);
 }
 /**
  * @brief Target::getZt
@@ -138,13 +126,7 @@ void Target::getYt(std::vector<float> &yt){
  */
 void Target::getZt(std::vector<float> &zt){
 
-    Matrix3f Rot;
-    this->RPY_matrix(Rot);
-    Vector3f v = Rot.col(2);
-
-    zt.push_back(v(0));
-    zt.push_back(v(1));
-    zt.push_back(v(2));
+    CommonFunctions::getRotAxis(zt,this->getOr(),2);
 }
 /**
  * @brief Target::getNorm
@@ -152,7 +134,7 @@ void Target::getZt(std::vector<float> &zt){
  */
 float Target::getNorm(){
 
-    return sqrt(pow((m_pos.Xpos),2)+pow((m_pos.Ypos),2)+pow((m_pos.Zpos),2));
+    return CommonFunctions::getNorm(this->m_pos);
 }
 
 /**
@@ -161,18 +143,8 @@ float Target::getNorm(){
  */
 void Target::RPY_matrix(Matrix3f &Rot){
 
-    float roll = this->m_or.roll;
-    float pitch = this->m_or.pitch;
-    float yaw = this->m_or.yaw;
-
-
-    Rot(0,0) = cos(roll)*cos(pitch);  Rot(0,1) = cos(roll)*sin(pitch)*sin(yaw)-sin(roll)*cos(yaw); Rot(0,2) = sin(roll)*sin(yaw)+cos(roll)*sin(pitch)*cos(yaw);
-    Rot(1,0) = sin(roll)*cos(pitch);  Rot(1,1) = cos(roll)*cos(yaw)+sin(roll)*sin(pitch)*sin(yaw); Rot(1,2) = sin(roll)*sin(pitch)*cos(yaw)-cos(roll)*sin(yaw);
-    Rot(2,0) = -sin(pitch);           Rot(2,1) = cos(pitch)*sin(yaw);                                Rot(2,2) = cos(pitch)*cos(yaw);
-
-
+    CommonFunctions::getRPY_matrix(Rot,this->m_or);
 }
-
 
 
 

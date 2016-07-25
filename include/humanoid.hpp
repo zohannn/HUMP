@@ -116,11 +116,6 @@ public:
     void getJK(std::vector<float>& jk);
 #endif
 
-    //DHparams getDH_rightArm();
-    //DHparams getDH_leftArm();
-    //void getDH_rightHand(std::vector<DHparams>& p);
-    //void getDH_leftHand(std::vector<DHparams>& p);
-
     // postures
     void getRightPosture(std::vector<float>& p);
     void getRightArmPosture(std::vector<float>& p);

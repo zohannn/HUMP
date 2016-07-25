@@ -2,6 +2,7 @@
 #define TARGET_H
 
 #include "HUMLconfig.hpp"
+#include "common_functions.hpp"
 
 namespace HUMotion {
 
@@ -34,7 +35,6 @@ public:
     void getYt(std::vector<float>& yt);
     void getZt(std::vector<float>& zt);
     float getNorm();
-
     void RPY_matrix(Matrix3f& Rot);
 
 
