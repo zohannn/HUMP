@@ -5,7 +5,8 @@ namespace HUMotion{
 
 
 // constructors
-Object::Object(){
+Object::Object()
+{
 
     this->m_name = "";
     this->m_pos.Xpos=0;this->m_pos.Ypos=0;this->m_pos.Zpos=0;
@@ -28,7 +29,8 @@ Object::Object(){
  * @brief Object::Object
  * @param name
  */
-Object::Object(string name){
+Object::Object(string name)
+{
 
     this->m_name = name;
     this->m_pos.Xpos=0;this->m_pos.Ypos=0;this->m_pos.Zpos=0;
@@ -84,7 +86,8 @@ Object::Object(string name, pos ppos, orient oor, dim ssize,
  * @brief Object::Object
  * @param obj
  */
-Object::Object(const Object &obj){
+Object::Object(const Object &obj)
+{
 
     this->m_name = obj.m_name;
     this->m_pos = obj.m_pos;
@@ -115,21 +118,9 @@ Object::~Object(){
 }
 
 // setters
-/**
- * @brief Object::setName
- * @param name
- */
-void Object::setName(string name){
 
-    this->m_name = name;
-}
-/**
- * @brief Object::setPos
- * @param ppos
- * @param update_features
- * @return
- */
-bool Object::setPos(pos ppos, bool update_features){
+
+void Object::setPos(pos& ppos, bool update_features){
 
 
     if (update_features){
@@ -198,21 +189,13 @@ bool Object::setPos(pos ppos, bool update_features){
         this->p_engage->setPos(new_engage_pos);
 
 
-
-        return true;
-
     }else{
         this->m_pos = ppos;
-        return true;
+
     }
 }
-/**
- * @brief Object::setOr
- * @param oor
- * @param update_features
- * @return
- */
-bool Object::setOr(orient oor, bool update_features){
+
+void Object::setOr(orient& oor, bool update_features){
 
     if (update_features){
 
@@ -227,7 +210,7 @@ bool Object::setOr(orient oor, bool update_features){
         Matrix4f trans_obj_tar_left;
         Matrix4f trans_obj_engage;
 
-        CommonFunctions::getTrans_matrix(trans_obj,this->m_or,this->m_pos);
+        this->Trans_matrix(trans_obj);
         this->getTar_right_matrix(trans_tar_right);
         this->getTar_left_matrix(trans_tar_left);
         this->getEngage_matrix(trans_engage);
@@ -240,35 +223,34 @@ bool Object::setOr(orient oor, bool update_features){
 
         // update the new orientation of the object and update the features
         this->m_or = oor;
-        CommonFunctions::getTrans_matrix(trans_obj,this->m_or,this->m_pos);
+        this->Trans_matrix(trans_obj);
 
         trans_tar_right = trans_obj * trans_obj_tar_right; // updated matrix of target right
         std::vector<float> rpy_tar_right;
-        CommonFunctions::getRPY(trans_tar_right,rpy_tar_right);
+        this->getRPY(trans_tar_right,rpy_tar_right);
         orient new_tar_right_or;
         new_tar_right_or.roll = rpy_tar_right.at(0); new_tar_right_or.pitch = rpy_tar_right.at(1); new_tar_right_or.yaw = rpy_tar_right.at(2);
         this->p_targetRight->setOr(new_tar_right_or);
 
         trans_tar_left = trans_obj * trans_obj_tar_left; // updated matrix of target left
         std::vector<float> rpy_tar_left;
-        CommonFunctions::getRPY(trans_tar_left,rpy_tar_left);
+        this->getRPY(trans_tar_left,rpy_tar_left);
         orient new_tar_left_or;
         new_tar_left_or.roll = rpy_tar_left.at(0); new_tar_left_or.pitch = rpy_tar_left.at(1); new_tar_left_or.yaw = rpy_tar_left.at(2);
         this->p_targetLeft->setOr(new_tar_left_or);
 
         trans_engage = trans_obj * trans_obj_engage; // updated matrix of engage point
         std::vector<float> rpy_engage;
-        CommonFunctions::getRPY(trans_engage,rpy_engage);
+        this->getRPY(trans_engage,rpy_engage);
         orient new_engage_or;
         new_engage_or.roll = rpy_engage.at(0); new_engage_or.pitch = rpy_engage.at(1); new_engage_or.yaw = rpy_engage.at(2);
         this->p_engage->setOr(new_engage_or);
 
-        return true;
 
 
     }else{
         this->m_or = oor;
-        return true;
+
     }
 }
 
@@ -360,30 +342,7 @@ void Object::setTargetLeftEnabled(bool c){
 
 
 // getters
-/**
- * @brief Object::getName
- * @return
- */
-string Object::getName(){
 
-    return this->m_name;
-}
-/**
- * @brief Object::getPos
- * @return
- */
-pos Object::getPos(){
-
-    return this->m_pos;
-}
-/**
- * @brief Object::getOr
- * @return
- */
-orient Object::getOr(){
-
-    return this->m_or;
-}
 /**
  * @brief Object::getSize
  * @return
@@ -480,56 +439,13 @@ string Object::getInfoLine(){
 
 
 }
-/**
- * @brief Object::getNorm
- * @return
- */
-float Object::getNorm(){
-    return CommonFunctions::getNorm(this->m_pos);
-}
 
-/**
- * @brief Object::getXt
- * @param xt
- */
-void Object::getXt(std::vector<float> &xt){
-
-    CommonFunctions::getRotAxis(xt,this->getOr(),0);
-
-}
-
-/**
- * @brief Object::getYt
- * @param yt
- */
-void Object::getYt(std::vector<float> &yt){
-
-    CommonFunctions::getRotAxis(yt,this->getOr(),1);
-}
-
-/**
- * @brief Object::getZt
- * @param zt
- */
-void Object::getZt(std::vector<float> &zt){
-
-    CommonFunctions::getRotAxis(zt,this->getOr(),2);
-}
-
-/**
- * @brief Object::RPY_matrix
- * @param Rot
- */
-void Object::RPY_matrix(Matrix3f &Rot){
-
-    CommonFunctions::getRPY_matrix(Rot,this->m_or);
-}
 /**
  * @brief Object::getTar_right_matrix
  * @param mat
  */
-void Object::getTar_right_matrix(Matrix4f& mat){    
-    CommonFunctions::getTrans_matrix(mat,this->p_targetRight->getOr(),this->p_targetRight->getPos());
+void Object::getTar_right_matrix(Matrix4f& mat){
+    this->p_targetRight->Trans_matrix(mat);
 }
 
 /**
@@ -538,7 +454,8 @@ void Object::getTar_right_matrix(Matrix4f& mat){
  */
 void Object::getTar_left_matrix(Matrix4f &mat){
 
-    CommonFunctions::getTrans_matrix(mat,this->p_targetLeft->getOr(),this->p_targetLeft->getPos());
+    this->p_targetLeft->Trans_matrix(mat);
+
 }
 
 /**
@@ -547,10 +464,33 @@ void Object::getTar_left_matrix(Matrix4f &mat){
  */
 void Object::getEngage_matrix(Matrix4f &mat){
 
-    CommonFunctions::getTrans_matrix(mat,this->p_engage->getOr(),this->p_engage->getPos());
+    this->p_engage->Trans_matrix(mat);
 }
 
 
+
+void Object::getRPY(Matrix4f Trans, std::vector<float>& rpy){
+
+    rpy = std::vector<float>(3);
+
+    if(abs(Trans(0,0) < 1e-10) && (abs(Trans(1,0) < 1e-10))){
+
+        rpy.at(0) = 0; // [rad]
+        rpy.at(1) = atan2(-Trans(2,0),Trans(0,0)); // [rad]
+        rpy.at(2) = atan2(-Trans(1,2),Trans(1,1)); // [rad]
+
+    }else{
+
+        rpy.at(0) = atan2(Trans(1,0),Trans(0,0)); // [rad]
+        float sp = sin(rpy.at(0));
+        float cp = cos(rpy.at(0));
+        rpy.at(1) = atan2(-Trans(2,0), cp*Trans(0,0)+sp*Trans(1,0)); // [rad]
+        rpy.at(2) = atan2(sp*Trans(0,2)-cp*Trans(1,2),cp*Trans(1,1)-sp*Trans(0,1)); // [rad]
+
+    }
+
+
+}
 
 } // namespace HUMotion
 

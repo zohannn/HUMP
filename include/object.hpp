@@ -11,14 +11,14 @@ typedef boost::shared_ptr<Target> targetPtr;
 typedef boost::shared_ptr<EngagePoint> engagePtr;
 
 
-class Object
+class Object: public Point
 {
 
 public:
     // constructors
-    explicit Object();
+    Object();
     explicit Object(string name);
-    explicit Object(string name, pos ppos, orient oor, dim ssize,
+    Object(string name, pos ppos, orient oor, dim ssize,
                     Target* pTR, Target* pTL,
                     EngagePoint* pEng);
 
@@ -29,9 +29,19 @@ public:
     ~Object();
 
     // *** setters *** //
-    void setName(string name);
-    bool setPos(pos ppos, bool update_features);
-    bool setOr(orient oor, bool update_features);
+
+    /**
+     * @brief This method sets the position of the point.
+     * @param ppos
+     */
+    void setPos(pos& ppos, bool update_features);
+
+    /**
+     * @brief This method sets the orientation of the point.
+     * @param oor
+     */
+    void setOr(orient& oor, bool update_features);
+
     void setSize(dim ssize);
     void setHandle(int h);
     void setHandleBody(int h);
@@ -44,9 +54,7 @@ public:
 
 
     // *** getters *** //
-    string getName();
-    pos getPos();
-    orient getOr();
+
     dim getSize();
     int getHandle();
     int getHandleBody();
@@ -57,20 +65,12 @@ public:
     bool isTargetLeftEnabled();
     float getRadius();
     string getInfoLine();
-    float getNorm();
-    void getXt(std::vector<float>& xt);
-    void getYt(std::vector<float>& yt);
-    void getZt(std::vector<float>& zt);
-    void RPY_matrix(Matrix3f& Rot);
-
 
 
 
 private:
 
-    string m_name; // name of the object
-    pos m_pos; // posiion of the center
-    orient m_or; // orientation of the object
+
     dim m_size; // size of the object
     int handle; // handle of the object
     int handle_body; // handle of the visible object
@@ -87,6 +87,13 @@ private:
     void getTar_right_matrix(Matrix4f& mat);
     void getTar_left_matrix(Matrix4f& mat);
     void getEngage_matrix(Matrix4f& mat);
+
+    /**
+     * @brief Get the orientation in Roll-Pitch-Yaw from the transformation matrix
+     * @param Trans
+     * @param rpy
+     */
+    void getRPY(Matrix4f Trans, std::vector<float>& rpy);
 
 
 

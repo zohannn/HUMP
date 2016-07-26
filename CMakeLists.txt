@@ -101,11 +101,12 @@ if(TEST)
     include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
     enable_testing ()
 
-    ## Common tests
-    set(PROJECT_TEST_NAME ${PROJECT_NAME_STR}_common_tests)
-    file(GLOB TEST_CPP_FILES ${PROJECT_SOURCE_DIR}/test/src/common.cpp)
-    file(GLOB TEST_HPP_FILES ${PROJECT_SOURCE_DIR}/test/include/common.hpp)
-    add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES} ${TEST_HPP_FILES})
+    ## Point tests
+    set(PROJECT_TEST_NAME ${PROJECT_NAME_STR}_point_tests)
+    file(GLOB TEST_CPP_FILES ${PROJECT_SOURCE_DIR}/test/src/point_tests.cpp)
+    #file(GLOB TEST_HPP_FILES ${PROJECT_SOURCE_DIR}/test/include/*.hpp)
+    #add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES} ${TEST_HPP_FILES})
+    add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES})
     target_link_libraries(${PROJECT_TEST_NAME} gtest gtest_main)
     target_link_libraries(${PROJECT_TEST_NAME} HUML)
     add_test (NAME Common_tests COMMAND ${PROJECT_TEST_NAME})

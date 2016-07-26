@@ -16,3 +16,7 @@
 // Hand
 #define HAND @HAND@
 
+//AMPL
+#define AMPL @AMPL@
+#define AMPL_PATH "@AMPL_PATH@"
+

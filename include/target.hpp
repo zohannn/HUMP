@@ -1,48 +1,45 @@
 #ifndef TARGET_H
 #define TARGET_H
 
-#include "HUMLconfig.hpp"
-#include "common_functions.hpp"
+#include "point.hpp"
+
 
 namespace HUMotion {
 
 using namespace std;
 
-class Target
+//! The Target class
+/**
+ * @brief This class defines the target that is taken into account for the constraints on the hand.
+ * The target is a point designed to be placed on a object that has to be manipulated.
+ */
+class Target:public Point
 {
 public:
-    // constructors
-    explicit Target();
-    explicit Target(string name, pos ppos, orient oor);
+    /**
+     * @brief Target, default constructor.
+     */
+    Target();
 
+    /**
+     * @brief Target, a constructor.
+     * @param name
+     * @param ppos
+     * @param oor
+     */
+    Target(string name, pos ppos, orient oor);
 
-    // copy constructor
+    /**
+     * @brief Target, a copy constructor.
+     * @param tar
+     */
     Target(const Target& tar);
 
-    // destructor
+
+    /**
+     * @brief ~Target, a destructor.
+     */
     ~Target();
-
-    //setters
-    void setName(const std::string& name);
-    void setPos(pos& ppos);
-    void setOr(orient& oor);
-
-    //getters
-    string getName() const;
-    pos getPos() const;
-    orient getOr() const;
-    void getXt(std::vector<float>& xt);
-    void getYt(std::vector<float>& yt);
-    void getZt(std::vector<float>& zt);
-    float getNorm();
-    void RPY_matrix(Matrix3f& Rot);
-
-
-private:
-
-    string m_name; // name of the target
-    pos m_pos; // position of the target
-    orient m_or; // orientation of the target
 
 
 
