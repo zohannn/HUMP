@@ -9,7 +9,7 @@ namespace HUMotion {
  * @param name
  */
 HUMPlanner::HUMPlanner(string name = string ("Default Planner")):
-    task(nullptr),scene(nullptr)
+    scene(nullptr),task(nullptr)
 {
 
     this->name = name;

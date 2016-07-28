@@ -109,7 +109,7 @@ if(TEST)
     add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES})
     target_link_libraries(${PROJECT_TEST_NAME} gtest gtest_main)
     target_link_libraries(${PROJECT_TEST_NAME} HUML)
-    add_test (NAME Common_tests COMMAND ${PROJECT_TEST_NAME})
+    add_test (NAME Tests_on_point COMMAND ${PROJECT_TEST_NAME})
 
 endif()
 

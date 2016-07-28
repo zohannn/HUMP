@@ -573,7 +573,7 @@ bool Problem::singleArmBouncePostureGoHome(){
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
 
-                    for (int i=0; i < x_sol.size()-2; ++i){
+                    for (std::size_t i=0; i < x_sol.size()-2; ++i){
 
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -905,7 +905,7 @@ bool Problem::singleArmFinalPostureSubDisengage(){
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
 
-                    for (int i=0; i < x_sol.size(); ++i){
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
 
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -1205,7 +1205,7 @@ bool Problem::singleArmFinalPostureSubEngage(){
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
 
-                    for (int i=0; i < x_sol.size(); ++i){
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
 
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -1404,7 +1404,7 @@ bool Problem::singleArmFinalPostureReachToGrasp(){
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
 
-                    for (int i=0; i < x_sol.size(); ++i){
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
 
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -1631,7 +1631,7 @@ bool Problem::singleArmBouncePostureReachToGrasp(){
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
 
-                    for (int i=0; i < x_sol.size()-2; ++i){
+                    for (std::size_t i=0; i < x_sol.size()-2; ++i){
 
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -1835,7 +1835,7 @@ bool Problem::singleArmFinalPostureEngage(){
     new_tar.Ypos=eng1_pos.Ypos - eng_to_tar(1);
     new_tar.Zpos=eng1_pos.Zpos - eng_to_tar(2);
 
-    float new_tar_norm = sqrt(pow((new_tar.Xpos),2)+pow((new_tar.Ypos),2)+pow((new_tar.Zpos),2));
+    //float new_tar_norm = sqrt(pow((new_tar.Xpos),2)+pow((new_tar.Ypos),2)+pow((new_tar.Zpos),2));
 
     float Lu = hh->getArm().arm_specs.d.at(2);
     float Ll = hh->getArm().arm_specs.d.at(4);
@@ -1944,7 +1944,7 @@ bool Problem::singleArmFinalPostureEngage(){
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
 
-                    for (int i=0; i < x_sol.size(); ++i){
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
 
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -2159,7 +2159,7 @@ bool Problem::singleArmBouncePostureEngage(){
 
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
 
-                    for (int i=0; i < x_sol.size(); ++i){
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
 
                        //printf("x[%i] = %f\n", i, x_sol[i]);
                         switch(arm_code){
@@ -2338,7 +2338,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
     PostureDat << string("# FINAL POSE \n");
     PostureDat << string("param thet_final := \n");
 
-    for (int i=0; i < finalAuxPosture.size(); ++i){
+    for (std::size_t i=0; i < finalAuxPosture.size(); ++i){
         string finalAuxstr =  boost::str(boost::format("%.2f") % (finalAuxPosture.at(i)));
         boost::replace_all(finalAuxstr,",",".");
         if (i == finalAuxPosture.size()-1){
@@ -2358,7 +2358,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
     PostureDat << string("# INITIAL GUESS \n");
     PostureDat << string("var theta_b := \n");
 
-    for (int i=0; i < initialGuess.size(); ++i){
+    for (std::size_t i=0; i < initialGuess.size(); ++i){
         string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
         boost::replace_all(guess,",",".");
         if (i == initialGuess.size()-1){
@@ -2372,7 +2372,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
     PostureDat << string("# INITIAL VELOCITY \n");
     PostureDat << string("param vel_0 := \n");
 
-    for (int i=0; i < b.vel_0.size(); ++i){
+    for (std::size_t i=0; i < b.vel_0.size(); ++i){
         string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
         boost::replace_all(vel_0,",",".");
         if (i == b.vel_0.size()-1){
@@ -2388,7 +2388,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
     PostureDat << string("# FINAL VELOCITY \n");
     PostureDat << string("param vel_f := \n");
 
-    for (int i=0; i < b.vel_f.size(); ++i){
+    for (std::size_t i=0; i < b.vel_f.size(); ++i){
         string vel_f =  boost::str(boost::format("%.2f") % (b.vel_f.at(i)));
         boost::replace_all(vel_f,",",".");
         if (i == b.vel_f.size()-1){
@@ -2404,7 +2404,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
     PostureDat << string("# INITIAL ACCELERATION \n");
     PostureDat << string("param acc_0 := \n");
 
-    for (int i=0; i < b.acc_0.size(); ++i){
+    for (std::size_t i=0; i < b.acc_0.size(); ++i){
         string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
         boost::replace_all(acc_0,",",".");
         if (i == b.acc_0.size()-1){
@@ -2418,7 +2418,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
     PostureDat << string("# FINAL ACCELERATION \n");
     PostureDat << string("param acc_f := \n");
 
-    for (int i=0; i < b.acc_f.size(); ++i){
+    for (std::size_t i=0; i < b.acc_f.size(); ++i){
         string acc_f =  boost::str(boost::format("%.2f") % (b.acc_f.at(i)));
         boost::replace_all(acc_f,",",".");
 
@@ -3392,7 +3392,7 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
     // initial guess
     PostureDat << string("# INITIAL GUESS \n");
     PostureDat << string("var theta := \n");
-    for (int i=0; i < initialGuess.size(); ++i){
+    for (std::size_t i=0; i < initialGuess.size(); ++i){
         string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
         boost::replace_all(guess,",",".");
         if (i == initialGuess.size()-1){
@@ -4153,7 +4153,7 @@ bool Problem::invKinHand(float d_obj,int hand_id,std::vector<float>& sols){
     int k;
 
     // middle finger
-    float ux = middle.ux;
+    //float ux = middle.ux;
     float uy;
     float uz = middle.uz;
     float Lp = middle.finger_specs.a.at(1);
@@ -4163,9 +4163,9 @@ bool Problem::invKinHand(float d_obj,int hand_id,std::vector<float>& sols){
     float theta0;
 
     // thumb
-    float uTx = thumb.uTx;
+    //float uTx = thumb.uTx;
     float uTy;
-    float uTz = thumb.uTz;
+    //float uTz = thumb.uTz;
     float LTm = thumb.thumb_specs.a.at(2);
     float LTp = thumb.thumb_specs.a.at(3);
     float LTd = thumb.thumb_specs.a.at(4);
@@ -4493,7 +4493,7 @@ for (int i = 0; i<steps; ++i){
 Traj = MatrixXf::Constant(steps+1,initPosture.size(),0);
 
 for (int i = 0; i <= steps;++i){
-    for (int j = 0; j<initPosture.size(); ++j){
+    for (std::size_t j = 0; j<initPosture.size(); ++j){
         Traj(i,j) = initPosture.at(j) +
                 (initPosture.at(j) - finalPosture.at(j))*
                 (15*pow(time.at(i),4)-6*pow(time.at(i),5)-10*pow(time.at(i),3))+
@@ -4532,7 +4532,7 @@ void Problem::backForthMovement(std::vector<float> initPosture,
     Traj = MatrixXf::Constant(steps+1,initPosture.size(),0);
 
     for (int i = 0; i<steps;++i){ // the last row is zero for all the joints
-        for (int j = 0; j<initPosture.size(); ++j){
+        for (std::size_t j = 0; j<initPosture.size(); ++j){
               Traj(i,j) = (bouncePosture.at(j) - initPosture.at(j))* pow(sin(M_PI*time.at(i)),(-log(2.0)/log(tb)));
         }
     }
@@ -4615,8 +4615,6 @@ float Problem::getTrajectory(MatrixXf& traj){
 
         this->getTimeStep(traj,timeStep);
 
-        return timeStep;
-
         break;
 
     case 1: // reaching
@@ -4681,7 +4679,6 @@ float Problem::getTrajectory(MatrixXf& traj){
         traj = this->optimalTraj;
 
         this->getTimeStep(traj,timeStep);
-        return timeStep;
 
         break;
 
@@ -4724,13 +4721,10 @@ float Problem::getTrajectory(MatrixXf& traj){
 
         this->getTimeStep(traj,timeStep);
 
-        return timeStep;
-
-
         break;
     }
 
-
+    return timeStep;
 
 }
 
@@ -4953,7 +4947,7 @@ void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k){
     string alpha_str;
     alpha_str =  boost::str(boost::format("%.2f") % (hh->getArm().arm_specs.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_str+string("\n");
-    for(int i=1; i<HUMotion::JOINTS_ARM; ++i){
+    for(std::size_t i=1; i<HUMotion::JOINTS_ARM; ++i){
         alpha_str =  boost::str(boost::format("%.2f") % (k*hh->getArm().arm_specs.alpha.at(i)));
 
         if (i == hh->getArm().arm_specs.alpha.size()-1){
@@ -4964,7 +4958,7 @@ void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k){
     }
     stream << string("param a := \n");
     string a_str;
-    for(int i=0; i<HUMotion::JOINTS_ARM; ++i){
+    for(std::size_t i=0; i<HUMotion::JOINTS_ARM; ++i){
         a_str =  boost::str(boost::format("%.2f") % (hh->getArm().arm_specs.a.at(i)));
         if (i == hh->getArm().arm_specs.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_str+string(";\n");
@@ -4974,7 +4968,7 @@ void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k){
     }
     stream << string("param d := \n");
     string d_str;
-    for(int i=0; i<HUMotion::JOINTS_ARM; ++i){
+    for(std::size_t i=0; i<HUMotion::JOINTS_ARM; ++i){
         d_str =  boost::str(boost::format("%.2f") % (k*hh->getArm().arm_specs.d.at(i)));
         if (i == hh->getArm().arm_specs.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_str+string(";\n");
@@ -5017,7 +5011,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     string alpha_fing1_str;
     alpha_fing1_str =  boost::str(boost::format("%.2f") % (k*finger_1.finger_specs.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_fing1_str+string("\n");
-    for(int i=1; i<HUMotion::N_PHALANGE+1; ++i){
+    for(std::size_t i=1; i<HUMotion::N_PHALANGE+1; ++i){
         alpha_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.alpha.at(i)));
         if (i == finger_1.finger_specs.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_fing1_str+string(";\n");
@@ -5027,7 +5021,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     }
     stream << string("param a_fing1 := \n");
     string a_fing1_str;
-    for(int i=0; i<HUMotion::N_PHALANGE+1; ++i){
+    for(std::size_t i=0; i<HUMotion::N_PHALANGE+1; ++i){
         a_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.a.at(i)));
         if (i == finger_1.finger_specs.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_fing1_str+string(";\n");
@@ -5037,7 +5031,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     }
     stream << string("param d_fing1 := \n");
     string d_fing1_str;
-    for(int i=0; i<HUMotion::N_PHALANGE+1; ++i){
+    for(std::size_t i=0; i<HUMotion::N_PHALANGE+1; ++i){
         d_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.d.at(i)));
         if (i == finger_1.finger_specs.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_fing1_str+string(";\n");
@@ -5070,7 +5064,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     string alpha_fing3_str;
     alpha_fing3_str =  boost::str(boost::format("%.2f") % (k*finger_3.finger_specs.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_fing3_str+string("\n");
-    for(int i=1; i<HUMotion::N_PHALANGE+1; ++i){
+    for(std::size_t i=1; i<HUMotion::N_PHALANGE+1; ++i){
         alpha_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.alpha.at(i)));
         if (i == finger_3.finger_specs.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_fing3_str+string(";\n");
@@ -5080,7 +5074,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     }
     stream << string("param a_fing3 := \n");
     string a_fing3_str;
-    for(int i=0; i<HUMotion::N_PHALANGE+1; ++i){
+    for(std::size_t i=0; i<HUMotion::N_PHALANGE+1; ++i){
         a_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.a.at(i)));
         if (i == finger_3.finger_specs.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_fing3_str+string(";\n");
@@ -5090,7 +5084,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     }
     stream << string("param d_fing3 := \n");
     string d_fing3_str;
-    for(int i=0; i<HUMotion::N_PHALANGE+1; ++i){
+    for(std::size_t i=0; i<HUMotion::N_PHALANGE+1; ++i){
         d_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.d.at(i)));
         if (i == finger_3.finger_specs.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_fing3_str+string(";\n");
@@ -5127,7 +5121,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
         alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(0)-M_PI/2));
     }
     stream << to_string(1)+string(" ")+alpha_thumb_str+string("\n");
-    for(int i=1; i<HUMotion::N_PHALANGE+2; ++i){
+    for(std::size_t i=1; i<HUMotion::N_PHALANGE+2; ++i){
         alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(i)));
         if (i == thumb_finger.thumb_specs.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_thumb_str+string(";\n");
@@ -5138,7 +5132,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
 
     stream << string("param a_thumb := \n");
     string a_thumb_str;
-    for(int i=0; i<HUMotion::N_PHALANGE+2; ++i){
+    for(std::size_t i=0; i<HUMotion::N_PHALANGE+2; ++i){
         a_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.a.at(i)));
         if (i == thumb_finger.thumb_specs.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_thumb_str+string(";\n");
@@ -5149,7 +5143,7 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
 
     stream << string("param d_thumb := \n");
     string d_thumb_str;
-    for(int i=0; i<HUMotion::N_PHALANGE+2; ++i){
+    for(std::size_t i=0; i<HUMotion::N_PHALANGE+2; ++i){
         d_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.d.at(i)));
         if (i == thumb_finger.thumb_specs.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_thumb_str+string(";\n");
@@ -6157,7 +6151,7 @@ void Problem::writeArmLimits(ofstream &stream, std::vector<float> &minArmLimits,
     stream << string("# Lower Bound \n");
     stream << string("param llim := \n");
 
-    for (int i=0; i < minArmLimits.size(); ++i){
+    for (std::size_t i=0; i < minArmLimits.size(); ++i){
         string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)));
         boost::replace_all(minLim,",",".");
         if (i == minArmLimits.size()-1){
@@ -6170,7 +6164,7 @@ void Problem::writeArmLimits(ofstream &stream, std::vector<float> &minArmLimits,
     stream << string("# Upper Bound \n");
     stream << string("param ulim := \n");
 
-    for (int i=0; i < maxArmLimits.size(); ++i){
+    for (std::size_t i=0; i < maxArmLimits.size(); ++i){
         string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)));
         boost::replace_all(maxLim,",",".");
 
@@ -6193,7 +6187,7 @@ void Problem::writeArmInitPose(ofstream &stream, std::vector<float> &initArmPost
     stream << string("# INITIAL POSE \n");
     stream << string("param thet_init := \n");
 
-    for (int i=0; i < initArmPosture.size(); ++i){
+    for (std::size_t i=0; i < initArmPosture.size(); ++i){
         string initArmstr =  boost::str(boost::format("%.2f") % (initArmPosture.at(i)));
         boost::replace_all(initArmstr,",",".");
         if (i == initArmPosture.size()-1){
@@ -6215,7 +6209,7 @@ void Problem::writeFingerFinalPose(ofstream &stream, std::vector<float> &finalHa
     stream << string("# FINAL FINGER JOINTS \n");
     stream << string("param joint_fingers := \n");
 
-    for (int i=0; i < finalHand.size(); ++i){
+    for (std::size_t i=0; i < finalHand.size(); ++i){
         string finalHandstr =  boost::str(boost::format("%.2f") % (finalHand.at(i)));
         boost::replace_all(finalHandstr,",",".");
         if (i == finalHand.size()-1){
@@ -6237,7 +6231,7 @@ void Problem::writeLambda(ofstream &stream, std::vector<float> &lambda){
     stream << string("# JOINT EXPENSE FACTORS \n");
     stream << string("param lambda := \n");
 
-    for (int i=0; i < lambda.size(); ++i){
+    for (std::size_t i=0; i < lambda.size(); ++i){
         string lambdastr =  boost::str(boost::format("%.2f") % (lambda.at(i)));
         boost::replace_all(lambdastr,",",".");
         if (i == lambda.size()-1){
@@ -6295,7 +6289,7 @@ void Problem::writeInfoObjects(ofstream &stream, std::vector<objectPtr> &objs){
     stream << string("param Obstacles : 1 2 3 4 5 6 7 8 9 := \n");
 
     std::vector<objectPtr> obstacles;
-    for (int i = 0; i < objs.size(); ++i){
+    for (std::size_t i = 0; i < objs.size(); ++i){
 
         objectPtr obs = objs.at(i);
         //if ((!boost::iequals(obs->getName(),strTable)) && (!obs->isTargetRightEnabled()) && (!obs->isTargetLeftEnabled()))
@@ -6903,7 +6897,7 @@ void Problem::getObstaclesSingleArm(std::vector<objectPtr> objs, std::vector<flo
 #endif
 
 
-        for (int i = 0; i < objs.size(); ++i){
+        for (std::size_t i = 0; i < objs.size(); ++i){
             objectPtr obj = objs.at(i);
             if ((!obj->isTargetRightEnabled()) && (!obj->isTargetLeftEnabled())){
 

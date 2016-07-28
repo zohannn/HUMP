@@ -4,7 +4,6 @@
 namespace HUMotion{
 
 
-// constructors
 Object::Object()
 {
 
@@ -25,10 +24,7 @@ Object::Object()
 
 }
 
-/**
- * @brief Object::Object
- * @param name
- */
+
 Object::Object(string name)
 {
 
@@ -49,16 +45,6 @@ Object::Object(string name)
 
 }
 
-/**
- * @brief Object::Object
- * @param name
- * @param ppos
- * @param oor
- * @param ssize
- * @param pTR
- * @param pTL
- * @param pEng
- */
 Object::Object(string name, pos ppos, orient oor, dim ssize,
                Target* pTR, Target* pTL,
                EngagePoint* pEng)
@@ -81,11 +67,7 @@ Object::Object(string name, pos ppos, orient oor, dim ssize,
 
 }
 
-// copy constructor
-/**
- * @brief Object::Object
- * @param obj
- */
+
 Object::Object(const Object &obj)
 {
 
@@ -109,18 +91,17 @@ Object::Object(const Object &obj)
 
 }
 
-// destructor
-/**
- * @brief Object::~Object
- */
-Object::~Object(){
+
+Object::~Object()
+{
 
 }
 
-// setters
 
 
-void Object::setPos(pos& ppos, bool update_features){
+
+void Object::setPos(pos& ppos, bool update_features)
+{
 
 
     if (update_features){
@@ -195,7 +176,8 @@ void Object::setPos(pos& ppos, bool update_features){
     }
 }
 
-void Object::setOr(orient& oor, bool update_features){
+void Object::setOr(orient& oor, bool update_features)
+{
 
     if (update_features){
 
@@ -255,20 +237,15 @@ void Object::setOr(orient& oor, bool update_features){
 }
 
 
-/**
- * @brief Object::setSize
- * @param ssize
- */
-void Object::setSize(dim ssize){
+
+void Object::setSize(dim ssize)
+{
 
     this->m_size = ssize;
 }
-/**
- * @brief Object::setTargetRight
- * @param tr
- * @return
- */
-bool Object::setTargetRight(targetPtr tr){
+
+bool Object::setTargetRight(targetPtr tr)
+{
 
     if (this->setup_features){
         this->p_targetRight = targetPtr(new Target(*tr.get()));
@@ -277,29 +254,22 @@ bool Object::setTargetRight(targetPtr tr){
         return false;
     }
 }
-/**
- * @brief Object::setHandle
- * @param h
- */
-void Object::setHandle(int h){
+
+void Object::setHandle(int h)
+{
 
     this->handle = h;
 }
-/**
- * @brief Object::setHandleBody
- * @param h
- */
-void Object::setHandleBody(int h){
+
+void Object::setHandleBody(int h)
+{
 
     this->handle_body = h;
 }
 
-/**
- * @brief Object::setTargetLeft
- * @param tl
- * @return
- */
-bool Object::setTargetLeft(targetPtr tl){
+
+bool Object::setTargetLeft(targetPtr tl)
+{
 
     if (this->setup_features){
         this->p_targetLeft = targetPtr(new Target(*tl.get()));
@@ -308,12 +278,9 @@ bool Object::setTargetLeft(targetPtr tl){
         return false;
     }
 }
-/**
- * @brief Object::setEngagePoint
- * @param eng
- * @return
- */
-bool Object::setEngagePoint(engagePtr eng){
+
+bool Object::setEngagePoint(engagePtr eng)
+{
 
     if (this->setup_features){
         this->p_engage = engagePtr(new EngagePoint(*eng.get()));
@@ -323,108 +290,81 @@ bool Object::setEngagePoint(engagePtr eng){
     }
 }
 
-/**
- * @brief Object::setTargetRightEnabled
- * @param c
- */
-void Object::setTargetRightEnabled(bool c){
+
+void Object::setTargetRightEnabled(bool c)
+{
 
     this->m_targetRightEnabled = c;
 }
-/**
- * @brief Object::setTargetLeftEnabled
- * @param c
- */
-void Object::setTargetLeftEnabled(bool c){
+
+void Object::setTargetLeftEnabled(bool c)
+{
 
     this->m_targetLeftEnabled = c;
 }
 
 
-// getters
-
-/**
- * @brief Object::getSize
- * @return
- */
-dim Object::getSize(){
+dim Object::getSize()
+{
 
     return this->m_size;
 }
-/**
- * @brief Object::getHandle
- * @return
- */
-int Object::getHandle(){
+
+int Object::getHandle()
+{
 
     return this->handle;
 }
 
-/**
- * @brief Object::getHandleBody
- * @return
- */
-int Object::getHandleBody(){
+
+int Object::getHandleBody()
+{
 
     return this->handle_body;
 }
 
-/**
- * @brief Object::getTargetRight
- * @return
- */
-targetPtr Object::getTargetRight(){
+
+targetPtr Object::getTargetRight()
+{
 
     return p_targetRight;
 }
-/**
- * @brief Object::getTargetLeft
- * @return
- */
-targetPtr Object::getTargetLeft(){
+
+targetPtr Object::getTargetLeft()
+{
 
     return p_targetLeft;
 }
-/**
- * @brief Object::getEngagePoint
- * @return
- */
-engagePtr Object::getEngagePoint(){
+
+engagePtr Object::getEngagePoint()
+{
 
    return p_engage;
 }
 
-/**
- * @brief Object::getRadius
- * @return
- */
-float Object::getRadius(){
+
+float Object::getRadius()
+{
 
     return (max(this->m_size.Xsize,this->m_size.Ysize)/2.0);
 }
-/**
- * @brief Object::isTargetRightEnabled
- * @return
- */
-bool Object::isTargetRightEnabled(){
+
+bool Object::isTargetRightEnabled()
+{
 
     return this->m_targetRightEnabled;
 }
-/**
- * @brief Object::isTargetLeftEnabled
- * @return
- */
-bool Object::isTargetLeftEnabled(){
+
+bool Object::isTargetLeftEnabled()
+{
 
     return this->m_targetLeftEnabled;
 }
 
 
-/**
- * @brief Object::getInfoLine
- * @return
- */
-string Object::getInfoLine(){
+
+string Object::getInfoLine()
+{
 
     return  this->m_name + COLUMN + SPACE +
             XposSTR + str(boost::format("%d") % this->m_pos.Xpos) + MILLIMETERS + SEP +
@@ -440,36 +380,31 @@ string Object::getInfoLine(){
 
 }
 
-/**
- * @brief Object::getTar_right_matrix
- * @param mat
- */
-void Object::getTar_right_matrix(Matrix4f& mat){
+
+void Object::getTar_right_matrix(Matrix4f& mat)
+{
     this->p_targetRight->Trans_matrix(mat);
 }
 
-/**
- * @brief Object::getTar_left_matrix
- * @param mat
- */
-void Object::getTar_left_matrix(Matrix4f &mat){
+
+void Object::getTar_left_matrix(Matrix4f &mat)
+{
 
     this->p_targetLeft->Trans_matrix(mat);
 
 }
 
-/**
- * @brief Object::getEngage_matrix
- * @param mat
- */
-void Object::getEngage_matrix(Matrix4f &mat){
+
+void Object::getEngage_matrix(Matrix4f &mat)
+{
 
     this->p_engage->Trans_matrix(mat);
 }
 
 
 
-void Object::getRPY(Matrix4f Trans, std::vector<float>& rpy){
+void Object::getRPY(Matrix4f Trans, std::vector<float>& rpy)
+{
 
     rpy = std::vector<float>(3);
 

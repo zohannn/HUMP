@@ -9,10 +9,13 @@
 
 namespace HUMotion{
 
-typedef boost::shared_ptr<Movement> movementPtr;
-typedef boost::shared_ptr<Scenario> scenarioPtr;
+typedef boost::shared_ptr<Movement> movementPtr; /**< shared pointer to a movement */
+typedef boost::shared_ptr<Scenario> scenarioPtr; /**< shared pointer to a scenario */
 
-
+//! The Problem class
+/**
+ * @brief The Problem class
+ */
 class Problem
 {
 public:
@@ -49,47 +52,47 @@ public:
 
 private:
 
-    bool solved; //true if the problem has been solved
-    /*
-     * Reach-to-grasp
-     * err_log = 0,   the problems have been successfully solved
-     * err_log = 10,  final posture reach-to-grasp not solved
-     * err_log = 20,  bounce posture reach-to-grasp not solved
-     *
-     * Engage
-     * err_log = 130, final posture engage sub-disengage not solved
-     * err_log = 13,  final posture engage not solved
-     * err_log = 131, final posture engage sub-engage not solved
-     * err_log = 23,  bounce posture engage not solved
-     *
-     * Go home
-     * err_log = 25, bounce posture go home not solved
-     *
-     * */
+    bool solved; /**< true if the problem has been solved */
+
+   /**
+     * @brief error log of the problem
+     * <table>
+     * <caption id="multi_row">Types of the errors</caption>
+     * <tr><th>Type      <th>Code <th>Description
+     * <tr><td>Any <td>0 <td>the problems have been successfully solved
+     * <tr><td rowspan="2">Reach-to-grasp <td>10 <td>final posture reach-to-grasp not solved
+     * <tr><td>20 <td>bounce posture reach-to-grasp not solved
+     * <tr><td rowspan="4">Engage <td>130 <td>final posture engage sub-disengage not solved
+     * <tr><td>13 <td>final posture engage not solved
+     * <tr><td>131 <td>final posture engage sub-engage not solved
+     * <tr><td>23 <td>bounce posture engage not solved
+     * <tr><td>Go home <td>25 <td> bounce posture go home not solved
+     * </table>
+     */
     int err_log;
-    bool part_of_task; // true if the problem is part of the task
-    float dHOr; // distance between the right hand and the center of the object
-    float dHOl; // distance between the left hand and the center of the object
-    float dFF; // distance between the fingertip F3 and the fingers F1 and F2
-    float dFH; // distance between the fingers and the palm of the hand
-    std::vector<float> rightFinalPosture; // right final total posture [rad]
-    std::vector<float> rightFinalHand; // right final hand posture [rad]
-    std::vector<float> leftFinalPosture; // left final total posture [rad]
-    std::vector<float> leftFinalHand; // left final hand posture [rad]
-    std::vector<float> rightBouncePosture; // right bounce posture [rad]
-    std::vector<float> leftBouncePosture; // left bounce posture [rad]
-    std::vector<float> rightFinalPosture_diseng;
-    std::vector<float> rightFinalPosture_eng;
-    std::vector<float> leftFinalPosture_diseng;
-    std::vector<float> leftFinalPosture_eng;
-    MatrixXf optimalTraj; // human-like optimized trajectory
-    Tols tolerances; // tolerances and parameters for the optimization problems
-    movementPtr mov;
-    scenarioPtr scene;
-    int targetAxis; // approaching target mode: 0 = none , 1 = x, 2 = y , 3 = z
-    objectPtr obj_curr; // current object
-    targetPtr tar_eng; // target of the engaged object
-    objectPtr obj_eng; // engaged object
+    bool part_of_task; /**< true if the problem is part of a task */
+    float dHOr; /**< distance between the right hand and the center of the object that is being manipulated */
+    float dHOl; /**< distance between the left hand and the center of the object that is being manipulated */
+    float dFF; /**< distance between the fingertip F3 and the fingertips F1 and F2 */
+    float dFH; /**< distance between the fingers and the palm of the hand */
+    std::vector<float> rightFinalPosture; /**< final posture of the right arm+hand */
+    std::vector<float> rightFinalHand; /**< final posture of the right hand */
+    std::vector<float> leftFinalPosture; /**< final posture of the left arm+hand */
+    std::vector<float> leftFinalHand; /**< final posture of the left hand */
+    std::vector<float> rightBouncePosture; /**< bounce posture of the right arm+hand */
+    std::vector<float> leftBouncePosture; /**< bounce posture of the left arm+hand */
+    std::vector<float> rightFinalPosture_diseng; /**< final posture of the right arm+hand for disengaging movements*/
+    std::vector<float> rightFinalPosture_eng; /**< final posture of the right arm+hand for engaging movements*/
+    std::vector<float> leftFinalPosture_diseng; /**< final posture of the left arm+hand for disengaging movements*/
+    std::vector<float> leftFinalPosture_eng; /**< final posture of the left arm+hand for engaging movements*/
+    MatrixXf optimalTraj; /**< human-like optimized trajectory */
+    Tols tolerances; /**< tolerances and parameters of the optimization problem */
+    movementPtr mov; /**< movement to be planned */
+    scenarioPtr scene;/**< current scenario */
+    int targetAxis; /**< approaching direction towards the target: 0 = none , 1 = x axis , 2 = y axis, 3 = z axis*/
+    objectPtr obj_curr; /**< current object being manipulated */
+    //targetPtr tar_eng; /**< target of the engaged object */
+    objectPtr obj_eng; /**< engaged object */
 
     // hand
     bool finalPostureFingers(int hand_id);
