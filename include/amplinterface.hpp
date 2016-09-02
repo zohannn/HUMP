@@ -80,13 +80,13 @@ private:
   void operator=(const AmplSuffixHandler&);
   //@}
 
-  mutable ASL_pfgh* asl_;
+  mutable ASL_pfgh* asl_; /**< asl_ */
 
-  SufDecl* suftab_;
+  SufDecl* suftab_; /**< suftab_ */
 
-  std::vector<std::string> suffix_ids_;
-  std::vector<Suffix_Type> suffix_types_;
-  std::vector<Suffix_Source> suffix_sources_;
+  std::vector<std::string> suffix_ids_;/**< suffix_ids_ */
+  std::vector<Suffix_Type> suffix_types_;/**< suffix_types_ */
+  std::vector<Suffix_Source> suffix_sources_;/**< suffix_sources_ */
 
   /** Method called by AmplInterface to prepare the asl for the suffixes */
   void PrepareAmplForSuffixes(ASL_pfgh* asl);
@@ -162,9 +162,9 @@ class AmplOption : public ReferencedObject
     void operator=(const AmplOption&);
     //@}
 
-    const std::string ipopt_option_name_;
-    const AmplOptionType type_;
-    char* description_;
+    const std::string ipopt_option_name_; /**< ipopt_option_name_ */
+    const AmplOptionType type_;/**< type_ */
+    char* description_;/**< description_ */
   }; // class AmplOption
 
     /** Class PrivatInfo*/
@@ -205,10 +205,10 @@ class AmplOption : public ReferencedObject
       return nerror_;
     }
   private:
-    const std::string ipopt_name_;
-    const SmartPtr<OptionsList> options_;
-    const SmartPtr<const Journalist> jnlst_;
-    void** nerror_;
+    const std::string ipopt_name_;/**< ipopt_name_ */
+    const SmartPtr<OptionsList> options_;/**< options_ */
+    const SmartPtr<const Journalist> jnlst_;/**< jnlst_ */
+    void** nerror_;/**< nerror_ */
 
   }; // class PrivatInfo
 
@@ -264,8 +264,17 @@ private:
   void operator=(const AmplOptionsList&);
   //@}
 
+  /**
+   * @brief MakeValidLatexString
+   * @param source
+   * @param dest
+   */
   void MakeValidLatexString(std::string source, std::string& dest) const;
 
+  /**
+   * @brief PrintLatex
+   * @param jnlst
+   */
   void PrintLatex(SmartPtr<const Journalist> jnlst);
 
   /** map for storing registered AMPL options */
@@ -533,9 +542,8 @@ private:
   //@}
   /** Status returned by the solver */
   SolverReturn status_;
-  /** Number of the variables and of the constraints*/
-  Index num_vars;
-  Index num_cons;
+  Index num_vars; /**< Number of the variables */
+  Index num_cons; /**< Number of the constraints*/
 
   /**@name Flags to track internal state */
   //@{
@@ -591,12 +599,12 @@ private:
   void call_hesset();
 
   /** meta data to pass on to TNLP */
-  StringMetaDataMapType var_string_md_;
-  IntegerMetaDataMapType var_integer_md_;
-  NumericMetaDataMapType var_numeric_md_;
-  StringMetaDataMapType con_string_md_;
-  IntegerMetaDataMapType con_integer_md_;
-  NumericMetaDataMapType con_numeric_md_;
+  StringMetaDataMapType var_string_md_; /**<  variable string metadata */
+  IntegerMetaDataMapType var_integer_md_; /**< variable integer metadata */
+  NumericMetaDataMapType var_numeric_md_; /**< variable numeric metadata */
+  StringMetaDataMapType con_string_md_; /**< constraint string metadata */
+  IntegerMetaDataMapType con_integer_md_; /**< constraint integer metadata*/
+  NumericMetaDataMapType con_numeric_md_; /**< constraint numeric metadata */
 
 
 }; // class AmplInterface

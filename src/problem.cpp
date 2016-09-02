@@ -6,10 +6,7 @@ using namespace Ipopt;
 namespace HUMotion {
 
 
-// constructors
-/**
- * @brief Problem::Problem
- */
+
 Problem::Problem():
     mov(nullptr),scene(nullptr)
 {
@@ -32,11 +29,7 @@ Problem::Problem():
 
 
 }
-/**
- * @brief Problem::Problem
- * @param mov
- * @param scene
- */
+
 Problem::Problem(Movement* mov, Scenario* scene)
 {
 
@@ -59,12 +52,9 @@ Problem::Problem(Movement* mov, Scenario* scene)
     this->scene = scenarioPtr(scene);
 }
 
-//copy constructor
-/**
- * @brief Problem::Problem
- * @param s
- */
-Problem::Problem(const Problem& s){
+
+Problem::Problem(const Problem& s)
+{
 
 
     this->dFF = s.dFF;
@@ -91,55 +81,39 @@ Problem::Problem(const Problem& s){
     this->scene = scenarioPtr(new Scenario(*s.scene.get()));
 }
 
-//destructor
-/**
- * @brief Problem::~Problem
- */
-Problem::~Problem(){
+
+Problem::~Problem()
+{
 
 }
 
-//getters
-/**
- * @brief Problem::getErrLog
- * @return
- */
-int Problem::getErrLog(){
-
+int Problem::getErrLog()
+{
     return this->err_log;
 }
 
 
-
-/**
- * @brief Problem::getSolved
- * @return
- */
-bool Problem::getSolved(){
+bool Problem::getSolved()
+{
 
     return this->solved;
 }
 
-bool Problem::getPartOfTask(){
+bool Problem::getPartOfTask()
+{
 
     return this->part_of_task;
 }
 
-/**
- * @brief Problem::getInfoLine
- * @return
- */
-string Problem::getInfoLine(){
+string Problem::getInfoLine()
+{
 
     return string("Humanoid: ")+this->scene->getHumanoid()->getName()+string(",Movement: ")+this->mov->getInfoLine();
 }
 
-/**
- * @brief Problem::getFinalPosture
- * @param arm_code
- * @param final_posture
- */
-void Problem::getFinalPosture(int arm_code, std::vector<float> &final_posture){
+
+void Problem::getFinalPosture(int arm_code, std::vector<float> &final_posture)
+{
 
 #ifdef DEBUG
     ASSERT(arm_code < 3 && arm_code >=0);
@@ -167,12 +141,9 @@ void Problem::getFinalPosture(int arm_code, std::vector<float> &final_posture){
     }
 }
 
-/**
- * @brief Problem::getBouncePosture
- * @param arm_code
- * @param bounce_posture
- */
-void Problem::getBouncePosture(int arm_code, std::vector<float> &bounce_posture){
+
+void Problem::getBouncePosture(int arm_code, std::vector<float> &bounce_posture)
+{
 
     switch (arm_code) {
 
@@ -195,39 +166,28 @@ void Problem::getBouncePosture(int arm_code, std::vector<float> &bounce_posture)
         break;
     }
 }
-/**
- * @brief Problem::getObjectEngaged
- * @return
- */
-objectPtr Problem::getObjectEngaged(){
+
+objectPtr Problem::getObjectEngaged()
+{
 
     return this->obj_eng;
 }
 
-//setters
-/**
- * @brief Problem::setSolved
- * @param s
- */
-void Problem::setSolved(bool s){
+void Problem::setSolved(bool s)
+{
 
     this->solved=s;
 }
-/**
- * @brief Problem::setPartOfTask
- * @param p
- */
-void Problem::setPartOfTask(bool p){
+
+void Problem::setPartOfTask(bool p)
+{
 
     this->part_of_task=p;
 }
 
-/**
- * @brief Problem::solve
- * @param probTols
- * @return
- */
-bool Problem::solve(Tols probTols){
+
+bool Problem::solve(Tols probTols)
+{
 
     this->tolerances = probTols;
     int arm_code =  this->mov->getArm();
@@ -393,11 +353,8 @@ bool Problem::solve(Tols probTols){
 
 }
 
-/**
- * @brief Problem::singleArmBouncePostureGoHome
- * @return
- */
-bool Problem::singleArmBouncePostureGoHome(){
+bool Problem::singleArmBouncePostureGoHome()
+{
 
     bool release_object;
 
@@ -678,11 +635,9 @@ bool Problem::singleArmBouncePostureGoHome(){
 
 }
 
-/**
- * @brief Problem::singleArmFinalPostureSubDisengage
- * @return
- */
-bool Problem::singleArmFinalPostureSubDisengage(){
+
+bool Problem::singleArmFinalPostureSubDisengage()
+{
 
     int mov_type = this->mov->getType();
     int arm_code = this->mov->getArm();
@@ -976,10 +931,8 @@ bool Problem::singleArmFinalPostureSubDisengage(){
 }
 
 
-/**
- * @brief Problem::singleArmFinalPostureSubEngage
- */
-bool Problem::singleArmFinalPostureSubEngage(){
+bool Problem::singleArmFinalPostureSubEngage()
+{
 
     int mov_type = this->mov->getType();
     int arm_code = this->mov->getArm();
@@ -1274,11 +1227,8 @@ bool Problem::singleArmFinalPostureSubEngage(){
 
 }
 
-/**
- * @brief Problem::singleArmFinalPostureReachToGrasp
- * @return
- */
-bool Problem::singleArmFinalPostureReachToGrasp(){
+bool Problem::singleArmFinalPostureReachToGrasp()
+{
 
 
     int mov_type = this->mov->getType();
@@ -1454,11 +1404,8 @@ bool Problem::singleArmFinalPostureReachToGrasp(){
 
 }
 
-/**
- * @brief Problem::singleArmBouncePostureReachToGrasp
- * @return
- */
-bool Problem::singleArmBouncePostureReachToGrasp(){
+bool Problem::singleArmBouncePostureReachToGrasp()
+{
 
 
     int arm_code = this->mov->getArm();
@@ -1712,11 +1659,8 @@ bool Problem::singleArmBouncePostureReachToGrasp(){
 
 }
 
-/**
- * @brief Problem::singleArmFinalPostureEngage
- * @return
- */
-bool Problem::singleArmFinalPostureEngage(){
+bool Problem::singleArmFinalPostureEngage()
+{
 
     int mov_type = this->mov->getType();
     int arm_code = this->mov->getArm();
@@ -2020,11 +1964,9 @@ bool Problem::singleArmFinalPostureEngage(){
 
 
 }
-/**
- * @brief Problem::singleArmBouncePostureEngage
- * @return
- */
-bool Problem::singleArmBouncePostureEngage(){
+
+bool Problem::singleArmBouncePostureEngage()
+{
 
     int arm_code = this->mov->getArm();
     int griptype = this->mov->getGrip();
@@ -2231,34 +2173,6 @@ bool Problem::singleArmBouncePostureEngage(){
 }
 
 
-/**
- * @brief Problem::writeFilesBouncePosture
- * @param mov_type
- * @param hh
- * @param dHO
- * @param griptype
- * @param steps
- * @param totalTime
- * @param minAuxLimits
- * @param maxAuxLimits
- * @param initAuxPosture
- * @param finalAuxPosture
- * @param finalHand
- * @param initialGuess
- * @param objs
- * @param tar
- * @param obj
- * @param b
- * @param tolsArm
- * @param tolsHand
- * @param tolsTarget
- * @param tolsObstacles
- * @param lambda
- * @param target_avoidance
- * @param obstacle_avoidance
- * @param arm_code
- * @return
- */
 bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, int griptype, int steps, float totalTime,
                                       std::vector<float> minAuxLimits, std::vector<float> maxAuxLimits,
                                       std::vector<float> initAuxPosture, std::vector<float> finalAuxPosture, std::vector<float> finalHand,
@@ -3285,34 +3199,13 @@ if(obstacle_avoidance){
 
 }
 
-/**
- * @brief Problem::writeFilesFinalPosture
- * @param mov_type
- * @param hh
- * @param dHO
- * @param griptype
- * @param initArmPosture
- * @param finalHand
- * @param initialGuess
- * @param objs
- * @param tar
- * @param obj
- * @param tolsArm
- * @param tolsHand
- * @param tolsObstacles
- * @param tolTarPos
- * @param tolTarOr
- * @param lambda
- * @param obstacle_avoidance
- * @param arm_code
- * @return
- */
 bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, int griptype,
                                      std::vector<float> initArmPosture, std::vector<float> finalHand,
                                      std::vector<float> initialGuess, std::vector<objectPtr> objs,
                                      targetPtr tar, objectPtr obj,
                                      std::vector<float> tolsArm, MatrixXf tolsHand, MatrixXf tolsObstacles,
-                                     float tolTarPos, float tolTarOr, std::vector<float> lambda, bool obstacle_avoidance,int arm_code){
+                                     float tolTarPos, float tolTarOr, std::vector<float> lambda, bool obstacle_avoidance,int arm_code)
+{
 
 
     //  --- create the "Models" directory if it does not exist ---
@@ -3776,12 +3669,8 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
 }
 
 
-/**
- * @brief Problem::finalPostureFingers
- * @param hand_id
- * @return
- */
-bool Problem::finalPostureFingers(int hand_id){
+bool Problem::finalPostureFingers(int hand_id)
+{
 
     bool success=false;
     humanoidPtr hh = this->scene->getHumanoid();
@@ -3858,7 +3747,6 @@ bool Problem::finalPostureFingers(int hand_id){
                     string(". The object is too large");
 
         }
-
 #elif HAND==1
 
         if (d_obj > hh->getBarrettHand().maxAperture){
@@ -4127,14 +4015,9 @@ bool Problem::finalPostureFingers(int hand_id){
 
 }
 
-/**
- * @brief Problem::invKinHand
- * @param d_obj
- * @param hand_id
- * @param sols
- * @return
- */
-bool Problem::invKinHand(float d_obj,int hand_id,std::vector<float>& sols){
+
+bool Problem::invKinHand(float d_obj,int hand_id,std::vector<float>& sols)
+{
 
     humanoidPtr hh = this->scene->getHumanoid();
 
@@ -4353,14 +4236,8 @@ bool Problem::invKinHand(float d_obj,int hand_id,std::vector<float>& sols){
 
 }
 
-/**
- * @brief Problem::amplRead
- * @param datFile
- * @param modFile
- * @param nlFile
- * @return
- */
-bool Problem::amplRead(string &datFile, string &modFile, string &nlFile){
+bool Problem::amplRead(string &datFile, string &modFile, string &nlFile)
+{
 
     string cmdLine;
 
@@ -4377,16 +4254,9 @@ bool Problem::amplRead(string &datFile, string &modFile, string &nlFile){
 
 }
 
-/**
- * @brief Problem::optimize
- * @param nlfile
- * @param x
- * @param tol
- * @param acc_tol
- * @return
- */
 bool Problem::optimize(string &nlfile, std::vector<Number>& x,
-                       float tol, float acc_tol){
+                       float tol, float acc_tol)
+{
 
     // Create a new instance of IpoptApplication
     //  (use a SmartPtr, not raw)
@@ -4463,14 +4333,6 @@ bool Problem::optimize(string &nlfile, std::vector<Number>& x,
 }
 
 
-/**
- * @brief Problem::directMovement
- * @param initPosture
- * @param finalPosture
- * @param steps
- * @param Traj
- * @return
- */
 void Problem::directMovement(std::vector<float> initPosture,
                              std::vector<float> finalPosture,
                              int steps,
@@ -4507,13 +4369,7 @@ for (int i = 0; i <= steps;++i){
 
 
 }
-/**
- * @brief Problem::backForthMovement
- * @param initPosture
- * @param bouncePosture
- * @param steps
- * @param Traj
- */
+
 void Problem::backForthMovement(std::vector<float> initPosture,
                                 std::vector<float> bouncePosture,
                                 int steps,
@@ -4539,12 +4395,9 @@ void Problem::backForthMovement(std::vector<float> initPosture,
 
 }
 
-/**
- * @brief Problem::computeTraj
- * @param dTraj
- * @param bTraj
- */
-void Problem::computeTraj(const MatrixXf& dTraj, const MatrixXf& bTraj){
+
+void Problem::computeTraj(const MatrixXf& dTraj, const MatrixXf& bTraj)
+{
 
 
     this->optimalTraj = MatrixXf::Constant(dTraj.rows(),dTraj.cols(),0);
@@ -4560,12 +4413,9 @@ void Problem::computeTraj(const MatrixXf& dTraj, const MatrixXf& bTraj){
 
 
 }
-/**
- * @brief Problem::getTrajectory
- * @param traj
- * @return
- */
-float Problem::getTrajectory(MatrixXf& traj){
+
+float Problem::getTrajectory(MatrixXf& traj)
+{
 
     int mov_type = this->getMovement()->getType();
 
@@ -4728,12 +4578,9 @@ float Problem::getTrajectory(MatrixXf& traj){
 
 }
 
-/**
- * @brief Problem::getVelocity
- * @param vel
- * @return
- */
-float Problem::getVelocity(MatrixXf &vel){
+
+float Problem::getVelocity(MatrixXf &vel)
+{
 
     MatrixXf traj;
     this->getTrajectory(traj);
@@ -4757,20 +4604,15 @@ float Problem::getVelocity(MatrixXf &vel){
     return timeStep;
 
 }
-/**
- * @brief Problem::getMovement
- * @return
- */
-movementPtr Problem::getMovement(){
+
+movementPtr Problem::getMovement()
+{
 
     return this->mov;
 }
-/**
- * @brief Problem::getDelta
- * @param jointTraj
- * @param delta
- */
-void Problem::getDelta(VectorXf  jointTraj, std::vector<float> &delta){
+
+void Problem::getDelta(VectorXf  jointTraj, std::vector<float> &delta)
+{
 
 
     // Formula of the numarical differentiation with 5 points
@@ -4844,11 +4686,9 @@ void Problem::getDelta(VectorXf  jointTraj, std::vector<float> &delta){
 }
 
 
-/**
- * @brief Problem::getTimeStep
- * @param jointTraj
- */
-void Problem::getTimeStep(MatrixXf jointTraj, float& timeStep){
+
+void Problem::getTimeStep(MatrixXf jointTraj, float& timeStep)
+{
 
 int steps1 = jointTraj.rows();
 int n_joints = jointTraj.cols();
@@ -4890,24 +4730,18 @@ float totalTime = num/den;
 timeStep = (totalTime/(steps1-1));
 
 }
-/**
- * @brief Problem::setApproachingTargetAxis
- * @param a
- */
-void Problem::setApproachingTargetAxis(int a){
+
+void Problem::setApproachingTargetAxis(int a)
+{
 
     this->targetAxis = a;
 
 }
 
-// writing methods
 
-/**
- * @brief Problem::write_dHO
- * @param stream
- * @param dHO
- */
-void Problem::write_dHO(std::ofstream& stream, float dHO){
+
+void Problem::write_dHO(std::ofstream& stream, float dHO)
+{
 
     string dHOstr=  boost::str(boost::format("%.2f") % (dHO));
     boost::replace_all(dHOstr,",",".");
@@ -4915,12 +4749,9 @@ void Problem::write_dHO(std::ofstream& stream, float dHO){
     stream << string("param dFH := ")+dHOstr+string(";\n");
 }
 
-/**
- * @brief Problem::writeBodyDim
- * @param hh
- * @param stream
- */
-void Problem::writeBodyDim(humanoidPtr hh, ofstream &stream){
+
+void Problem::writeBodyDim(humanoidPtr hh, ofstream &stream)
+{
 
     string bodyxsize=  boost::str(boost::format("%.2f") % (hh->getSize().Xsize/2));
     boost::replace_all(bodyxsize,",",".");
@@ -4933,13 +4764,9 @@ void Problem::writeBodyDim(humanoidPtr hh, ofstream &stream){
     stream << to_string(2)+string(" ")+bodyysize+string(";\n");
 }
 
-/**
- * @brief Problem::writeArmDHParams
- * @param hh
- * @param stream
- * @param k
- */
-void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k){
+
+void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k)
+{
 
     // D-H Parameters of the Arm
     stream << string("# D-H PARAMETERS OF THE ARM \n");
@@ -4981,13 +4808,9 @@ void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k){
 
 #if HAND==0
 
-/**
- * @brief Problem::writeHumanHandParams
- * @param hh
- * @param stream
- * @param k
- */
-void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
+
+void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k)
+{
 
     stream << string("# PARAMETERS OF THE HAND \n");
 
@@ -5158,11 +4981,9 @@ void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k){
     stream << theta0_thumb_str+string(";\n");
 }
 
-/**
- * @brief Problem::writeHumanHandParamsMod
- * @param stream
- */
-void Problem::writeHumanHandParamsMod(ofstream &stream){
+
+void Problem::writeHumanHandParamsMod(ofstream &stream)
+{
     stream << string("# Parameters of the Hand \n");
 
     stream << string("# Index finger \n");
@@ -5194,14 +5015,9 @@ void Problem::writeHumanHandParamsMod(ofstream &stream){
 
 }
 
-/**
- * @brief Problem::writeHumanHandDirKin
- * @param stream
- * @param tolsHand
- * @param final
- * @param transport
- */
-void Problem::writeHumanHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool final, bool transport){
+
+void Problem::writeHumanHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool final, bool transport)
+{
 
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("#  Direct Kinematics model of the fingers \n\n");
@@ -5805,12 +5621,8 @@ void Problem::writeHumanHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool fi
 
 #elif HAND==1
 
-/**
- * @brief Problem::writeBarrettHandParams
- * @param hh
- * @param stream
- */
-void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream){
+void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream)
+{
 
     std::vector<float> rk;
     std::vector<float> jk;
@@ -5875,11 +5687,9 @@ void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream){
 
 }
 
-/**
- * @brief Problem::writeBarrettHandParamsMod
- * @param stream
- */
-void Problem::writeBarrettHandParamsMod(std::ofstream& stream){
+
+void Problem::writeBarrettHandParamsMod(std::ofstream& stream)
+{
 
     stream << string("param rk {i in 1..3} ; \n");
     stream << string("param jk {i in 1..3} ; \n");
@@ -5893,16 +5703,9 @@ void Problem::writeBarrettHandParamsMod(std::ofstream& stream){
 }
 
 
-/**
- * @brief Problem::writeBarrettHandDirKin
- * @param stream
- * @param rk
- * @param jk
- * @param tolsHand
- * @param final
- * @param transport
- */
-void Problem::writeBarrettHandDirKin(ofstream &stream, std::vector<int> &rk, std::vector<int> &jk, MatrixXf &tolsHand, bool final, bool transport){
+
+void Problem::writeBarrettHandDirKin(ofstream &stream, std::vector<int> &rk, std::vector<int> &jk, MatrixXf &tolsHand, bool final, bool transport)
+{
 
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("#  Direct Kinematics model of the fingers \n\n");
@@ -6139,13 +5942,9 @@ void Problem::writeBarrettHandDirKin(ofstream &stream, std::vector<int> &rk, std
 
 #endif
 
-/**
- * @brief Problem::writeArmLimits
- * @param stream
- * @param minArmLimits
- * @param maxArmLimits
- */
-void Problem::writeArmLimits(ofstream &stream, std::vector<float> &minArmLimits, std::vector<float> &maxArmLimits){
+
+void Problem::writeArmLimits(ofstream &stream, std::vector<float> &minArmLimits, std::vector<float> &maxArmLimits)
+{
 
     stream << string("# JOINT LIMITS \n");
     stream << string("# Lower Bound \n");
@@ -6177,12 +5976,9 @@ void Problem::writeArmLimits(ofstream &stream, std::vector<float> &minArmLimits,
 
 }
 
-/**
- * @brief Problem::writeArmInitPose
- * @param stream
- * @param initArmPosture
- */
-void Problem::writeArmInitPose(ofstream &stream, std::vector<float> &initArmPosture){
+
+void Problem::writeArmInitPose(ofstream &stream, std::vector<float> &initArmPosture)
+{
 
     stream << string("# INITIAL POSE \n");
     stream << string("param thet_init := \n");
@@ -6199,12 +5995,9 @@ void Problem::writeArmInitPose(ofstream &stream, std::vector<float> &initArmPost
 
 }
 
-/**
- * @brief Problem::writeFingerFinalPose
- * @param stream
- * @param finalHand
- */
-void Problem::writeFingerFinalPose(ofstream &stream, std::vector<float> &finalHand){
+
+void Problem::writeFingerFinalPose(ofstream &stream, std::vector<float> &finalHand)
+{
 
     stream << string("# FINAL FINGER JOINTS \n");
     stream << string("param joint_fingers := \n");
@@ -6221,12 +6014,9 @@ void Problem::writeFingerFinalPose(ofstream &stream, std::vector<float> &finalHa
 
 }
 
-/**
- * @brief Problem::writeLambda
- * @param stream
- * @param lambda
- */
-void Problem::writeLambda(ofstream &stream, std::vector<float> &lambda){
+
+void Problem::writeLambda(ofstream &stream, std::vector<float> &lambda)
+{
 
     stream << string("# JOINT EXPENSE FACTORS \n");
     stream << string("param lambda := \n");
@@ -6242,12 +6032,8 @@ void Problem::writeLambda(ofstream &stream, std::vector<float> &lambda){
     }
 }
 
-/**
- * @brief Problem::writeInfoObjects
- * @param stream
- * @param objs
- */
-void Problem::writeInfoObjects(ofstream &stream, std::vector<objectPtr> &objs){
+void Problem::writeInfoObjects(ofstream &stream, std::vector<objectPtr> &objs)
+{
 
     /*
     // table
@@ -6341,12 +6127,9 @@ void Problem::writeInfoObjects(ofstream &stream, std::vector<objectPtr> &objs){
 
 }
 
-/**
- * @brief Problem::writeInfoTarget
- * @param stream
- * @param tar
- */
-void Problem::writeInfoTarget(ofstream &stream, targetPtr tar){
+
+void Problem::writeInfoTarget(ofstream &stream, targetPtr tar)
+{
 
     stream << string("# TARGET POSITION \n");
     stream << string("param Tar_pos := \n");
@@ -6412,12 +6195,9 @@ void Problem::writeInfoTarget(ofstream &stream, targetPtr tar){
 
 }
 
-/**
- * @brief Problem::writeInfoObjectTarget
- * @param stream
- * @param obj
- */
-void Problem::writeInfoObjectTarget(ofstream &stream, objectPtr obj){
+
+void Problem::writeInfoObjectTarget(ofstream &stream, objectPtr obj)
+{
 
     stream << string("# OBJECT OF THE TARGET POSITION+RADIUS+ORIENTATION \n");
     stream << string("param ObjTar : 1 2 3 4 5 6 7 8 9 := \n");
@@ -6459,30 +6239,23 @@ void Problem::writeInfoObjectTarget(ofstream &stream, objectPtr obj){
 
 }
 
-// model file
 
-/**
- * @brief Problem::writePI
- * @param stream
- */
-void Problem::writePI(std::ofstream& stream){
+
+void Problem::writePI(std::ofstream& stream)
+{
     stream << string("param pi := 4*atan(1); \n");
 }
 
-/**
- * @brief Problem::writeBodyDimMod
- * @param stream
- */
-void Problem::writeBodyDimMod(ofstream &stream){
+
+void Problem::writeBodyDimMod(ofstream &stream)
+{
     stream << string("# Body info \n");
     stream << string("param body {i in 1..2}; \n");
 }
 
-/**
- * @brief Problem::writeArmDHParamsMod
- * @param stream
- */
-void Problem::writeArmDHParamsMod(ofstream &stream){
+
+void Problem::writeArmDHParamsMod(ofstream &stream)
+{
     stream << string("# D-H parameters of the arm \n");
     stream << string("param alpha {i in 1..")+to_string(JOINTS_ARM)+string("} ; \n");
     stream << string("param a {i in 1..")+to_string(JOINTS_ARM)+string("} ; \n");
@@ -6490,21 +6263,17 @@ void Problem::writeArmDHParamsMod(ofstream &stream){
 
 }
 
-/**
- * @brief Problem::write_dHOMod
- * @param stream
- */
-void Problem::write_dHOMod(ofstream &stream){
+
+void Problem::write_dHOMod(ofstream &stream)
+{
     stream << string("# Distance hand - target  \n");
     stream << string("param dFH; \n");
 }
 
 
-/**
- * @brief Problem::writeInfoObjectsMod
- * @param stream
- */
-void Problem::writeInfoObjectsMod(ofstream &stream){
+
+void Problem::writeInfoObjectsMod(ofstream &stream)
+{
 
     //stream << string("# Table \n");
     //stream << string("param Table {i in 1..2} ; # x-->Table[1], z-->Table[2]\n");
@@ -6525,11 +6294,9 @@ void Problem::writeInfoObjectsMod(ofstream &stream){
     stream << string("param ObjTar {i in 1..n_ObjTar, j in 1..9}; \n");
 }
 
-/**
- * @brief Problem::writeRotMatObsts
- * @param stream
- */
-void Problem::writeRotMatObsts(ofstream &stream){
+
+void Problem::writeRotMatObsts(ofstream &stream)
+{
 
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("# Rotation matrix of the obstacles \n");
@@ -6558,15 +6325,9 @@ void Problem::writeRotMatObsts(ofstream &stream){
 }
 
 
-/**
- * @brief Problem::writeArmDirKin
- * @param stream
- * @param matWorldToArm
- * @param matHand
- * @param tolsArm
- * @param final
- */
-void Problem::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matrix4f &matHand, std::vector<float>& tolsArm, bool final){
+
+void Problem::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matrix4f &matHand, std::vector<float>& tolsArm, bool final)
+{
 
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("#  Direct Kinematics model of the arm \n\n");
@@ -6789,12 +6550,9 @@ void Problem::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matrix4f
 }
 
 
-/**
- * @brief Problem::writeObjective
- * @param stream
- * @param final
- */
-void Problem::writeObjective(ofstream &stream, bool final){
+
+void Problem::writeObjective(ofstream &stream, bool final)
+{
 
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("#  \n");
@@ -6809,12 +6567,9 @@ void Problem::writeObjective(ofstream &stream, bool final){
 
 }
 
-/**
- * @brief Problem::writeBodyConstraints
- * @param stream
- * @param final
- */
-void Problem::writeBodyConstraints(ofstream &stream, bool final){
+
+void Problem::writeBodyConstraints(ofstream &stream, bool final)
+{
 
     stream << string("# Constraints with the body: the body is modeled as a cylinder \n");
     if (final){
@@ -6832,15 +6587,9 @@ void Problem::writeBodyConstraints(ofstream &stream, bool final){
 }
 
 
-/**
- * @brief Problem::writeTableConstraints
- * @param stream
- * @param final
- * @param griptype
- * @param tols_table
- * @param steps
- */
-void Problem::writeTableConstraints(ofstream &stream, bool final, int griptype, std::vector<float> &tols_table,int steps){
+
+void Problem::writeTableConstraints(ofstream &stream, bool final, int griptype, std::vector<float> &tols_table,int steps)
+{
 
     stream << string("# Constraints with the Table \n");
 
@@ -6873,14 +6622,9 @@ void Problem::writeTableConstraints(ofstream &stream, bool final, int griptype, 
 
 }
 
-/**
- * @brief Problem::getObstaclesSingleArm
- * @param objs
- * @param center
- * @param radius
- * @param obsts
- */
-void Problem::getObstaclesSingleArm(std::vector<objectPtr> objs, std::vector<float> center, float radius, std::vector<objectPtr> & obsts){
+
+void Problem::getObstaclesSingleArm(std::vector<objectPtr> objs, std::vector<float> center, float radius, std::vector<objectPtr> & obsts)
+{
 
 
         // position of the shoulder = center of the workspace

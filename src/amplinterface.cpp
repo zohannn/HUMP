@@ -677,7 +677,6 @@
    * @param x
    * @param z_L
    * @param z_U
-   * @param g
    * @param lambda
    * @param obj
    */

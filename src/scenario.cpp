@@ -92,7 +92,7 @@ objectPtr Scenario::getObject(int pos)
 
 }
 
-objectPtr Scenario::getObject(string obj_name)
+objectPtr Scenario::getObject(std::string obj_name)
 {
 
     objectPtr obj = NULL;
