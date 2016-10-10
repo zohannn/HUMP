@@ -51,7 +51,7 @@ endif()
 set (HAND 0)
 
 ## AMPL software
-# AMPL=0 use wine to run ampl.exe
+# AMPL=0 use wine to run ampl for windows
 # AMPL=1 use ampl for linux
 set (AMPL 0)
 set (AMPL_PATH /home/gianpaolo/AMPL)
