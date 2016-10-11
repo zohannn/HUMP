@@ -77,6 +77,11 @@ using namespace Eigen;
     const float THETA8_HOME = 0.0; /**< constant of the joint 8 (spread of the hand) in [rad] */
     const float THETA8_FINAL = 0.0; /**< constant of the joint 8 (spread of the hand) in [rad] */
     const float TOL_GRIP = 0.0; /**< tolerance on the grip in [mm] */
+    const int firstPartTorqueOvershootCountRequired = 1;/**< number of time that the torque applied to the first phalanx is bigger than firstPartMaxTorque */
+    const float firstPartMaxTorque = 0.9f;/**< max torque that can be applied to the first phalanx of the fingers */
+    const float closingOpeningTorque = 1.0f;/**< torque applied to the fingers when they are opening/closing */
+    const float closingVel = 60.0f * static_cast<float>(M_PI) / 180.0f; /**< joint velocity of the fingers when they are closing */
+    const float openingVel = -120.0f * static_cast<float>(M_PI) / 180.0f;/**< joint velocity of the fingers when they are opening */
 #endif
 
 const int HAND_FINGERS = 3; /**< number of fingers per hand */

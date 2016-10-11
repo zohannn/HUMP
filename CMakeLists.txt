@@ -48,7 +48,7 @@ endif()
 ## Hand configuration
 # HAND=0. Human hand
 # HAND=1, Barrett hand
-set (HAND 0)
+set (HAND 1)
 
 ## AMPL software
 # AMPL=0 use wine to run ampl for windows

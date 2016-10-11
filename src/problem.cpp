@@ -5633,7 +5633,7 @@ void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream)
     stream << string("# R and J parameters \n");
     stream << string("param rk := \n");
 
-    for (int i=0; i < rk.size(); ++i){
+    for (size_t i=0; i < rk.size(); ++i){
         string rkstr =  boost::str(boost::format("%.2f") % (rk.at(i)));
         boost::replace_all(rkstr,",",".");
         if (i == rk.size()-1){
@@ -5645,7 +5645,7 @@ void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream)
 
     stream << string("param jk := \n");
 
-    for (int i=0; i < jk.size(); ++i){
+    for (size_t i=0; i < jk.size(); ++i){
         string jkstr =  boost::str(boost::format("%.2f") % (jk.at(i)));
         boost::replace_all(jkstr,",",".");
         if (i == jk.size()-1){
