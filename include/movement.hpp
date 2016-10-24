@@ -22,7 +22,7 @@ public:
      * @param type
      * @param arm
      */
-    explicit Movement(int type, int arm);
+    Movement(int type, int arm);
 
     /**
      * @brief Movement, a constructor
@@ -182,7 +182,7 @@ private:
      * <tr><td>Transport <td>2
      * <tr><td>Engage <td>3
      * <tr><td>Disengage <td>4
-     * <tr><td>Go home <td>5
+     * <tr><td>Go park <td>5
      * </table>
      */
     int type;
@@ -217,7 +217,7 @@ private:
     // ||Transport      |   2  ||
     // ||Engage         |   3  ||
     // ||Disengage      |   4  ||
-    // ||Go home        |   5  ||
+    // ||Go park        |   5  ||
     // ||||||||||||||||||||||||||
 
     // Types of Grip and related code

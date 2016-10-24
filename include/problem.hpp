@@ -1,5 +1,5 @@
-#ifndef SOLUTION_H
-#define SOLUTION_H
+#ifndef PROBLEM_H
+#define PROBLEM_H
 
 
 #include "movement.hpp"
@@ -45,7 +45,7 @@ public:
 
 
     /**
-     * @brief This method sets the axis of the target that during the muvement has to be approached
+     * @brief This method sets the axis of the target that during the movement has to be approached
      * @param a
      */
     void setApproachingTargetAxis(int a);
@@ -150,7 +150,7 @@ private:
      * <tr><td>13 <td>final posture engage not solved
      * <tr><td>131 <td>final posture engage sub-engage not solved
      * <tr><td>23 <td>bounce posture engage not solved
-     * <tr><td>Go home <td>25 <td> bounce posture go home not solved
+     * <tr><td>Go Park <td>25 <td> bounce posture Go Park not solved
      * </table>
      */
     int err_log;
@@ -234,10 +234,10 @@ private:
     bool singleArmBouncePostureEngage();
 
     /**
-     * @brief This method solves the bounce posture selection problem of single arm go-home movements
+     * @brief This method solves the bounce posture selection problem of single arm go-park movements
      * @return
      */
-    bool singleArmBouncePostureGoHome();
+    bool singleArmBouncePostureGoPark();
 
     /**
      * @brief This method gets the obstacles in the workspace of a single arm
@@ -579,4 +579,4 @@ private:
 } // namespace HUMotion
 
 
-#endif // SOLUTION_H
+#endif // PROBLEM_H

@@ -108,7 +108,7 @@ bool Problem::getPartOfTask()
 string Problem::getInfoLine()
 {
 
-    return string("Humanoid: ")+this->scene->getHumanoid()->getName()+string(",Movement: ")+this->mov->getInfoLine();
+    return string("Planner: HUML, ")+string("Humanoid: ")+this->scene->getHumanoid()->getName()+string(",Movement: ")+this->mov->getInfoLine();
 }
 
 
@@ -308,7 +308,7 @@ bool Problem::solve(Tols probTols)
 
             break;
 
-        case 5:// Go home
+        case 5:// Go park
 
 
         try{
@@ -321,7 +321,7 @@ bool Problem::solve(Tols probTols)
             break;
         case 1: case 2: // right arm (1) , left arm (2)
 
-            this->solved = this->singleArmBouncePostureGoHome();
+            this->solved = this->singleArmBouncePostureGoPark();
             if(this->solved){
                 this->err_log=0;
             }else{
@@ -353,7 +353,7 @@ bool Problem::solve(Tols probTols)
 
 }
 
-bool Problem::singleArmBouncePostureGoHome()
+bool Problem::singleArmBouncePostureGoPark()
 {
 
     bool release_object;
@@ -2459,8 +2459,8 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
 
    bool engage = false; // true when there is an object to engage
    bool transport = false; // true when there is an object to transport
-   bool gohome = false; // true when the movement is go home
-   bool release_object = false; // true when go home and release an object
+   bool gopark = false; // true when the movement is Go park
+   bool release_object = false; // true when Go park and release an object
 
    switch (mov_type) {
    case 0: // reach to grasp
@@ -2512,8 +2512,8 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
 
        break;
 
-   case 5: // go home
-       gohome=true;
+   case 5: // Go park
+       gopark=true;
        release_object=std::strcmp(mov->getObject()->getName().c_str(),"")!=0;
 
        break;
@@ -2665,7 +2665,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
 
            break;
 
-       case 5: // go home
+       case 5: // Go park
 
            switch (this->targetAxis) {
 
@@ -2726,7 +2726,7 @@ bool Problem::writeFilesBouncePosture(int mov_type, humanoidPtr hh,float dHO, in
        break;
    }
 
-if((gohome && release_object) || (!gohome && !release_object) ){
+if((gopark && release_object) || (!gopark && !release_object) ){
 
       if(target_avoidance){
 
@@ -2926,13 +2926,13 @@ if((gohome && release_object) || (!gohome && !release_object) ){
            if (engage){
                PostureMod << string("subject to target_Arm{j in 1..18, l in 1..Nsteps-2}:   \n");
 
-           }else if (gohome && release_object){
+           }else if (gopark && release_object){
                PostureMod << string("subject to target_Arm{j in 1..15, l in 5..Nsteps+1}:   \n");
-           }else if(!gohome && !release_object){
+           }else if(!gopark && !release_object){
                PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps-2}:   \n");
 
            }
-           if((gohome && release_object) || (!gohome && !release_object) ){
+           if((gopark && release_object) || (!gopark && !release_object) ){
                PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
                PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
                PostureMod << string("(x_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xx2[l])^2) + \n");
@@ -3131,7 +3131,7 @@ if(obstacle_avoidance){
    PostureMod << string("# \n");
    if(engage || transport){
         PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n");
-   }else if(gohome){
+   }else if(gopark){
        PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n");
    }else{
         PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n");
@@ -3440,7 +3440,7 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
 
         break;
 
-    case 5: // go home
+    case 5: // Go park
 
         break;
 
@@ -3528,7 +3528,7 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
 
             break;
 
-        case 5: // go home
+        case 5: // Go park
 
             break;
 
@@ -4536,7 +4536,7 @@ float Problem::getTrajectory(MatrixXf& traj)
 
         break;
 
-    case 5: // go home
+    case 5: // Go park
 
         switch (arm_code) {
 

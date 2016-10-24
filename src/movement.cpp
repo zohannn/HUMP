@@ -42,7 +42,7 @@ Movement::Movement(int type, int arm)
 
     case 5:
 
-        this->strType = string("Go home");
+        this->strType = string("Go park");
         break;
 
 
@@ -407,7 +407,7 @@ void Movement::setType(int t)
 
     case 5:
 
-        this->strType = string("Go home");
+        this->strType = string("Go park");
         break;
 
 
