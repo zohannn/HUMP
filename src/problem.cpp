@@ -3296,11 +3296,11 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
     }
 
     // Parameters of the Fingers
-#if HAND == 0
+//#if HAND == 0
     this->writeHumanHandParams(hh,PostureDat,k);
-#elif HAND == 1
+//#elif HAND == 1
     this->writeBarrettHandParams(hh,PostureDat);
-#endif
+//#endif
 
 
     // info of the target to reach
@@ -4806,7 +4806,7 @@ void Problem::writeArmDHParams(humanoidPtr hh, ofstream &stream, int k)
 
 }
 
-#if HAND==0
+//#if HAND==0
 
 
 void Problem::writeHumanHandParams(humanoidPtr hh, ofstream &stream, int k)
@@ -5619,7 +5619,7 @@ void Problem::writeHumanHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool fi
 
 }
 
-#elif HAND==1
+//#elif HAND==1
 
 void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream)
 {

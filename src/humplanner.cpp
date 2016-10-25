@@ -11,30 +11,12 @@ HUMPlanner::HUMPlanner(string name = string ("Default Planner")):
     this->name = name;
 }
 
-HUMPlanner::HUMPlanner(string name, Scenario* scene):
-    task(nullptr)
-{
-
-    this->name=name;
-    this->scene=scenarioPtr(scene);
-}
-
-HUMPlanner::HUMPlanner(string name, Scenario *scene, Task *tt)
-{
-
-    this->name=name;
-    this->scene=scenarioPtr(scene);
-    this->task=taskPtr(tt);
-
-}
 
 
 HUMPlanner::HUMPlanner(const HUMPlanner &hp)
 {
 
     this->name=hp.name;
-    this->scene=scenarioPtr(new Scenario(*hp.scene.get()));
-    this->task=taskPtr(new Task(*hp.task.get()));
 }
 
 HUMPlanner::~HUMPlanner()
@@ -42,68 +24,153 @@ HUMPlanner::~HUMPlanner()
 
 }
 
-scenarioPtr HUMPlanner::getScenario()
+void HUMPlanner::writeBodyDim(double h_xsize,double h_ysize, ofstream &stream)
 {
 
-    return this->scene;
+    string bodyxsize=  boost::str(boost::format("%.2f") % (h_xsize/2));
+    boost::replace_all(bodyxsize,",",".");
+    string bodyysize=  boost::str(boost::format("%.2f") % (h_ysize/2));
+    boost::replace_all(bodyysize,",",".");
+
+    stream << string("# BODY INFO \n");
+    stream << string("param body := \n");
+    stream << to_string(1)+string(" ")+bodyxsize+string("\n");
+    stream << to_string(2)+string(" ")+bodyysize+string(";\n");
 }
 
-void HUMPlanner::setScenario(scenarioPtr scene)
+void HUMPlanner::writeArmDHParams(std::vector<double> alpha, std::vector<double> a, std::vector<double> d, ofstream &stream, int k)
+{
+    // D-H Parameters of the Arm
+    stream << string("# D-H PARAMETERS OF THE ARM \n");
+    stream << string("param alpha := \n");
+    string alpha_str;
+    alpha_str =  boost::str(boost::format("%.2f") % (alpha.at(0)));
+    stream << to_string(1)+string(" ")+alpha_str+string("\n");
+    for(std::size_t i=1; i< alpha.size(); ++i){
+        alpha_str =  boost::str(boost::format("%.2f") % (k*alpha.at(i)));
+
+        if (i == alpha.size()-1){
+            stream << to_string(i+1)+string(" ")+alpha_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+alpha_str+string("\n");
+        }
+    }
+    stream << string("param a := \n");
+    string a_str;
+    for(std::size_t i=0; i<a.size(); ++i){
+        a_str =  boost::str(boost::format("%.2f") % (a.at(i)));
+        if (i == a.size()-1){
+            stream << to_string(i+1)+string(" ")+a_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+a_str+string("\n");
+        }
+    }
+    stream << string("param d := \n");
+    string d_str;
+    for(std::size_t i=0; i<d.size(); ++i){
+        d_str =  boost::str(boost::format("%.2f") % (k*d.at(i)));
+        if (i == d.size()-1){
+            stream << to_string(i+1)+string(" ")+d_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+d_str+string("\n");
+        }
+    }
+}
+
+void HUMPlanner::write_dHO(std::ofstream& stream, float dHO)
 {
 
-    this->scene=scene;
+    string dHOstr=  boost::str(boost::format("%.2f") % (dHO));
+    boost::replace_all(dHOstr,",",".");
+    stream << string("# DISTANCE HAND - TARGET\n");
+    stream << string("param dFH := ")+dHOstr+string(";\n");
 }
 
-void HUMPlanner::setTask(taskPtr tt)
+void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLimits, std::vector<double> &maxArmLimits)
 {
 
-    this->task=tt;
+    stream << string("# JOINT LIMITS \n");
+    stream << string("# Lower Bound \n");
+    stream << string("param llim := \n");
+
+    for (std::size_t i=0; i < minArmLimits.size(); ++i){
+        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)));
+        boost::replace_all(minLim,",",".");
+        if (i == minArmLimits.size()-1){
+            stream << to_string(i+1)+string(" ")+minLim+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+minLim+string("\n");
+        }
+    }
+
+    stream << string("# Upper Bound \n");
+    stream << string("param ulim := \n");
+
+    for (std::size_t i=0; i < maxArmLimits.size(); ++i){
+        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)));
+        boost::replace_all(maxLim,",",".");
+
+        if (i == maxArmLimits.size()-1){
+            stream << to_string(i+1)+string(" ")+maxLim+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+maxLim+string("\n");
+        }
+    }
+
 }
 
-taskPtr HUMPlanner::getTask()
+void HUMPlanner::writeArmInitPose(ofstream &stream, std::vector<double> &initArmPosture)
 {
 
-    return this->task;
+    stream << string("# INITIAL POSE \n");
+    stream << string("param thet_init := \n");
+
+    for (std::size_t i=0; i < initArmPosture.size(); ++i){
+        string initArmstr =  boost::str(boost::format("%.2f") % (initArmPosture.at(i)));
+        boost::replace_all(initArmstr,",",".");
+        if (i == initArmPosture.size()-1){
+            stream << to_string(i+1)+string(" ")+initArmstr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+initArmstr+string("\n");
+        }
+    }
+
 }
 
-
-void HUMPlanner::addProblem(movementPtr mm)
+void HUMPlanner::writeFingerFinalPose(ofstream &stream, std::vector<double> &finalHand)
 {
 
-    this->task->addProblem(new Problem(new Movement(*mm.get()),new Scenario(*scene.get())));
+    stream << string("# FINAL FINGER JOINTS \n");
+    stream << string("param joint_fingers := \n");
+
+    for (std::size_t i=0; i < finalHand.size(); ++i){
+        string finalHandstr =  boost::str(boost::format("%.2f") % (finalHand.at(i)));
+        boost::replace_all(finalHandstr,",",".");
+        if (i == finalHand.size()-1){
+            stream << to_string(i+1)+string(" ")+finalHandstr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+finalHandstr+string("\n");
+        }
+    }
+
 }
 
-void HUMPlanner::addProblem(problemPtr prob)
+void HUMPlanner::writeLambda(ofstream &stream, std::vector<double> &lambda)
 {
 
-    this->task->addProblem(new Problem(*prob.get()));
+    stream << string("# JOINT EXPENSE FACTORS \n");
+    stream << string("param lambda := \n");
+
+    for (std::size_t i=0; i < lambda.size(); ++i){
+        string lambdastr =  boost::str(boost::format("%.2f") % (lambda.at(i)));
+        boost::replace_all(lambdastr,",",".");
+        if (i == lambda.size()-1){
+            stream << to_string(i+1)+string(" ")+lambdastr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+lambdastr+string("\n");
+        }
+    }
 }
-
-
-problemPtr HUMPlanner::getProblem(int pos)
-{
-
-    return this->task->getProblem(pos);
-}
-
-string HUMPlanner::getProblemInfo(int pos)
-{
-
-    return this->task->getProbInfo(pos);
-}
-
-int HUMPlanner::getProblemNumber()
-{
-
-    return this->task->getProblemNumber();
-
-}
-void HUMPlanner::clearProblems()
-{
-
-    this->task->clearProblems();
-}
-
 
 
 

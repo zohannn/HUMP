@@ -29,26 +29,6 @@ endif()
 # Settings
 ##############################################################################
 
-## Humanoid parts configuration
-# 1 means that the part is present and it is taken into account for the generation of the trajectories,
-# 0 otherwise.
-# The torso and the arms are the only parts assumed for any humanoid robot. In other words, the anthropomorphiism of the system is assumed.
-# The characteristics of the torso will be those ones of the humanoid.
-# However the following parts may be taken into account when they are present
-# set (HEAD 0)
-# set (NECK 0)
-# set (PELVIS 1)
-# set (RIGHT_UPPER_LEG 1)
-# set (RIGHT_LOWER_LEG 0)
-# set (RIGHT_FOOT 0)
-# set (LEFT_UPPER_LEG 1)
-# set (LEFT_LOWER_LEG 0)
-# set (LEFT_FOOT 0)
-
-## Hand configuration
-# HAND=0. Human hand
-# HAND=1, Barrett hand
-set (HAND 1)
 
 ## AMPL software
 # AMPL=0 use wine to run ampl for windows
@@ -62,12 +42,12 @@ set(IPOPT_HOME /home/gianpaolo/CoinIpopt)
 ## Tests
 # TEST=0. do not run the tests
 # TEST=1, run the tests
-set(TEST 1)
+set(TEST 0)
 
 ## Documentation
 # DOC=0. do not make the documentation
 # DOC=1, make the documentation
-set(DOC 1)
+set(DOC 0)
 
 ##############################################################################
 
