@@ -5673,7 +5673,7 @@ void Problem::writeBarrettHandParams(humanoidPtr hh, ofstream &stream)
     boost::replace_all(A3str,",",".");
     stream << string("param A3 :=")+A3str+string(";\n");
 
-    string D3str =  boost::str(boost::format("%.2f") % (hh->getBarrettHand().A3));
+    string D3str =  boost::str(boost::format("%.2f") % (hh->getBarrettHand().D3));
     boost::replace_all(D3str,",",".");
     stream << string("param D3 :=")+D3str+string(";\n");
 

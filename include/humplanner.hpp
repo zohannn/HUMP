@@ -16,6 +16,11 @@ namespace HUMotion{
 class HUMPlanner
 {
 public:
+    static int hand_fingers; /**< number of fingers per hand */
+    static int joints_arm; /**< number of joints per arm */
+    static int joints_hand; /**< number of joints per hand */
+    static int n_phalange; /**< number of phalanges per finger */
+
 
     /**
      * @brief HUMPlanner, a constructor
@@ -46,6 +51,8 @@ public:
 private:
 
     string name;/**< name of the planner */
+    std::vector<object> obstacles; /**< obstacles in the scenario */
+    object obj_tar; /**< object that has the target of the movement */
 
     /**
      * @brief This method writes all the necessary files to solve the final posture selection problem
@@ -135,12 +142,15 @@ private:
 
 
     /**
-     * @brief This method writes down the parameters of the human hand
-     * @param hh
+     * @brief writeHumanHandParams
+     * This method writes down the parameter of the human hand
+     * @param index
+     * @param ring
+     * @param thumb
      * @param stream
      * @param k
      */
-    void writeHumanHandParams(humanoidPtr hh, std::ofstream& stream, int k);
+    void writeHumanHandParams(human_finger index, human_finger ring, human_finger thumb, std::ofstream& stream, int k);
 
     /**
      * @brief This method writes down the declaration of the parameters of the human hand
@@ -158,11 +168,21 @@ private:
     //void writeHumanHandDirKin(std::ofstream& stream,MatrixXf& tolsHand, bool final, bool transport);
 
     /**
-     * @brief This method writes down the parameters of the Barrett hand
-     * @param hh
+     * @brief writeBarrettHandParams
+     * Thi method writes down the parameters of the Barrett Hand
+     * @param Aw
+     * @param A1
+     * @param A2
+     * @param A3
+     * @param D3
+     * @param phi2
+     * @param phi3
+     * @param rk
+     * @param jk
      * @param stream
      */
-    void writeBarrettHandParams(humanoidPtr hh, std::ofstream& stream);
+    void writeBarrettHandParams(double Aw, double A1, double A2, double A3,double D3, double phi2, double phi3,
+                                std::vector<double> rk, std::vector<double> jk, std::ofstream& stream);
 
     /**
      * @brief This method writes down the declaration of the parameters of the Barrett hand
@@ -181,6 +201,17 @@ private:
      */
     //void writeBarrettHandDirKin(std::ofstream& stream, std::vector<int>& rk,std::vector<int>& jk, MatrixXf& tolsHand, bool final, bool transport);
 
+    /**
+     * @brief writeInfoTarget
+     * This method writes down the info of the target
+     * @param stream
+     * @param pos
+     * @param xt
+     * @param yt
+     * @param zt
+     */
+    void writeInfoTarget(ofstream &stream, std::vector<double> pos, std::vector<double> xt,
+                                  std::vector<double> yt, std::vector<double> zt);
 };
 
 } // namespace HUMotion

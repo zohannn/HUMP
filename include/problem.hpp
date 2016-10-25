@@ -2,8 +2,6 @@
 #define PROBLEM_H
 
 
-#include "movement.hpp"
-#include "scenario.hpp"
 #include "amplinterface.hpp"
 
 
@@ -522,7 +520,7 @@ private:
      */
     void writeTableConstraints(std::ofstream& stream, bool final,int griptype, std::vector<float>& tols_table,int steps);
 
-#if HAND==0
+
     /**
      * @brief This method writes down the parameters of the human hand
      * @param hh
@@ -545,7 +543,7 @@ private:
      * @param transport
      */
     void writeHumanHandDirKin(std::ofstream& stream,MatrixXf& tolsHand, bool final, bool transport);    
-#elif HAND==1
+
     /**
      * @brief This method writes down the parameters of the Barrett hand
      * @param hh
@@ -569,7 +567,7 @@ private:
      * @param transport
      */
     void writeBarrettHandDirKin(std::ofstream& stream, std::vector<int>& rk,std::vector<int>& jk, MatrixXf& tolsHand, bool final, bool transport);
-#endif
+
 
 
 

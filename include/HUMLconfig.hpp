@@ -51,40 +51,31 @@ using namespace Eigen;
 /** This is the main namespace of the library */
 namespace HUMotion{
 
-/** this struct defines the barrett hand */
+
+/** this struct defines an object in the scenario */
 typedef struct{
-    double maxAperture; /**< [mm] max aperture of the hand in [mm] */
-    double Aw; /**< smallest distance between F1 and F2 in [mm] */
-    double A1; /**< length of the 1st part of the finger in [mm] */
-    double A2; /**< length of the first phalax in [mm] */
-    double A3; /**< length of the second phalax in [mm] */
-    double D3; /**< depth of the fingertip in [mm] */
-    double phi2; /**< angular displacement between the 1st part of the finger and the 1st phalax in [rad] */
-    double phi3; /**< angular displacement between the 1st and the 2nd phalax in [rad] */
-} barrett_hand;
+    string name; /**< name of the object */
+    double xpos; /**< position of the object along the x axis in [mm] */
+    double ypos; /**< position of the object along the y axis in [mm] */
+    double zpos; /**< position of the object along the z axis in [mm] */
+    double roll; /**< rotarion of the object around the z axis in [rad] */
+    double pitch;/**< rotarion of the object around the y axis in [rad] */
+    double yaw;  /**< rotarion of the object around the x axis in [rad] */
+    double xsize;/**< size of the object along the x axis in [mm] */
+    double ysize;/**< size of the object along the y axis in [mm] */
+    double zsize;/**< size of the object along the z axis in [mm] */
+}object;
 
 /** this struct defines a human finger */
 typedef struct{
     double ux; /**<  position of the finger with respect to the center of the palm along the x axis in [mm] */
     double uy; /**<  position of the finger with respect to the center of the palm along the y axis in [mm] */
     double uz; /**<  position of the finger with respect to the center of the palm along the z axis in [mm] */
-    DHparams finger_specs; /**< the Denavit-Hartenberg parameters of the finger */
+    vector<double> d; /**< distances between consecutive frames along the y axes in [mm] */
+    vector<double> a; /**< distances between concecutive frames along the z axes in [mm] */
+    vector<double> alpha; /**< angle around the x axes between consecutive z axes in [rad] */
+    vector<double> theta; /**< angle around the z axes between consecutive x axes in [rad] */
 } human_finger;
-
-/** this struct defines a human thumb */
-typedef struct{
-    double uTx; /**<  position of the thumb with respect to the center of the palm along the x axis in [mm] */
-    double uTy; /**<  position of the thumb with respect to the center of the palm along the y axis in [mm] */
-    double uTz; /**<  position of the thumb with respect to the center of the palm along the z axis in [mm] */
-    DHparams thumb_specs; /**< the Denavit-Hartenberg parameters of the thumb */
-} human_thumb;
-
-/** this struct defines a human hand */
-typedef struct{
-  vector<human_finger> fingers; /**< fingers of the hand */
-  human_thumb thumb; /**<  thumb of the hand */
-  double maxAperture; /**< max aperture of the hand in [mm] */
-} human_hand;
 
 
 /** this struct defines the boundary conditions of the movement*/
