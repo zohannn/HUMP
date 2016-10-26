@@ -3351,11 +3351,11 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
 
 
 
-#if HAND == 0    
+
     this->writeHumanHandParamsMod(PostureMod);
-#elif HAND == 1
+
     this->writeBarrettHandParamsMod(PostureMod);
-#endif
+
 
     // info objects
     this->writeInfoObjectsMod(PostureMod);
@@ -3370,14 +3370,14 @@ bool Problem::writeFilesFinalPosture(int mov_type, humanoidPtr hh, float dHO, in
     this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,true);
 
     // direct kinematics of the fingers
-#if HAND == 0    
+
     this->writeHumanHandDirKin(PostureMod,tolsHand,true,false);
-#elif HAND == 1
+
     std::vector<int> rk; std::vector<int> jk;
     rk.push_back(-1); rk.push_back(1); rk.push_back(0);
     jk.push_back(-1); jk.push_back(-1); jk.push_back(1);
     this->writeBarrettHandDirKin(PostureMod,rk,jk,tolsHand,true,false);
-#endif
+
 
     // Points of the arm
     PostureMod << string("var Points_Arm {j in 1..21, i in 1..4} = \n");
@@ -5940,7 +5940,7 @@ void Problem::writeBarrettHandDirKin(ofstream &stream, std::vector<int> &rk, std
 
 }
 
-#endif
+//#endif
 
 
 void Problem::writeArmLimits(ofstream &stream, std::vector<float> &minArmLimits, std::vector<float> &maxArmLimits)

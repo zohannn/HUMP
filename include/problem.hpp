@@ -7,8 +7,6 @@
 
 namespace HUMotion{
 
-typedef boost::shared_ptr<Movement> movementPtr; /**< shared pointer to a movement */
-typedef boost::shared_ptr<Scenario> scenarioPtr; /**< shared pointer to a scenario */
 
 //! The Problem class
 /**
