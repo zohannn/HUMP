@@ -3,13 +3,12 @@
 
 #include "HUMLconfig.hpp"
 #include "amplinterface.hpp"
-#include "object.hpp"
+#include "IpIpoptApplication.hpp"
 
+using namespace Ipopt;
 using namespace std;
 
 namespace HUMotion{
-
-typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in the scenario */
 
 //! The Object class
 /**
@@ -18,10 +17,10 @@ typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in 
 class HUMPlanner
 {
 public:
-    static int hand_fingers; /**< number of fingers per hand */
-    static int joints_arm; /**< number of joints per arm */
-    static int joints_hand; /**< number of joints per hand */
-    static int n_phalange; /**< number of phalanges per finger */
+    static unsigned hand_fingers; /**< number of fingers per hand */
+    static unsigned joints_arm; /**< number of joints per arm */
+    static unsigned joints_hand; /**< number of joints per hand */
+    static unsigned n_phalange; /**< number of phalanges per finger */
 
 
     /**
@@ -66,7 +65,7 @@ public:
      * @param pos
      * @return
      */
-    bool setObstacle(objectPtr obs, int pos);
+    bool setObstacle(objectPtr obs, unsigned pos);
 
     /**
      * @brief getObstacles
@@ -80,7 +79,7 @@ public:
      * @param pos
      * @return
      */
-    objectPtr getObstacle(int pos);
+    objectPtr getObstacle(unsigned pos);
 
     /**
      * @brief getObstacle
@@ -260,23 +259,42 @@ public:
      */
     HumanHand getHumanHand();
 
-
+    /**
+     * @brief setShpos
+     * @param shPos
+     */
+    void setShpos(std::vector<double>& shPos);
 
     /**
-     * @brief This method solves the final posture selection problem of single arm reach-to-grasp movements
+     * @brief getShpos
+     * @param shPos
+     */
+    void getShpos(std::vector<double>& shPos);
+
+    /**
+     * @brief plan_pick
+     * @param obj
+     * @param params
      * @return
      */
-    bool singleArmFinalPostureReachToGrasp();
+    planning_result plan_pick(huml_params& params);
+
+
+    bool singleArmBouncePostureReach_pick(huml_params& tols, int arm_code,int hand_code, int griptype,int mov_type, std::vector<double> target,
+                                                        std::vector<double> initPosture,std::vector<double> finalPosture, std::vector<double> finalHand, int targetAxis,
+                                                        double dHO, std::vector<double>& bouncePosture,string infoline ="");
 
 
 
 private:
 
     string name;/**< name of the planner */
+    //int targetAxis; /**< approaching direction towards the target: 0 = none , 1 = x axis , 2 = y axis, 3 = z axis*/
     // scenario info    this->planner_id=planner_id;
     vector<objectPtr> obstacles; /**< obstacles in the scenario */
-    objectPtr obj_tar; /**< object that has the target of the movement (reach-to-grasp, transport, engage, disengage) */
+    //objectPtr obj_tar; /**< object that has the target of the movement (reach-to-grasp, transport, engage, disengage) */
     // humanoid info
+    std::vector<double> shPos; /**< position of the shoulder of the humanoid: shPos(0)=x, shPos(1)=y, shPos(2)=z */
     Matrix4f matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
     Matrix4f matRightHand;/**< trabsformation matrix from the last joint of the right arm and the palm of the right hand (positions are in [mm]) */
     std::vector<double> minRightLimits; /**< minimum right limits */
@@ -290,6 +308,19 @@ private:
     DHparameters DH_leftArm; /**< current D-H parameters of the left arm */
     BarrettHand bhand; /**< parameters of the barrett hand */
     HumanHand hhand; /**< parameters of the human hand */
+
+    double getTimeStep(huml_params& tols,MatrixXf& jointTraj);
+
+    void getDelta(VectorXf& jointTraj, std::vector<double> &delta);
+
+    void directMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXf& Traj);
+
+    void backForthMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXf& Traj);
+
+    void computeTraj(const MatrixXf& dTraj, const MatrixXf& bTraj, MatrixXf& totTraj);
+
+    double getTrajectory(huml_params &tols,int mov_type,int arm_code, std::vector<double> initPosture,
+                                     std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXf &traj);
 
     /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
@@ -496,34 +527,48 @@ private:
     void getRotAxis(vector<double>& xt, int id,std::vector<double>rpy);
 
     /**
-     * @brief writeFilesFinalPosture
-     * @param mov_type
-     * @param dHO
-     * @param griptype
-     * @param initArmPosture
-     * @param finalHand
-     * @param initialGuess
-     * @param objs
-     * @param tar: tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(5)=yaw
-     * @param obj
-     * @param tolsArm
-     * @param tolsHand
-     * @param tolsObstacles
-     * @param tolTarPos
-     * @param tolTarOr
-     * @param lambda
-     * @param obstacle_avoidance
-     * @param arm_code
-     * @param hand_code
+     * @brief amplRead
+     * @param datFile
+     * @param modFile
+     * @param nlFile
      * @return
      */
-    bool writeFilesFinalPosture(int mov_type, double dHO, int griptype,
-                                std::vector<double> initArmPosture, std::vector<double> finalHand,
-                                std::vector<double> initialGuess, std::vector<objectPtr> objs,
-                                std::vector<double> tar, objectPtr obj,
-                                std::vector<double> tolsArm, MatrixXf tolsHand, MatrixXf tolsObstacles,
-                                double tolTarPos, double tolTarOr, std::vector<double> lambda, bool obstacle_avoidance,
-                                int arm_code,int hand_code);
+    bool amplRead(string &datFile, string &modFile, string &nlFile);
+
+    /**
+     * @brief optimize
+     * @param nlfile
+     * @param x
+     * @param tol
+     * @param acc_tol
+     * @return
+     */
+    bool optimize(string &nlfile, std::vector<Number>& x,double tol, double acc_tol);
+
+    /**
+     * @brief getObstaclesSingleArm
+     * @param center
+     * @param radius
+     * @param obsts
+     * @param hand_code
+     */
+    void getObstaclesSingleArm(std::vector<double> center, double radius, std::vector<objectPtr>& obsts, int hand_code);
+
+
+
+    bool singleArmFinalPosture_pick(huml_params& params, std::vector<double>& initPosture, std::vector<double>& finalPosture);
+
+
+    bool writeFilesFinalPosture(huml_params& params,int mov_type, std::vector<double>& initArmPosture, std::vector<double>& initialGuess,std::vector<objectPtr>& obsts);
+
+
+    bool writeFilesBouncePosture(int mov_type, double dHO, int griptype, int steps, double totalTime,
+                                             std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,
+                                             std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture, std::vector<double> finalHand,
+                                             std::vector<double> initialGuess, std::vector<objectPtr> objs, std::vector<double> tar, int targetAxis,
+                                             boundaryConditions b, std::vector<double> tolsArm, MatrixXf tolsHand,
+                                             std::vector< MatrixXf > tolsTarget, std::vector< MatrixXf > tolsObstacles, std::vector<double> lambda, bool target_avoidance, bool obstacle_avoidance,
+                                             int arm_code,int hand_code,string mov_infoLine="");
 
 
 

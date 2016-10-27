@@ -1,6 +1,7 @@
 #ifndef OBJECT_HPP
 #define OBJECT_HPP
-#include "HUMLconfig.hpp"
+#include <string>
+#include <vector>
 
 using namespace std;
 

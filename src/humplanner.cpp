@@ -3,10 +3,10 @@
 
 namespace HUMotion {
 
-static int HUMPlanner::joints_arm = 7;
-static int HUMPlanner::joints_hand = 4;
-static int HUMPlanner::hand_fingers = 3;
-static int HUMPlanner::n_phalange = 3;
+unsigned HUMPlanner::joints_arm = 7;
+unsigned HUMPlanner::joints_hand = 4;
+unsigned HUMPlanner::hand_fingers = 3;
+unsigned HUMPlanner::n_phalange = 3;
 
 HUMPlanner::HUMPlanner(string name = string ("Default Planner"))
 {
@@ -25,10 +25,7 @@ HUMPlanner::HUMPlanner(string name = string ("Default Planner"))
     this->maxLeftLimits= vector<double>(joints_arm+joints_hand);
 
     this->torso_size = {0,0,0};
-    //this->DH_rightArm = {std::vector<double>(),std::vector<double>(),std::vector<double>(),std::vector<double>()};
-    //this->DH_leftArm = {std::vector<double>(),std::vector<double>(),std::vector<double>(),std::vector<double>()};
 
-    //this->bhand = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,std::vector<double>(),std::vector<double>()};
 }
 
 
@@ -82,7 +79,7 @@ void HUMPlanner::addObstacle(objectPtr obs)
     this->obstacles.push_back(objectPtr(new Object(*obs.get())));
 }
 
-bool HUMPlanner::setObstacle(objectPtr obs, int pos)
+bool HUMPlanner::setObstacle(objectPtr obs, unsigned pos)
 {
     if(this->obstacles.size() > pos){
         this->obstacles.at(pos) = objectPtr(new Object(*obs.get()));
@@ -104,7 +101,7 @@ bool HUMPlanner::getObstacles(std::vector<objectPtr> &obs)
     }
 }
 
-objectPtr HUMPlanner::getObstacle(int pos)
+objectPtr HUMPlanner::getObstacle(unsigned pos)
 {
     if(this->obstacles.size() > pos){
         std::vector<objectPtr>::iterator ii = this->obstacles.begin();
@@ -121,7 +118,7 @@ objectPtr HUMPlanner::getObstacle(std::string name)
 
     for(std::size_t i=0; i<this->obstacles.size();++i){
         string n = this->obstacles.at(i)->getName();
-        if(boost::iequals(n,obj_name)){
+        if(boost::iequals(n,name)){
             obj=this->obstacles.at(i);
             break;
         }
@@ -279,16 +276,12 @@ void HUMPlanner::getLeftMaxLimits(vector<double> &max_ll)
 
 void HUMPlanner::setTorsoSize(vector<double> &tsize)
 {
-    if(!tsize.empty()){
-        std::copy(tsize.begin(),tsize.end(),this->torso_size.begin());
-    }
+    this->torso_size = tsize;
 }
 
 void HUMPlanner::getTorsoSize(vector<double> &tsize)
-{
-    if(!this->torso_size.empty()){
-        std::copy(this->torso_size.begin(),this->torso_size.end(),tsize.begin());
-    }
+{    
+    tsize = this->torso_size;
 }
 
 void HUMPlanner::setDH_rightArm(DHparameters &p)
@@ -329,6 +322,16 @@ void HUMPlanner::setHumanHand(HumanHand &hhand)
 HumanHand HUMPlanner::getHumanHand()
 {
     return this->hhand;
+}
+
+void HUMPlanner::setShpos(std::vector<double> &shPos)
+{
+    this->shPos = shPos;
+}
+
+void HUMPlanner::getShpos(std::vector<double> &shPos)
+{
+    shPos = this->shPos;
 }
 
 
@@ -486,7 +489,7 @@ void HUMPlanner::writeHumanHandParams(HumanHand& hhand, std::ofstream& stream, i
 
     // Index finger
     stream << string("# Index Finger \n");
-    human_finger finger_1 = hhand.fingers.at(0);
+    HumanFinger finger_1 = hhand.fingers.at(0);
 
     stream << string("param u1x := ");
     string ux_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.ux));
@@ -539,7 +542,7 @@ void HUMPlanner::writeHumanHandParams(HumanHand& hhand, std::ofstream& stream, i
 
     // Ring finger
     stream << string("# Ring Finger \n");
-    human_finger finger_3 = hhand.fingers.at(2);
+    HumanFinger finger_3 = hhand.fingers.at(2);
 
     stream << string("param u3x := ");
     string ux_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.ux));
@@ -592,7 +595,7 @@ void HUMPlanner::writeHumanHandParams(HumanHand& hhand, std::ofstream& stream, i
 
     // Thumb finger
     stream << string("# Thumb Finger \n");
-    human_thumb thumb_finger = hhand.thumb;
+    HumanThumb thumb_finger = hhand.thumb;
 
     stream << string("param uTx := ");
     string uTx_fing2_str =  boost::str(boost::format("%.2f") % (thumb_finger.uTx));
@@ -833,9 +836,9 @@ void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &ob
     for (std::size_t i = 0; i < obstacles.size(); ++i){
 
         objectPtr obs = obstacles.at(i);
-        std::vector position; obs->getPos(position);
-        std::vector orientation; obs->getOr(orientation);
-        std::vector dimension; obs->getSize(dimension);
+        std::vector<double> position; obs->getPos(position);
+        std::vector<double> orientation; obs->getOr(orientation);
+        std::vector<double> dimension; obs->getSize(dimension);
 
         string obsx =  boost::str(boost::format("%.2f") % (position.at(0))); boost::replace_all(obsx,",",".");
         string obsy =  boost::str(boost::format("%.2f") % (position.at(1))); boost::replace_all(obsy,",",".");
@@ -875,9 +878,9 @@ void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &ob
 
 void HUMPlanner::writeInfoObjectTarget(ofstream &stream, objectPtr obj)
 {
-    std::vector position; obj->getPos(position);
-    std::vector orientation; obj->getOr(orientation);
-    std::vector dimension; obj->getSize(dimension);
+    std::vector<double> position; obj->getPos(position);
+    std::vector<double> orientation; obj->getOr(orientation);
+    std::vector<double> dimension; obj->getSize(dimension);
 
     stream << string("# OBJECT OF THE TARGET POSITION+RADIUS+ORIENTATION \n");
     stream << string("param ObjTar : 1 2 3 4 5 6 7 8 9 := \n");
@@ -1042,7 +1045,7 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matri
 
     string idx;
     string idx1;
-    for (int i = 0 ; i < joints_arm; ++i){
+    for (unsigned i = 0 ; i < joints_arm; ++i){
 
         idx = to_string(i);
         idx1 = to_string(i+1);
@@ -1137,7 +1140,7 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matri
     }else{
         stream << string("var T_W_1 {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_WorldToArm[i1,j]*T_0_1[j,i2,i];\n");
     }
-    for (int i = 1 ; i < joints_arm; ++i){
+    for (unsigned i = 1 ; i < joints_arm; ++i){
         idx = to_string(i);
         idx1 = to_string(i+1);
         if(final){
@@ -1818,7 +1821,7 @@ void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXf &tolsHand, bo
 
     if(final){
         // final posture selection
-        for (int i = 0 ; i < hand_fingers; ++i){
+        for (unsigned i = 0 ; i < hand_fingers; ++i){
             //for (int j = 0; j <N_PHALANGE; ++j){
 
             string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
@@ -1889,7 +1892,7 @@ void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXf &tolsHand, bo
 
         if (transport){
             // transport or engage movement
-            for (int i = 0 ; i < HAND_FINGERS; ++i){
+            for (unsigned i = 0 ; i < hand_fingers; ++i){
                 //for (int j = 0; j <N_PHALANGE; ++j){
                 int k;
                 if (i == 2){
@@ -1966,7 +1969,7 @@ void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXf &tolsHand, bo
 
         }else{
             // reaching movements
-            for (int i = 0 ; i < hand_fingers; ++i){
+            for (unsigned i = 0 ; i < hand_fingers; ++i){
                 //for (int j = 0; j <N_PHALANGE; ++j){
                 int k;
                 if (i == 2){
@@ -2121,22 +2124,7 @@ void HUMPlanner::Trans_matrix(std::vector<double> xyz, std::vector<double> rpy, 
 
 }
 
-void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
-                                        std::vector<double> initArmPosture,
-                                        std::vector<double> finalHand,
-                                        std::vector<double> initialGuess,
-                                        std::vector<objectPtr> objs,
-                                        std::vector<double> tar,
-                                        objectPtr obj_tar,
-                                        std::vector<double> tolsArm,
-                                        MatrixXf tolsHand,
-                                        MatrixXf tolsObstacles,
-                                        double tolTarPos,
-                                        double tolTarOr,
-                                        std::vector<double> lambda,
-                                        bool obstacle_avoidance,
-                                        int arm_code,
-                                        int hand_code)
+bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::vector<double>& initArmPosture, std::vector<double>& initialGuess,std::vector<objectPtr>& obsts)
 {
     //  --- create the "Models" directory if it does not exist ---
     struct stat st = {0};
@@ -2144,6 +2132,38 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
         mkdir("Models", 0700);
     }
     string path("Models/");
+
+    // movement settings
+    int arm_code = params.mov_specs.arm_code;
+    int hand_code = params.mov_specs.hand_code;
+    int griptype = params.mov_specs.griptype;
+    std::vector<double> tar = params.mov_specs.target;
+    int dHO = params.mov_specs.dHO;
+    std::vector<double> finalHand = params.mov_specs.finalHand;
+    std::string mov_infoLine = params.mov_specs.mov_infoline;
+    objectPtr obj_tar;
+    std::vector<double> pre_grasp_approach;
+    std::vector<double> post_grasp_retreat;
+    std::vector<double> pre_place_approach;
+    std::vector<double> post_place_retreat;
+    switch(mov_type){
+    case 0: // reach-to-grasp/pick
+        obj_tar = params.mov_specs.obj;
+        pre_grasp_approach = params.mov_specs.pre_grasp_approach;
+        post_grasp_retreat = params.mov_specs.post_grasp_retreat;
+        break;
+
+    }
+
+
+    // tolerances
+    std::vector<double> lambda = params.lambda_final;
+    std::vector<double> tolsArm = params.tolsArm;
+    MatrixXf tolsHand = params.tolsHand;
+    MatrixXf tolsObstacles = params.final_tolsObstacles;
+    double tolTarPos = params.tolTarPos;
+    double tolTarOr = params.tolTarOr;
+    bool obstacle_avoidance = params.obstacle_avoidance;
 
     Matrix4f matWorldToArm;
     Matrix4f matHand;
@@ -2156,7 +2176,6 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
     case 0: // dual arm
         //TO DO
         break;
-
     case 1: // right arm
         k=1;
         matWorldToArm = this->matWorldToRightArm;
@@ -2165,7 +2184,6 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
         maxLimits = this->maxRightLimits;
         dh_arm = this->DH_rightArm;
         break;
-
     case 2: // left arm
         k=-1;
         matWorldToArm = this->matWorldToLeftArm;
@@ -2229,9 +2247,13 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
     // info of the target to reach
     this->writeInfoTarget(PostureDat,tar);
     //info objects
-    this->writeInfoObstacles(PostureDat,objs);
+    this->writeInfoObstacles(PostureDat,obsts);
     // object that has the target
-    this->writeInfoObjectTarget(PostureDat,obj_tar);
+    switch(mov_type){
+    case 0: // reach-to-grasp/pick
+        this->writeInfoObjectTarget(PostureDat,obj_tar);
+        break;
+    }
     //close the file
     PostureDat.close();
 
@@ -2244,7 +2266,7 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
 
     PostureMod << string("# FINAL POSTURE MODEL FILE \n");
     PostureMod << string("# Movement to plan: \n");
-    PostureMod << string("# ")+this->mov->getInfoLine()+string("\n\n");
+    PostureMod << string("# ")+mov_infoLine+string("\n\n");
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     PostureMod << string("# PARAMETERS \n\n");
@@ -2337,17 +2359,13 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
     string taror = boost::str(boost::format("%.4f") % tolTarOr); boost::replace_all(taror,",",".");
 
     switch(mov_type){
-
     case 0: // reach-to-grasp
         PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         break;
     case 1: // reaching
-
         break;
     case 2:// transport
-
         break;
-
     case 3: // engage
         // the target here has been computed according the new position of the target
         // (the constraint is equal to that one for reaching and grasping)
@@ -2366,16 +2384,11 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
 
     PostureMod << string("# Hand orientation\n");
     switch(griptype){
-
     case 111: case 211: // side thumb left
-
         switch (mov_type) {
-
-        case 0: // reach-to-grasp
-
+        case 0: // reach-to-grasp/pick
             // hand constraints for approaching direction setting
-            switch (this->targetAxis) {
-
+            switch (targetAxis) {
             case 0: // none
 
                 PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = z_t \n");
@@ -2411,10 +2424,11 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
             break;
 
         case 3: // engage
+            /*
 
             // hand constraints for approaching direction setting
             // (TO REVIEW)
-            switch (this->targetAxis) {
+            switch (targetAxis) {
 
             case 0: // none
 
@@ -2441,6 +2455,7 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
             }
 
             break;
+            */
 
         case 4: // disengage
 
@@ -2582,9 +2597,1633 @@ void HUMPlanner::writeFilesFinalPosture(int mov_type, double dHO, int griptype,
 
 }
 
-void HUMPlanner::singleArmFinalPostureReachToGrasp()
+bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype, int steps, double totalTime,
+                                         std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,
+                                         std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture, std::vector<double> finalHand,
+                                         std::vector<double> initialGuess, std::vector<objectPtr> objs, std::vector<double> tar, int targetAxis,
+                                         boundaryConditions b, std::vector<double> tolsArm, MatrixXf tolsHand,
+                                         std::vector< MatrixXf > tolsTarget, std::vector< MatrixXf > tolsObstacles, std::vector<double> lambda, bool target_avoidance, bool obstacle_avoidance,
+                                         int arm_code,int hand_code,string mov_infoLine)
+{
+    //  --- create the "Models" directory if it does not exist ---
+    struct stat st = {0};
+    if (stat("Models", &st) == -1) {
+        mkdir("Models", 0700);
+    }
+    string path("Models/");
+
+    Matrix4f matWorldToArm;
+    Matrix4f matHand;
+    DHparameters dh;
+
+    int k;
+    switch(arm_code){
+    case 0: // dual arm
+        //TO DO
+        break;
+    case 1: // right arm
+        k=1;
+        matWorldToArm=this->matWorldToRightArm;
+        matHand = this->matRightHand;
+        dh=this->DH_rightArm;
+        break;
+    case 2: // left arm
+        k=-1;
+        matWorldToArm=this->matWorldToLeftArm;
+        matHand = this->matLeftHand;
+        dh=this->DH_leftArm;
+        break;
+    }
+    //------------------------- Write the dat file --------------------------------------------------
+     string filename("BouncePosture.dat");
+     ofstream PostureDat;
+     // open the file
+     PostureDat.open(path+filename);
+
+     PostureDat << string("# BOUNCE POSTURE DATA FILE \n");
+     PostureDat << string("# Units of measure: [rad], [mm] \n\n");
+
+     PostureDat << string("data; \n");
+
+     // number of steps
+     PostureDat << string("param Nsteps :=")+to_string(steps)+string(";\n");
+
+     // total time
+     string time =  boost::str(boost::format("%.2f") % (totalTime));
+     boost::replace_all(time,",",".");
+     PostureDat << string("param TotalTime :=")+time+string(";\n");
+     // Body dimension
+     this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
+     // D-H Parameters of the Arm
+     this->writeArmDHParams(dh,PostureDat,k);
+     // distance between the hand and the object
+     this->write_dHO(PostureDat,dHO);
+     // joint limits
+     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits);
+     // initial pose of the arm
+     this->writeArmInitPose(PostureDat,initAuxPosture);
+     // final pose of the arm
+     PostureDat << string("# FINAL POSE \n");
+     PostureDat << string("param thet_final := \n");
+     for (std::size_t i=0; i < finalAuxPosture.size(); ++i){
+         string finalAuxstr =  boost::str(boost::format("%.2f") % (finalAuxPosture.at(i)));
+         boost::replace_all(finalAuxstr,",",".");
+         if (i == finalAuxPosture.size()-1){
+             PostureDat << to_string(i+1)+string(" ")+finalAuxstr+string(";\n");
+         }else{
+             PostureDat << to_string(i+1)+string(" ")+finalAuxstr+string("\n");
+         }
+     }
+     // final posture of the fingers
+     this->writeFingerFinalPose(PostureDat,finalHand);
+     // joint expense factors of the arm
+     this->writeLambda(PostureDat,lambda);
+     // initial guess
+     PostureDat << string("# INITIAL GUESS \n");
+     PostureDat << string("var theta_b := \n");
+     for (std::size_t i=0; i < initialGuess.size(); ++i){
+         string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
+         boost::replace_all(guess,",",".");
+         if (i == initialGuess.size()-1){
+             PostureDat << to_string(i+1)+string(" ")+guess+string(";\n");
+         }else{
+             PostureDat << to_string(i+1)+string(" ")+guess+string("\n");
+         }
+     }
+     // boundary conditions initial velocity
+     PostureDat << string("# INITIAL VELOCITY \n");
+     PostureDat << string("param vel_0 := \n");
+     for (std::size_t i=0; i < b.vel_0.size(); ++i){
+         string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
+         boost::replace_all(vel_0,",",".");
+         if (i == b.vel_0.size()-1){
+             PostureDat << to_string(i+1)+string(" ")+vel_0+string(";\n");
+         }else{
+             PostureDat << to_string(i+1)+string(" ")+vel_0+string("\n");
+         }
+     }
+     // boundary conditions final velocity
+     PostureDat << string("# FINAL VELOCITY \n");
+     PostureDat << string("param vel_f := \n");
+     for (std::size_t i=0; i < b.vel_f.size(); ++i){
+         string vel_f =  boost::str(boost::format("%.2f") % (b.vel_f.at(i)));
+         boost::replace_all(vel_f,",",".");
+         if (i == b.vel_f.size()-1){
+             PostureDat << to_string(i+1)+string(" ")+vel_f+string(";\n");
+         }else{
+             PostureDat << to_string(i+1)+string(" ")+vel_f+string("\n");
+         }
+     }
+     // boundary conditions initial acceleration
+     PostureDat << string("# INITIAL ACCELERATION \n");
+     PostureDat << string("param acc_0 := \n");
+
+     for (std::size_t i=0; i < b.acc_0.size(); ++i){
+         string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
+         boost::replace_all(acc_0,",",".");
+         if (i == b.acc_0.size()-1){
+             PostureDat << to_string(i+1)+string(" ")+acc_0+string(";\n");
+         }else{
+             PostureDat << to_string(i+1)+string(" ")+acc_0+string("\n");
+         }
+     }
+     // boundary conditions final acceleration
+     PostureDat << string("# FINAL ACCELERATION \n");
+     PostureDat << string("param acc_f := \n");
+     for (std::size_t i=0; i < b.acc_f.size(); ++i){
+         string acc_f =  boost::str(boost::format("%.2f") % (b.acc_f.at(i)));
+         boost::replace_all(acc_f,",",".");
+
+         if (i == b.acc_f.size()-1){
+             PostureDat << to_string(i+1)+string(" ")+acc_f+string(";\n");
+         }else{
+             PostureDat << to_string(i+1)+string(" ")+acc_f+string("\n");
+         }
+     }
+     // Parameters of the Fingers
+     switch(hand_code){
+     case 0: // human hand
+         this->writeHumanHandParams(this->hhand,PostureDat,k);
+         break;
+     case 1: // barrett hand
+         this->writeBarrettHandParams(this->bhand,PostureDat);
+         break;
+     }
+     // info of the target to reach
+     this->writeInfoTarget(PostureDat,tar);
+     //info objects
+     this->writeInfoObstacles(PostureDat,objs);
+     // object that has the target
+     this->writeInfoObjectTarget(PostureDat,this->obj_tar);
+     //close the file
+     PostureDat.close();
+
+     // ------------- Write the mod file ------------------------- //
+
+     string filenamemod("BouncePosture.mod");
+     ofstream PostureMod;
+     // open the file
+     PostureMod.open(path+filenamemod);
+
+     PostureMod << string("# BOUNCE POSTURE MODEL FILE \n");
+     PostureMod << string("# Movement to plan: \n");
+     PostureMod << string("# ")+mov_infoLine+string("\n\n");
+
+     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+     PostureMod << string("# PARAMETERS \n\n");
+
+     this->writePI(PostureMod);
+     this->writeBodyDimMod(PostureMod);
+     this->writeArmDHParamsMod(PostureMod);
+     this->write_dHOMod(PostureMod);
+
+     PostureMod << string("# Joint Limits \n");
+     PostureMod << string("param llim {i in 1..")+to_string(minAuxLimits.size())+string("} ; \n");
+     PostureMod << string("param ulim {i in 1..")+to_string(maxAuxLimits.size())+string("} ; \n");
+     PostureMod << string("# Initial posture \n");
+     PostureMod << string("param thet_init {i in 1..")+to_string(initAuxPosture.size())+string("} ; \n");
+     PostureMod << string("# Final posture \n");
+     PostureMod << string("param thet_final {i in 1..")+to_string(finalAuxPosture.size())+string("} ; \n");
+     PostureMod << string("# Final finger posture \n");
+     PostureMod << string("param joint_fingers {i in 1..")+to_string(joints_hand)+string("} ; \n");
+     PostureMod << string("# Joint Expense Factors \n");
+     PostureMod << string("param lambda {i in 1..")+to_string(lambda.size())+string("} ; \n");
+
+     switch(hand_code){
+     case 0: // human hand
+         this->writeHumanHandParamsMod(PostureMod);
+         break;
+     case 1: // barrett hand
+         this->writeBarrettHandParamsMod(PostureMod);
+         break;
+     }
+     // info objects
+     this->writeInfoObjectsMod(PostureMod);
+
+     PostureMod << string("# Boundary Conditions \n");
+     PostureMod << string("param vel_0 {i in 1..")+to_string(b.vel_0.size())+string("} ; \n");
+     PostureMod << string("param vel_f {i in 1..")+to_string(b.vel_f.size())+string("} ; \n");
+     PostureMod << string("param acc_0 {i in 1..")+to_string(b.acc_0.size())+string("} ; \n");
+     PostureMod << string("param acc_f {i in 1..")+to_string(b.acc_f.size())+string("} ; \n");
+
+     PostureMod << string("# Time and iterations\n");
+     PostureMod << string("param Nsteps;\n");
+     PostureMod << string("param TotalTime;\n");
+     PostureMod << string("set Iterations := 1..(Nsteps+1);\n");
+     PostureMod << string("set nJoints := 1..")+to_string(initialGuess.size())+string(";\n");
+     PostureMod << string("set Iterations_nJoints := Iterations cross nJoints;\n");
+     PostureMod << string("param time {i in Iterations} = (i-1)/Nsteps;\n");
+
+     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+     PostureMod << string("# DECISION VARIABLES \n");
+     PostureMod << string("# Bounce Posture \n");
+     PostureMod << string("var theta_b {i in 1..")+to_string(initialGuess.size())+string("} >= llim[i], <= ulim[i]; \n");
+
+     PostureMod << string("# Direct Movement \n");
+     PostureMod << string("param the_direct {(i,j) in Iterations_nJoints} := \n");
+     PostureMod << string("( thet_final[j] - thet_init[j] ) * (10*(time[i])^3 -15*(time[i])^4 +6*(time[i])^5) \n");
+     PostureMod << string("+ \n");
+     PostureMod << string("vel_0[j] *TotalTime* (time[i] - 6 *(time[i])^3 +8*(time[i])^4 -3*(time[i])^5) \n");
+     PostureMod << string("+ \n");
+     PostureMod << string("vel_f[j] *TotalTime* (- 4 *(time[i])^3 +7*(time[i])^4 -3*(time[i])^5) \n");
+     PostureMod << string("+ \n");
+     PostureMod << string("acc_0[j]/2 *TotalTime^2* (time[i]^2 - 3 *(time[i])^3 +3*(time[i])^4 -(time[i])^5) \n");
+     PostureMod << string("+ \n");
+     PostureMod << string("acc_f[j]/2 *TotalTime^2* ((time[i])^3 -2*(time[i])^4 +(time[i])^5); \n");
+
+     PostureMod << string("# Back and forth Movement \n");
+     PostureMod << string("var the_bf 	{(i,j) in Iterations_nJoints} =  \n");
+     PostureMod << string("(theta_b[j] - thet_init[j])*(sin(pi*time[i]))^2; \n");
+
+     PostureMod << string("# Composite Movement \n");
+     PostureMod << string("var theta 	{(i,j) in Iterations_nJoints} = \n");
+     PostureMod << string("thet_init[j] + 	the_direct[i,j] + the_bf[i,j];\n");
+
+     // Rotation matrix of the obstacles
+     this->writeRotMatObsts(PostureMod);
+     // Direct Kinematics of the arm
+     this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,false);
+
+     std::vector<double> obj_tar_size; this->obj_tar->getSize(obj_tar_size);
+     string obj_radius =  boost::str(boost::format("%.2f") % std::max(obj_tar_size.at(0),obj_tar_size.at(1))); boost::replace_all(obj_radius,",",".");
+     string obj_size_z =  boost::str(boost::format("%.2f") % obj_tar_size.at(2)); boost::replace_all(obj_size_z,",",".");
+
+     bool engage = false; // true when there is an object to engage
+     bool transport = false; // true when there is an object to transport
+     bool gopark = false; // true when the movement is Go park
+     bool release_object = false; // true when Go park and release an object
+
+     switch (mov_type) {
+     case 0: // reach to grasp
+
+         break;
+     case 1: // reaching
+
+         break;
+     case 2: // transport
+         transport = true;
+         break;
+     case 3: // engage
+
+         engage = true;
+
+         PostureMod << string("var Obj2Transp {j in 1..4, i in Iterations} = if j<3 then Hand[j,i] + dFH * z_H[j,i] \n");
+         PostureMod << string("else 	if (j=4) then ")+obj_radius+string("; \n");
+
+         switch (griptype) {
+
+         case 111: case 211: case 112: case 212: // Side thumb right, Side thumb left
+
+
+             PostureMod << string("var Obj2Transp_1 {j in 1..4, i in Iterations} = if j<3 then Obj2Transp[j,i] + x_H[j,i] *(")+obj_size_z+string("/2)\n");
+             PostureMod << string("else 	if (j=4) then ")+obj_radius+string("; \n");
+
+             PostureMod << string("var Obj2Transp_2 {j in 1..4, i in Iterations} = if j<3 then Obj2Transp[j,i] - x_H[j,i] *(")+obj_size_z+string("/2)\n");
+             PostureMod << string("else 	if (j=4) then ")+obj_radius+string("; \n");
+
+             break;
+
+         case 113: case 213: case 114: case 214: // Side thumb up, Side thumb down
+
+             // TO DO
+             break;
+
+         case 121: case 221: case 122: case 222: // Above, Below
+
+             // TO DO
+             break;
+         }
+
+         break;
+
+     case 4: // disengage
+
+         break;
+
+     case 5: // Go park
+         gopark=true;
+         release_object=std::strcmp(this->obj_tar->getName().c_str(),"")!=0;
+         break;
+     }
+     // Direct Kinematics of the arm
+     this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,true);
+
+     switch(hand_code){
+     case 0: // human hand
+         this->writeHumanHandDirKin(PostureMod,tolsHand,true,false);
+         break;
+     case 1: // barrett hand
+         this->writeBarrettHandDirKin(PostureMod,tolsHand,true,false);
+         break;
+     }
+     // Points of the arm
+     if (engage){
+      PostureMod << string("var Points_Arm {j in 1..18, i in 1..4,k in Iterations} = \n");
+     }else{
+      PostureMod << string("var Points_Arm {j in 1..15, i in 1..4,k in Iterations} = \n");
+     }
+     PostureMod << string("if ( j=1 ) then 	(Shoulder[i,k]+Elbow[i,k])/2  \n");
+     PostureMod << string("else	if ( j=2 ) then 	Elbow[i,k] \n");
+     PostureMod << string("else    if ( j=3 ) then 	(Wrist[i,k]+Elbow[i,k])/2  \n");
+     PostureMod << string("else	if ( j=4 ) then 	Wrist[i,k] \n");
+     PostureMod << string("else	if ( j=5 ) then 	Wrist[i,k]+0.45*(Hand[i,k]-Wrist[i,k]) \n");
+     PostureMod << string("else	if ( j=6 ) then 	Wrist[i,k]+0.75*(Hand[i,k]-Wrist[i,k]) \n");
+     PostureMod << string("else	if ( j=7 ) then 	Finger1_1[i,k] \n");
+     PostureMod << string("else	if ( j=8 ) then 	Finger2_1[i,k] \n");
+     PostureMod << string("else	if ( j=9 ) then 	Finger3_1[i,k]\n");
+     PostureMod << string("#else	if ( j=10 ) then 	(Finger1_1[i,k]+Finger1_2[i,k])/2 \n");
+     PostureMod << string("#else	if ( j=11 ) then 	(Finger2_1[i,k]+Finger2_2[i,k])/2 \n");
+     PostureMod << string("#else	if ( j=12 ) then 	(Finger3_1[i,k]+Finger3_2[i,k])/2 \n");
+     PostureMod << string("else	if ( j=10 ) then 	 Finger1_2[i,k] \n");
+     PostureMod << string("else	if ( j=11 ) then 	 Finger2_2[i,k] \n");
+     PostureMod << string("else	if ( j=12 ) then 	 Finger3_2[i,k] \n");
+     PostureMod << string("#else	if ( j=16 ) then 	(Finger1_2[i,k]+Finger1_tip[i,k])/2	 \n");
+     PostureMod << string("#else	if ( j=17 ) then 	(Finger2_2[i,k]+Finger2_tip[i,k])/2 \n");
+     PostureMod << string("#else	if ( j=18 ) then 	(Finger3_2[i,k]+Finger3_tip[i,k])/2 \n");
+     PostureMod << string("else	if ( j=13 ) then 	Finger1_tip[i,k]\n");
+     PostureMod << string("else	if ( j=14 ) then 	Finger2_tip[i,k] \n");
+     PostureMod << string("else	if ( j=15 ) then 	Finger3_tip[i,k] \n");
+     if (engage){
+         PostureMod << string("else    if ( j=16 ) then 	Obj2Transp[i,k] \n");
+         PostureMod << string("else    if ( j=17 ) then 	Obj2Transp_1[i,k] \n");
+         PostureMod << string("else    if ( j=18 ) then 	Obj2Transp_2[i,k] \n");
+     }
+     PostureMod << string("; \n\n");
+     // objective function
+     this->writeObjective(PostureMod,false);
+     // constraints
+     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+     PostureMod << string("#  \n");
+     PostureMod << string("#		     Constraints                  # \n");
+     PostureMod << string("#  \n");
+     PostureMod << string("# joint limits for all the trajectory \n");
+     PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
+     // hand constraints for approaching direction setting
+     switch (griptype) {
+     case 111: case 211: // side thumb left
+
+         switch (mov_type) {
+
+         case 0: // reach-to-grasp
+
+             switch (targetAxis) {
+
+             case 0: // none
+
+                 break;
+
+             case 1: // x target
+
+                 PostureMod << string("# Hand approach orientation\n");
+                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + x_t[i])^2 )<= 0.010; #  z_H = -x_t  \n\n");
+
+                 break;
+
+             case 2: // y target
+
+
+                 PostureMod << string("# Hand approach orientation\n");
+                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  z_H = -y_t  \n\n");
+
+                 break;
+
+             case 3: // z target
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to const_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + z_t[i])^2 )<= 0.010; #  z_H = -z_t  \n\n");
+
+                 break;
+             }
+
+             break;
+
+         case 1: // reaching
+
+             break;
+
+         case 2: // transport
+
+             break;
+
+         case 3: // engage
+
+             switch (targetAxis) {
+
+             case 0: // none
+
+                 break;
+
+             case 1: // x target
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + x_t[i])^2 )<= 0.010; #  z_H = -x_t  \n\n");
+
+                 break;
+
+             case 2: // y target
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  z_H = -y_t  \n\n");
+
+                 break;
+
+             case 3: // z target
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to const_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 )<= 0.010; #  z_H = -z_t  \n\n");
+
+                 //PostureMod << string("# Hand approach orientation at the beginning\n");
+                 //PostureMod << string("subject to constr_hand_or {k in 1..5}: ( sum{i in 1..3} (z_H[i,k] + z_w[i])^2 )<= 0.010; #  z_H = -y_t  \n\n");
+
+                 break;
+             }
+
+             break;
+
+         case 4: // disengage
+
+             break;
+
+         case 5: // Go park
+
+             switch (targetAxis) {
+             case 0: // none
+
+                 break;
+
+             case 1: // x target
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to constr_hand_or {k in 1..5}: ( sum{i in 1..3} (z_H[i,k] + x_t[i])^2 )<= 0.010; #  z_H = -x_t  \n\n");
+
+                 break;
+
+             case 2: // y target
+
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to constr_hand_or {k in 1..5}: ( sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  z_H = -y_t  \n\n");
+
+                 break;
+
+             case 3: // z target
+
+                 //PostureMod << string("# Hand approach orientation\n");
+                 //PostureMod << string("subject to const_hand_or {k in 1..5}: ( sum{i in 1..3} (z_H[i,k] + z_t[i])^2 )<= 0.010; #  z_H = -z_t  \n\n");
+
+                 break;
+             }
+
+             break;
+
+
+         }
+         break;
+
+     case 112: case 212: // side thumb right
+
+         break;
+
+     case 113: case 213: // side thumb up
+
+         break;
+
+     case 114: case 214: // side thumb down
+
+         break;
+
+     case 121: case 221: // above
+
+         break;
+
+     case 122: case 222: // below
+
+         break;
+     }
+     if((gopark && release_object) || (!gopark && !release_object) ){
+
+           if(target_avoidance){
+
+                // constraints with the targets
+                MatrixXf tols_0 = tolsTarget.at(0);
+                MatrixXf tols_1 = tolsTarget.at(1);
+                MatrixXf tols_2 = tolsTarget.at(2);
+
+                //xx1
+                string txx1_0 = boost::str(boost::format("%.2f") % tols_0(0,0)); boost::replace_all(txx1_0,",",".");
+                string txx1_1 = boost::str(boost::format("%.2f") % tols_1(0,0)); boost::replace_all(txx1_1,",",".");
+                string txx1_2 = boost::str(boost::format("%.2f") % tols_2(0,0)); boost::replace_all(txx1_2,",",".");
+
+                PostureMod << string("param tol_target_xx1 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txx1_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txx1_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txx1_2+string("; \n");
+
+                //xx2
+                string txx2_0 = boost::str(boost::format("%.2f") % tols_0(1,0)); boost::replace_all(txx2_0,",",".");
+                string txx2_1 = boost::str(boost::format("%.2f") % tols_1(1,0)); boost::replace_all(txx2_1,",",".");
+                string txx2_2 = boost::str(boost::format("%.2f") % tols_2(1,0)); boost::replace_all(txx2_2,",",".");
+
+                PostureMod << string("param tol_target_xx2 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txx2_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txx2_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txx2_2+string("; \n");
+
+
+                // xx3
+                string txx3_0 = boost::str(boost::format("%.2f") % tols_0(2,0)); boost::replace_all(txx3_0,",",".");
+                string txx3_1 = boost::str(boost::format("%.2f") % tols_1(2,0)); boost::replace_all(txx3_1,",",".");
+                string txx3_2 = boost::str(boost::format("%.2f") % tols_2(2,0)); boost::replace_all(txx3_2,",",".");
+
+                PostureMod << string("param tol_target_xx3 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txx3_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txx3_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txx3_2+string("; \n");
+
+                // yy1
+                string tyy1_0 = boost::str(boost::format("%.2f") % tols_0(0,1)); boost::replace_all(tyy1_0,",",".");
+                string tyy1_1 = boost::str(boost::format("%.2f") % tols_1(0,1)); boost::replace_all(tyy1_1,",",".");
+                string tyy1_2 = boost::str(boost::format("%.2f") % tols_2(0,1)); boost::replace_all(tyy1_2,",",".");
+
+                PostureMod << string("param tol_target_yy1 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tyy1_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tyy1_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tyy1_2+string("; \n");
+
+                // yy2
+                string tyy2_0 = boost::str(boost::format("%.2f") % tols_0(1,1)); boost::replace_all(tyy2_0,",",".");
+                string tyy2_1 = boost::str(boost::format("%.2f") % tols_1(1,1)); boost::replace_all(tyy2_1,",",".");
+                string tyy2_2 = boost::str(boost::format("%.2f") % tols_2(1,1)); boost::replace_all(tyy2_2,",",".");
+
+                PostureMod << string("param tol_target_yy2 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tyy2_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tyy2_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tyy2_2+string("; \n");
+
+
+                // yy3
+                string tyy3_0 = boost::str(boost::format("%.2f") % tols_0(2,1)); boost::replace_all(tyy3_0,",",".");
+                string tyy3_1 = boost::str(boost::format("%.2f") % tols_1(2,1)); boost::replace_all(tyy3_1,",",".");
+                string tyy3_2 = boost::str(boost::format("%.2f") % tols_2(2,1)); boost::replace_all(tyy3_2,",",".");
+
+                PostureMod << string("param tol_target_yy3 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tyy3_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tyy3_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tyy3_2+string("; \n");
+
+                // zz1
+                string tzz1_0 = boost::str(boost::format("%.2f") % tols_0(0,2)); boost::replace_all(tzz1_0,",",".");
+                string tzz1_1 = boost::str(boost::format("%.2f") % tols_1(0,2)); boost::replace_all(tzz1_1,",",".");
+                string tzz1_2 = boost::str(boost::format("%.2f") % tols_2(0,2)); boost::replace_all(tzz1_2,",",".");
+
+                PostureMod << string("param tol_target_zz1 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tzz1_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tzz1_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tzz1_2+string("; \n");
+
+                // zz2
+                string tzz2_0 = boost::str(boost::format("%.2f") % tols_0(1,2)); boost::replace_all(tzz2_0,",",".");
+                string tzz2_1 = boost::str(boost::format("%.2f") % tols_1(1,2)); boost::replace_all(tzz2_1,",",".");
+                string tzz2_2 = boost::str(boost::format("%.2f") % tols_2(1,2)); boost::replace_all(tzz2_2,",",".");
+
+                PostureMod << string("param tol_target_zz2 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tzz2_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tzz2_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tzz2_2+string("; \n");
+
+                // zz3
+                string tzz3_0 = boost::str(boost::format("%.2f") % tols_0(2,2)); boost::replace_all(tzz3_0,",",".");
+                string tzz3_1 = boost::str(boost::format("%.2f") % tols_1(2,2)); boost::replace_all(tzz3_1,",",".");
+                string tzz3_2 = boost::str(boost::format("%.2f") % tols_2(2,2)); boost::replace_all(tzz3_2,",",".");
+
+                PostureMod << string("param tol_target_zz3 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tzz3_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tzz3_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tzz3_2+string("; \n");
+
+
+                // xy1
+                string txy1_0 = boost::str(boost::format("%.2f") % tols_0(0,3)); boost::replace_all(txy1_0,",",".");
+                string txy1_1 = boost::str(boost::format("%.2f") % tols_1(0,3)); boost::replace_all(txy1_1,",",".");
+                string txy1_2 = boost::str(boost::format("%.2f") % tols_2(0,3)); boost::replace_all(txy1_2,",",".");
+
+                PostureMod << string("param tol_target_xy1 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txy1_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txy1_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txy1_2+string("; \n");
+
+                // xy2
+                string txy2_0 = boost::str(boost::format("%.2f") % tols_0(1,3)); boost::replace_all(txy2_0,",",".");
+                string txy2_1 = boost::str(boost::format("%.2f") % tols_1(1,3)); boost::replace_all(txy2_1,",",".");
+                string txy2_2 = boost::str(boost::format("%.2f") % tols_2(1,3)); boost::replace_all(txy2_2,",",".");
+
+                PostureMod << string("param tol_target_xy2 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txy2_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txy2_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txy2_2+string("; \n");
+
+                // xy3
+                string txy3_0 = boost::str(boost::format("%.2f") % tols_0(2,3)); boost::replace_all(txy3_0,",",".");
+                string txy3_1 = boost::str(boost::format("%.2f") % tols_1(2,3)); boost::replace_all(txy3_1,",",".");
+                string txy3_2 = boost::str(boost::format("%.2f") % tols_2(2,3)); boost::replace_all(txy3_2,",",".");
+
+                PostureMod << string("param tol_target_xy3 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txy3_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txy3_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txy3_2+string("; \n");
+
+
+                // xz1
+                string txz1_0 = boost::str(boost::format("%.2f") % tols_0(0,4)); boost::replace_all(txz1_0,",",".");
+                string txz1_1 = boost::str(boost::format("%.2f") % tols_1(0,4)); boost::replace_all(txz1_1,",",".");
+                string txz1_2 = boost::str(boost::format("%.2f") % tols_2(0,4)); boost::replace_all(txz1_2,",",".");
+
+                PostureMod << string("param tol_target_xz1 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txz1_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txz1_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txz1_2+string("; \n");
+
+                // xz2
+                string txz2_0 = boost::str(boost::format("%.2f") % tols_0(1,4)); boost::replace_all(txz2_0,",",".");
+                string txz2_1 = boost::str(boost::format("%.2f") % tols_1(1,4)); boost::replace_all(txz2_1,",",".");
+                string txz2_2 = boost::str(boost::format("%.2f") % tols_2(1,4)); boost::replace_all(txz2_2,",",".");
+
+                PostureMod << string("param tol_target_xz2 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txz2_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txz2_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txz2_2+string("; \n");
+
+                // xz3
+                string txz3_0 = boost::str(boost::format("%.2f") % tols_0(2,4)); boost::replace_all(txz3_0,",",".");
+                string txz3_1 = boost::str(boost::format("%.2f") % tols_1(2,4)); boost::replace_all(txz3_1,",",".");
+                string txz3_2 = boost::str(boost::format("%.2f") % tols_2(2,4)); boost::replace_all(txz3_2,",",".");
+
+                PostureMod << string("param tol_target_xz3 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+txz3_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+txz3_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+txz3_2+string("; \n");
+
+                // yz1
+                string tyz1_0 = boost::str(boost::format("%.2f") % tols_0(0,5)); boost::replace_all(tyz1_0,",",".");
+                string tyz1_1 = boost::str(boost::format("%.2f") % tols_1(0,5)); boost::replace_all(tyz1_1,",",".");
+                string tyz1_2 = boost::str(boost::format("%.2f") % tols_2(0,5)); boost::replace_all(tyz1_2,",",".");
+
+                PostureMod << string("param tol_target_yz1 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tyz1_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tyz1_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tyz1_2+string("; \n");
+
+                // yz2
+                string tyz2_0 = boost::str(boost::format("%.2f") % tols_0(1,5)); boost::replace_all(tyz2_0,",",".");
+                string tyz2_1 = boost::str(boost::format("%.2f") % tols_1(1,5)); boost::replace_all(tyz2_1,",",".");
+                string tyz2_2 = boost::str(boost::format("%.2f") % tols_2(1,5)); boost::replace_all(tyz2_2,",",".");
+
+                PostureMod << string("param tol_target_yz2 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tyz2_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tyz2_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tyz2_2+string("; \n");
+
+
+                // yz3
+                string tyz3_0 = boost::str(boost::format("%.2f") % tols_0(2,5)); boost::replace_all(tyz3_0,",",".");
+                string tyz3_1 = boost::str(boost::format("%.2f") % tols_1(2,5)); boost::replace_all(tyz3_1,",",".");
+                string tyz3_2 = boost::str(boost::format("%.2f") % tols_2(2,5)); boost::replace_all(tyz3_2,",",".");
+
+                PostureMod << string("param tol_target_yz3 {i in 1..Nsteps+1} := \n");
+                PostureMod << string("if 		(i <= (Nsteps+1)*0.8) then ")+tyz3_0+string("\n");
+                PostureMod << string("else if (i>(Nsteps+1)*0.8 && i < (Nsteps+1)*0.95) then ")+tyz3_1+string("\n");
+                PostureMod << string("else if (i>=(Nsteps+1)*0.95) then ")+tyz3_2+string("; \n");
+
+
+                PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+                PostureMod << string("# \n");
+                if (engage){
+                    PostureMod << string("subject to target_Arm{j in 1..18, l in 1..Nsteps-2}:   \n");
+
+                }else if (gopark && release_object){
+                    PostureMod << string("subject to target_Arm{j in 1..15, l in 5..Nsteps+1}:   \n");
+                }else if(!gopark && !release_object){
+                    PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps-2}:   \n");
+
+                }
+                if((gopark && release_object) || (!gopark && !release_object) ){
+                    PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
+                    PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
+                    PostureMod << string("(x_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xx2[l])^2) + \n");
+                    PostureMod << string("(x_t[3])^2 / ((ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_xx3[l])^2)) \n");
+                    PostureMod << string("+ \n");
+                    PostureMod << string("((Points_Arm[j,2,l]-ObjTar[1,2])^2)*(  \n");
+                    PostureMod << string("(y_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_yy1[l])^2) + \n");
+                    PostureMod << string("(y_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_yy2[l])^2) + \n");
+                    PostureMod << string("(y_t[3])^2 / ((ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_yy3[l])^2)) \n");
+                    PostureMod << string("+ \n");
+                    PostureMod << string("((Points_Arm[j,3,l]-ObjTar[1,3])^2)*( \n");
+                    PostureMod << string("(z_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_zz1[l])^2) + \n");
+                    PostureMod << string("(z_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_zz2[l])^2) +  \n");
+                    PostureMod << string("(z_t[3])^2 / ((ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_zz3[l])^2)) \n");
+                    PostureMod << string("+ \n");
+                    PostureMod << string("2*(Points_Arm[j,1,l]-ObjTar[1,1])*(Points_Arm[j,2,l]-ObjTar[1,2])* ( \n");
+                    PostureMod << string("(x_t[1]*y_t[1])/((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xy1[l])^2) + \n");
+                    PostureMod << string("(x_t[2]*y_t[2])/((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xy2[l])^2) + \n");
+                    PostureMod << string("(x_t[3]*y_t[3])/((ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_xy3[l])^2)) \n");
+                    PostureMod << string("+ \n");
+                    PostureMod << string("2*(Points_Arm[j,1,l]-ObjTar[1,1])*(Points_Arm[j,3,l]-ObjTar[1,3])* ( \n");
+                    PostureMod << string("(x_t[1]*z_t[1])/((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xz1[l])^2) + \n");
+                    PostureMod << string("(x_t[2]*z_t[2])/((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xz2[l])^2) + \n");
+                    PostureMod << string("(x_t[3]*z_t[3])/((ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_xz3[l])^2)) \n");
+                    PostureMod << string("+ \n");
+                    PostureMod << string("2*(Points_Arm[j,2,l]-ObjTar[1,2])*(Points_Arm[j,3,l]-ObjTar[1,3])* (\n");
+                    PostureMod << string("(y_t[1]*z_t[1])/((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_yz1[l])^2) + \n");
+                    PostureMod << string("(y_t[2]*z_t[2])/((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_yz2[l])^2) + \n");
+                    PostureMod << string("(y_t[3]*z_t[3])/((ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_yz3[l])^2)) \n");
+                    PostureMod << string("-1 >=0; \n");
+                    PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+                    PostureMod << string("# \n");
+                }
+
+           }
+
+        }
+
+     if(obstacle_avoidance){
+        // coinstraints with the obstacles
+        MatrixXf tolsObs_0 = tolsObstacles.at(0);
+        MatrixXf tolsObs_1 = tolsObstacles.at(1);
+        //xx1
+        string tbxx1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,0)); boost::replace_all(tbxx1_0,",",".");
+        string tbxx1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,0)); boost::replace_all(tbxx1_1,",",".");
+        PostureMod << string("param tol_obs_xx1 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxx1_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxx1_1+string("; \n");
+
+        //xx2
+        string tbxx2_0 = boost::str(boost::format("%.2f") % tolsObs_0(1,0)); boost::replace_all(tbxx2_0,",",".");
+        string tbxx2_1 = boost::str(boost::format("%.2f") % tolsObs_1(1,0)); boost::replace_all(tbxx2_1,",",".");
+
+        PostureMod << string("param tol_obs_xx2 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxx2_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxx2_1+string("; \n");
+
+
+        // xx3
+        string tbxx3_0 = boost::str(boost::format("%.2f") % tolsObs_0(2,0)); boost::replace_all(tbxx3_0,",",".");
+        string tbxx3_1 = boost::str(boost::format("%.2f") % tolsObs_1(2,0)); boost::replace_all(tbxx3_1,",",".");
+
+        PostureMod << string("param tol_obs_xx3 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxx3_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxx3_1+string("; \n");
+
+        // yy1
+        string tbyy1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,1)); boost::replace_all(tbyy1_0,",",".");
+        string tbyy1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,1)); boost::replace_all(tbyy1_1,",",".");
+
+        PostureMod << string("param tol_obs_yy1 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbyy1_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbyy1_1+string("; \n");
+
+        // yy2
+        string tbyy2_0 = boost::str(boost::format("%.2f") % tolsObs_0(1,1)); boost::replace_all(tbyy2_0,",",".");
+        string tbyy2_1 = boost::str(boost::format("%.2f") % tolsObs_1(1,1)); boost::replace_all(tbyy2_1,",",".");
+
+        PostureMod << string("param tol_obs_yy2 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbyy2_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbyy2_1+string("; \n");
+
+
+        // yy3
+        string tbyy3_0 = boost::str(boost::format("%.2f") % tolsObs_0(2,1)); boost::replace_all(tbyy3_0,",",".");
+        string tbyy3_1 = boost::str(boost::format("%.2f") % tolsObs_1(2,1)); boost::replace_all(tbyy3_1,",",".");
+
+        PostureMod << string("param tol_obs_yy3 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbyy3_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbyy3_1+string("; \n");
+
+
+        // zz1
+        string tbzz1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,2)); boost::replace_all(tbzz1_0,",",".");
+        string tbzz1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,2)); boost::replace_all(tbzz1_1,",",".");
+
+        PostureMod << string("param tol_obs_zz1 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbzz1_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbzz1_1+string("; \n");
+
+        // zz2
+        string tbzz2_0 = boost::str(boost::format("%.2f") % tolsObs_0(1,2)); boost::replace_all(tbzz2_0,",",".");
+        string tbzz2_1 = boost::str(boost::format("%.2f") % tolsObs_1(1,2)); boost::replace_all(tbzz2_1,",",".");
+
+        PostureMod << string("param tol_obs_zz2 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbzz2_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbzz2_1+string("; \n");
+
+        // zz3
+        string tbzz3_0 = boost::str(boost::format("%.2f") % tolsObs_0(2,2)); boost::replace_all(tbzz3_0,",",".");
+        string tbzz3_1 = boost::str(boost::format("%.2f") % tolsObs_1(2,2)); boost::replace_all(tbzz3_1,",",".");
+
+        PostureMod << string("param tol_obs_zz3 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbzz3_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbzz3_1+string("; \n");
+
+
+        // xy1
+        string tbxy1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,3)); boost::replace_all(tbxy1_0,",",".");
+        string tbxy1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,3)); boost::replace_all(tbxy1_1,",",".");
+
+        PostureMod << string("param tol_obs_xy1 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxy1_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxy1_1+string("; \n");
+
+        // xy2
+        string tbxy2_0 = boost::str(boost::format("%.2f") % tolsObs_0(1,3)); boost::replace_all(tbxy2_0,",",".");
+        string tbxy2_1 = boost::str(boost::format("%.2f") % tolsObs_1(1,3)); boost::replace_all(tbxy2_1,",",".");
+
+        PostureMod << string("param tol_obs_xy2 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxy2_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxy2_1+string("; \n");
+
+        // xy3
+        string tbxy3_0 = boost::str(boost::format("%.2f") % tolsObs_0(2,3)); boost::replace_all(tbxy3_0,",",".");
+        string tbxy3_1 = boost::str(boost::format("%.2f") % tolsObs_1(2,3)); boost::replace_all(tbxy3_1,",",".");
+
+        PostureMod << string("param tol_obs_xy3 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxy3_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxy3_1+string("; \n");
+
+
+        // xz1
+        string tbxz1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,4)); boost::replace_all(tbxz1_0,",",".");
+        string tbxz1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,4)); boost::replace_all(tbxz1_1,",",".");
+
+        PostureMod << string("param tol_obs_xz1 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxz1_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxz1_1+string("; \n");
+
+        // xz2
+        string tbxz2_0 = boost::str(boost::format("%.2f") % tolsObs_0(1,4)); boost::replace_all(tbxz2_0,",",".");
+        string tbxz2_1 = boost::str(boost::format("%.2f") % tolsObs_1(1,4)); boost::replace_all(tbxz2_1,",",".");
+
+        PostureMod << string("param tol_obs_xz2 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxz2_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxz2_1+string("; \n");
+
+        // xz3
+        string tbxz3_0 = boost::str(boost::format("%.2f") % tolsObs_0(2,4)); boost::replace_all(tbxz3_0,",",".");
+        string tbxz3_1 = boost::str(boost::format("%.2f") % tolsObs_1(2,4)); boost::replace_all(tbxz3_1,",",".");
+
+        PostureMod << string("param tol_obs_xz3 {i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbxz3_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbxz3_1+string("; \n");
+
+        // yz1
+        string tbyz1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,5)); boost::replace_all(tbyz1_0,",",".");
+        string tbyz1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,5)); boost::replace_all(tbyz1_1,",",".");
+
+        PostureMod << string("param tol_obs_yz1{i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbyz1_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbyz1_1+string("; \n");
+
+        // yz2
+        string tbyz2_0 = boost::str(boost::format("%.2f") % tolsObs_0(1,5)); boost::replace_all(tbyz2_0,",",".");
+        string tbyz2_1 = boost::str(boost::format("%.2f") % tolsObs_1(1,5)); boost::replace_all(tbyz2_1,",",".");
+
+        PostureMod << string("param tol_obs_yz2{i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbyz2_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbyz2_1+string("; \n");
+
+
+        // yz3
+        string tbyz3_0 = boost::str(boost::format("%.2f") % tolsObs_0(2,5)); boost::replace_all(tbyz3_0,",",".");
+        string tbyz3_1 = boost::str(boost::format("%.2f") % tolsObs_1(2,5)); boost::replace_all(tbyz3_1,",",".");
+
+        PostureMod << string("param tol_obs_yz3{i in 1..Nsteps+1} :=  \n");
+        PostureMod << string("if 		(i < (Nsteps/2)+1) then ")+tbyz3_0+string("\n");
+        PostureMod << string("else if (i > (Nsteps/2)) then ")+tbyz3_1+string("; \n");
+
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("# \n");
+        if(engage || transport){
+             PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n");
+        }else if(gopark){
+            PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n");
+        }else{
+             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n");
+        }
+        PostureMod << string("((Points_Arm[j,1,l]-Obstacles[i,1])^2)*(\n");
+        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_xx1[l])^2) +\n");
+        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_xx2[l])^2) + \n");
+        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_xx3[l])^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("((Points_Arm[j,2,l]-Obstacles[i,2])^2)*( \n");
+        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_yy1[l])^2) + \n");
+        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_yy2[l])^2) + \n");
+        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_yy3[l])^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("((Points_Arm[j,3,l]-Obstacles[i,3])^2)*( \n");
+        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_zz1[l])^2) + \n");
+        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_zz2[l])^2) + \n");
+        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_zz3[l])^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm[j,1,l]-Obstacles[i,1])*(Points_Arm[j,2,l]-Obstacles[i,2])* ( \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_xy1[l])^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_xy2[l])^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_xy3[l])^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm[j,1,l]-Obstacles[i,1])*(Points_Arm[j,3,l]-Obstacles[i,3])* ( \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_xz1[l])^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_xz2[l])^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_xz3[l])^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm[j,2,l]-Obstacles[i,2])*(Points_Arm[j,3,l]-Obstacles[i,3])* ( \n");
+        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_yz1[l])^2) + \n");
+        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_yz2[l])^2) + \n");
+        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_yz3[l])^2)) \n");
+        PostureMod << string("-1 >=0; \n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+        PostureMod << string("# \n");
+
+     }
+     // constraints with the body
+     this->writeBodyConstraints(PostureMod,false);
+
+     // constraints with the table
+     //this->writeTableConstraints(PostureMod,false,griptype,tols_table);
+
+     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
+
+     // close the file
+     PostureMod.close();
+
+     // ----- write run file for options --------
+     string filenamerun("options.run");
+     ofstream optionsrun;
+     // open the file
+     optionsrun.open(path+filenamerun);
+
+     optionsrun << string("option presolve 0; \n");
+
+
+     //close the file
+     optionsrun.close();
+
+     return true;
+
+}
+
+void HUMPlanner::getObstaclesSingleArm(std::vector<double> center, double radius, std::vector<objectPtr> &obsts, int hand_code)
+{
+    double tol;
+    switch (hand_code){
+    case 0: // human hand
+        tol = 50.0;
+        break;
+    case 1://barrett hand
+        tol = 5;
+        break;
+    }
+
+    for (std::size_t i =0; i < this->obstacles.size(); ++i){
+        objectPtr obj = obstacles.at(i);
+        // get the RPY matrix
+        Matrix3f Rot; std::vector<double> rpy; obj->getOr(rpy); this->RPY_matrix(rpy,Rot);
+        // get the position of the object
+        std::vector<double> pos; obj->getPos(pos);
+        // get the size of the object
+        std::vector<double> dim; obj->getSize(dim);
+        // distance vector
+        Vector3f diff;
+        diff(0) = center.at(0) - pos.at(0);
+        diff(1) = center.at(1) - pos.at(1);
+        diff(2) = center.at(2) - pos.at(2);
+        // A matrix
+        Matrix3f A;
+        A(0,0) = 1/pow(radius+dim.at(0)+tol,2); A(0,1) = 0; A(0,2) = 0;
+        A(1,0) = 0; A(1,1) = 1/pow(radius+dim.at(1)+tol,2); A(1,2) = 0;
+        A(2,0) = 0; A(2,1) = 0; A(2,2) = 1/pow(radius+dim.at(2)+tol,2);
+
+        MatrixXf diff1 = MatrixXf::Zero(3,1);
+        diff1(0,0) = diff(0); diff1(1,0) = diff(1); diff1(2,0) = diff(2);
+
+        MatrixXf diffT = diff1.transpose();
+        MatrixXf RotT = Rot.transpose();
+
+        MatrixXf to_check = diffT*RotT;
+        to_check = to_check * A;
+        to_check = to_check * Rot;
+        to_check = to_check * diff;
+
+        if (to_check(0,0) < 1){
+            // the object is a real obstacle
+            obsts.push_back(obj);
+        }
+
+    }
+
+}
+
+bool HUMPlanner::amplRead(string &datFile, string &modFile, string &nlFile)
+{
+    string cmdLine;
+
+#if AMPL==0
+    cmdLine = string("wine ")+AMPL_PATH+string("/ampl.exe -ogModels/")+nlFile+string(" Models/")+modFile+string(".mod")+
+            string(" Models/")+datFile+string(".dat")+string(" Models/options.run");
+#elif AMPL==1
+    cmdLine = AMPL_PATH+string("/./ampl -ogModels/")+nlFile+string(" Models/")+modFile+string(".mod")+
+            string(" Models/")+datFile+string(".dat")+string(" Models/options.run");
+#endif
+    int status = system(cmdLine.c_str());
+
+    return (status >= 0);
+}
+
+bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, double acc_tol)
+{
+    // Create a new instance of IpoptApplication
+    //  (use a SmartPtr, not raw)
+    // We are using the factory, since this allows us to compile this
+    // example with an Ipopt Windows DLL
+    SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+    app->RethrowNonIpoptException(true);
+
+    app->Options()->SetNumericValue("tol", tol);
+    app->Options()->SetNumericValue("acceptable_tol", acc_tol);
+    app->Options()->SetStringValue("output_file", "ipopt.out");
+    app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    app->Options()->SetIntegerValue("print_level",3);
+
+    // Initialize the IpoptApplication and process the options
+    ApplicationReturnStatus status;
+    status = app->Initialize();
+    if (status != Solve_Succeeded) {
+      std::cout << std::endl << std::endl << "*** Error during initialization!" << std::endl;
+      return (int) status;
+    }
+
+    // Add the suffix handler for scaling
+    SmartPtr<AmplSuffixHandler> suffix_handler = new AmplSuffixHandler();
+    suffix_handler->AddAvailableSuffix("scaling_factor", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("scaling_factor", AmplSuffixHandler::Constraint_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("scaling_factor", AmplSuffixHandler::Objective_Source, AmplSuffixHandler::Number_Type);
+    // Modified for warm-start from AMPL
+    suffix_handler->AddAvailableSuffix("ipopt_zL_out", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("ipopt_zU_out", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("ipopt_zL_in", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("ipopt_zU_in", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+
+    char *cstr = new char[nlfile.length() + 1];
+    strcpy(cstr, nlfile.c_str());
+
+    SmartPtr<AmplInterface> ampl_tnlp = new AmplInterface(ConstPtr(app->Jnlst()),
+                                            app->Options(),
+                                            cstr, suffix_handler);
+
+
+    delete [] cstr;
+
+    // Ask Ipopt to solve the problem
+    status = app->OptimizeTNLP(ampl_tnlp);
+    std::vector<Number> x_sol;
+    std::vector<Number> z_L_sol;
+    std::vector<Number> z_U_sol;
+    std::vector<Number> lambda_sol;
+    Number obj_sol;
+
+    if (ampl_tnlp->get_status() == SolverReturn::SUCCESS){
+        ampl_tnlp->get_solutions(x_sol,
+                                 z_L_sol,
+                                 z_U_sol,
+                                 lambda_sol,
+                                 obj_sol);
+
+        x=x_sol;
+
+        return true;
+
+    }else{
+        x=x_sol;
+
+        return false;
+
+    }
+}
+
+bool HUMPlanner::singleArmFinalPosture_pick(huml_params& params, std::vector<double>& initPosture, std::vector<double>& finalPosture)
+
+{
+    // movement settings
+    int arm_code = params.mov_specs.arm_code;
+    int hand_code = params.mov_specs.hand_code;
+    std::vector<double> target = params.mov_specs.target;
+    //double dHO = params.mov_specs.dHO;
+    //int griptype = params.mov_specs.griptype;
+    //std::vector<double> finalHand = params.mov_specs.finalHand;
+    //std::string infoline = params.mov_specs.mov_infoline;
+    //std::vector<double> pre_grasp_approach = params.mov_specs.pre_grasp_approach;
+    //std::vector<double> post_grasp_retreat = params.mov_specs.post_grasp_retreat;
+    //tolerances
+    //std::vector<double> tolsArm = params.tolsArm;
+    //MatrixXf tolsHand = params.tolsHand;
+    //MatrixXf tolsObstacles = params.final_tolsObstacles;
+    //double tolTarPos = params.tolTarPos;
+    //double tolTarOr = params.tolTarOr;
+    //std::vector<double> lambda = params.lambda_final;
+    //bool obstacle_avoidance = params.obstacle_avoidance;
+
+    std::vector<double> initArmPosture(initPosture.begin(),initPosture.begin()+joints_arm);
+
+    // initial guess choice
+    std::vector<double> initialGuess = initArmPosture; // arbitrary choice
+
+    double Lu; double Ll; double Lh;
+    switch(arm_code){
+    case 0: // dual arm
+        //TO DO
+        break;
+    case 1: // right arm
+        Lu = this->DH_rightArm.d.at(2);
+        Ll = this->DH_rightArm.d.at(4);
+        Lh = this->DH_rightArm.d.at(6);
+        break;
+    case 2: // left arm
+        Lu = this->DH_leftArm.d.at(2);
+        Ll = this->DH_leftArm.d.at(4);
+        Lh = this->DH_leftArm.d.at(6);
+        break;
+    }
+    double max_ext = Lh+Ll+Lu;
+    if(sqrt(pow(target.at(0) -this->shPos.at(0),2)+
+            pow(target.at(1) -this->shPos.at(1),2)+
+            pow(target.at(2) -this->shPos.at(2),2))>= max_ext){
+        throw string("The object to grasp is too far away");
+    }
+    // get the obstacles of the workspace
+    std::vector<objectPtr> obsts;
+    this->getObstaclesSingleArm(this->shPos,max_ext,obsts,hand_code);
+
+    // write the files for the final posture selection
+    int mov_type = 0; // reach-to-grasp/pick
+    bool written = this->writeFilesFinalPosture(params,mov_type,initArmPosture,initialGuess,obsts);
+
+    if(written){
+        // call AMPL the produce the .nl file
+        string fn = string("FinalPosture");
+        bool nlwritten = this->amplRead(fn,fn,fn);
+        if(nlwritten){
+            // call ipopt for optimization
+            string nlfile = string("Models/")+fn+string(".nl");
+            std::vector<Number> x_sol = std::vector<Number>(joints_arm);
+            try
+            {
+                double tol_stop = 1e-2;
+                if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
+                    finalPosture = std::vector<double>(x_sol.size());
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
+                        finalPosture.at(i)=x_sol[i];
+                    }
+                    return true;
+                }else{return false;}
+            }catch(const std::exception &exc){throw string(exc.what());}
+        }else{throw string("Error in reading the files for optimization");}
+    }else{throw string("Error in writing the files for optimization");}
+
+}
+
+bool HUMPlanner::singleArmBouncePostureReachToGrasp(huml_params& tols, int arm_code,int hand_code, int griptype,int mov_type,std::vector<double> shPos, std::vector<double> target,
+                                                    std::vector<double> initPosture,std::vector<double> finalPosture, std::vector<double> finalHand,int targetAxis,
+                                                    double dHO, std::vector<double>& bouncePosture,string infoline)
 {
 
+
+    std::vector<double> initialGuess;
+    std::vector<double> minLimits;
+    std::vector<double> maxLimits;
+    DHparameters dh;
+    //tolerances
+    boundaryConditions b = tols.bounds;
+    boundaryConditions bAux;
+    int steps = tols.steps;
+    double totalTime = 1.0;
+    std::vector<double> tolsArm = tols.tolsArm;
+    MatrixXf tolsHand = tols.tolsHand;
+    std::vector< MatrixXf > tolsTarget = tols.singleArm_tolsTarget;
+    std::vector< MatrixXf > tolsObstacles = tols.singleArm_tolsObstacles;
+    std::vector<double> lambda = tols.lambda_bounce;
+    bool target_avoidance = tols.target_avoidance;
+    bool obstacle_avoidance = tols.obstacle_avoidance;
+
+    switch(arm_code){
+    case 1: // right arm
+        minLimits = this->minRightLimits;
+        maxLimits = this->maxRightLimits;
+        dh = this->DH_rightArm;
+        break;
+    case 2: // left arm
+        minLimits = this->minLeftLimits;
+        maxLimits = this->maxLeftLimits;
+        dh = this->DH_leftArm;
+        break;
+    }
+    std::vector<double> initAuxPosture(initPosture.begin(),initPosture.begin()+joints_arm);
+    std::vector<double> finalAuxPosture(finalPosture.begin(),finalPosture.begin()+joints_arm);
+    std::vector<double> minAuxLimits(minLimits.begin(),minLimits.begin()+joints_arm);
+    std::vector<double> maxAuxLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
+    std::vector<double> lambdaAux(lambda.begin(),lambda.begin()+joints_arm);
+    std::vector<double> vel0Aux(b.vel_0.begin(),b.vel_0.begin()+joints_arm);
+    std::vector<double> velfAux(b.vel_f.begin(),b.vel_f.begin()+joints_arm);
+    std::vector<double> acc0Aux(b.acc_0.begin(),b.acc_0.begin()+joints_arm);
+    std::vector<double> accfAux(b.acc_f.begin(),b.acc_f.begin()+joints_arm);
+    switch(hand_code){
+    case 0:// human hand
+        initAuxPosture.push_back(initPosture.at(7));
+        initAuxPosture.push_back(initPosture.at(8));
+        initAuxPosture.push_back(initPosture.at(10));
+        finalAuxPosture.push_back(finalPosture.at(7));
+        finalAuxPosture.push_back(finalPosture.at(8));
+        finalAuxPosture.push_back(finalPosture.at(10));
+        minAuxLimits.push_back(minLimits.at(7));
+        minAuxLimits.push_back(minLimits.at(8));
+        minAuxLimits.push_back(minLimits.at(10));
+        maxAuxLimits.push_back(maxLimits.at(7));
+        maxAuxLimits.push_back(maxLimits.at(8));
+        maxAuxLimits.push_back(maxLimits.at(10));
+        lambdaAux.push_back(lambda.at(7));
+        lambdaAux.push_back(lambda.at(8));
+        lambdaAux.push_back(lambda.at(10));
+        vel0Aux.push_back(b.vel_0.at(7));
+        vel0Aux.push_back(b.vel_0.at(8));
+        vel0Aux.push_back(b.vel_0.at(10));
+        velfAux.push_back(b.vel_f.at(7));
+        velfAux.push_back(b.vel_f.at(8));
+        velfAux.push_back(b.vel_f.at(10));
+        acc0Aux.push_back(b.acc_0.at(7));
+        acc0Aux.push_back(b.acc_0.at(8));
+        acc0Aux.push_back(b.acc_0.at(10));
+        accfAux.push_back(b.acc_f.at(7));
+        accfAux.push_back(b.acc_f.at(8));
+        accfAux.push_back(b.acc_f.at(10));
+        break;
+    case 1:// barrett hand
+        initAuxPosture.push_back(initPosture.at(8));
+        initAuxPosture.push_back(initPosture.at(10));
+        finalAuxPosture.push_back(finalPosture.at(8));
+        finalAuxPosture.push_back(finalPosture.at(10));
+        minAuxLimits.push_back(minLimits.at(8));
+        minAuxLimits.push_back(minLimits.at(10));
+        maxAuxLimits.push_back(maxLimits.at(8));
+        maxAuxLimits.push_back(maxLimits.at(10));
+        lambdaAux.push_back(lambda.at(8));
+        lambdaAux.push_back(lambda.at(10));
+        vel0Aux.push_back(b.vel_0.at(8));
+        vel0Aux.push_back(b.vel_0.at(10));
+        velfAux.push_back(b.vel_f.at(8));
+        velfAux.push_back(b.vel_f.at(10));
+        acc0Aux.push_back(b.acc_0.at(8));
+        acc0Aux.push_back(b.acc_0.at(10));
+        accfAux.push_back(b.acc_f.at(8));
+        accfAux.push_back(b.acc_f.at(10));
+        break;
+    }
+    bAux.vel_0=vel0Aux;
+    bAux.vel_f=velfAux;
+    bAux.acc_0=acc0Aux;
+    bAux.acc_f=accfAux;
+    // initial guess choice
+    initialGuess = initAuxPosture;
+
+    double Lu = dh.d.at(2);
+    double Ll = dh.d.at(4);
+    double Lh = dh.d.at(6);
+    double max_ext = Lh+Ll+Lu;
+    // get the obstacles of the workspace
+    std::vector<objectPtr> obsts;
+    this->getObstaclesSingleArm(shPos,max_ext,obsts,hand_code);
+
+    bool written = this->writeFilesBouncePosture(mov_type,dHO,griptype,steps,totalTime,minAuxLimits,maxAuxLimits,initAuxPosture,finalAuxPosture,
+                                                 finalHand,initialGuess,obsts,target,targetAxis,bAux,tolsArm,tolsHand,tolsTarget,tolsObstacles,
+                                                 lambda,target_avoidance,obstacle_avoidance,arm_code,hand_code,infoline);
+    if (written){
+        // call AMPL the produce the .nl file
+        string fn = string("BouncePosture");
+        bool nlwritten = this->amplRead(fn,fn,fn);
+        if(nlwritten){
+            // call ipopt for optimization
+            string nlfile = string("Models/")+fn+string(".nl");
+            std::vector<Number> x_sol = std::vector<Number>(joints_arm);
+            try
+            {
+                double tol_stop = 1e-6;
+                if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
+                    bouncePosture = std::vector<double>(joints_arm);
+                    for (std::size_t i=0; i < x_sol.size()-2; ++i){
+                       // printf("x[%i] = %f\n", i, x_sol[i]);
+                        //switch(arm_code){
+                        //case 1: //right arm
+                            //this->rightBouncePosture.at(i) = x_sol[i];
+                            //break;
+                        //case 2: // left arm
+                            //this->leftBouncePosture.at(i) = x_sol[i];
+                            //break;
+                        //}
+                        bouncePosture.at(i) = x_sol[i];
+
+                    }
+                    switch(hand_code){
+                    case 0://human hand
+                        bouncePosture.at(7) = x_sol[7];
+                        bouncePosture.at(8) = x_sol[8];
+                        bouncePosture.at(9) = x_sol[8];
+                        bouncePosture.at(10) = x_sol[9];
+                        break;
+                    case 1:// barrett hand
+                        bouncePosture.at(7) = 0.0;
+                        bouncePosture.at(8) = x_sol[8];
+                        bouncePosture.at(9) = x_sol[8];
+                        bouncePosture.at(10) = x_sol[7];
+                        break;
+
+                    }
+                    return true;
+                }else{return false;}
+            }catch(const std::exception &exc){throw string(exc.what());}
+        }else{throw string("Error in writing the files for optimization");}
+    }else{throw string("Error in writing the files for optimization");}
+
+
+}
+
+double HUMPlanner::getTimeStep(huml_params &tols, MatrixXf &jointTraj)
+{
+    int steps1 = jointTraj.rows();
+    int n_joints = jointTraj.cols();
+    double timestep;
+
+    std::vector<double> w_max = tols.w_max;
+    std::vector<double> lambda = tols.lambda_bounce;
+
+
+    double num = 0;
+    double den = 0;
+
+    for (int k =0; k < n_joints; ++k){
+
+        double time_k;
+        double deltaTheta = 0;
+        std::vector<double> diffs;
+        for (int i = 1; i < steps1; ++i){
+
+            double diff = abs(jointTraj(i,k) - jointTraj(i-1,k))*180/M_PI;
+            diffs.push_back(diff);
+            deltaTheta = deltaTheta + diff;
+
+
+        }
+        std::vector<double>::iterator res = std::max_element(diffs.begin(),diffs.end());
+        int poss = std::distance(diffs.begin(),res);
+        double deltaThetaMax = diffs.at(poss);
+        double tol = -3.0; // tolerance in [deg/sec]
+        time_k = ((steps1-1)*deltaThetaMax/(w_max.at(k)+tol)) + (lambda.at(k)*log(1+deltaTheta));
+
+        num = num + lambda.at(k)*deltaTheta*time_k;
+        den = den + lambda.at(k)*deltaTheta;
+
+    }
+
+    double totalTime = num/den;
+    timestep = (totalTime/(steps1-1));
+    return timestep;
+}
+
+void HUMPlanner::getDelta(VectorXf& jointTraj, std::vector<double> &delta)
+{
+    // Formula of the numarical differentiation with 5 points
+       // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
+       // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
+       // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
+       // f'3 = ( -1*f0 +  6*f1 - 18*f2 + 10*f3 +  3*f4)/(12*h) - h^4/20*f^(5)(c_3)
+       // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
+
+       delta = std::vector<double>(jointTraj.size());
+
+       int h = 1;
+       int tnsample;
+       double f0;
+       double f1;
+       double f2;
+       double f3;
+       double f4;
+
+       // 1st point
+       // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
+       tnsample = 0;
+       f0 = jointTraj(tnsample);
+       f1 = jointTraj(tnsample+1);
+       f2 = jointTraj(tnsample+2);
+       f3 = jointTraj(tnsample+3);
+       f4 = jointTraj(tnsample+4);
+       delta.at(tnsample) = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h);
+
+       // 2nd point
+       // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
+       tnsample = 1;
+       f0 = jointTraj(tnsample-1);
+       f1 = jointTraj(tnsample);
+       f2 = jointTraj(tnsample+1);
+       f3 = jointTraj(tnsample+2);
+       f4 = jointTraj(tnsample+3);
+       delta.at(tnsample) = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h);
+
+       // 3rd point
+       // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
+       for (int i=2; i< jointTraj.size() -2;++i){     // centered
+           f0 = jointTraj(i-2);
+           f1 = jointTraj(i-1);
+           f2 = jointTraj(i);
+           f3 = jointTraj(i+1);
+           f4 = jointTraj(i+2);
+           delta.at(i) = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h);
+       }
+
+       // 4th point
+       // f'3 = ( -1*f0 +  6*f1 - 18*f2 + 10*f3 +  3*f4)/(12*h) - h^4/20*f^(5)(c_3)
+       tnsample = jointTraj.size()-2;
+       f0 = jointTraj(tnsample-3);
+       f1 = jointTraj(tnsample-2);
+       f2 = jointTraj(tnsample-1);
+       f3 = jointTraj(tnsample);
+       f4 = jointTraj(tnsample+1);
+       delta.at(tnsample) = ( -f0+6*f1-18*f2+10*f3+3*f4)/(12*h);
+
+       // 5th point
+       // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
+       tnsample = jointTraj.size()-1;
+       f0 = jointTraj(tnsample-4);
+       f1 = jointTraj(tnsample-3);
+       f2 = jointTraj(tnsample-2);
+       f3 = jointTraj(tnsample-1);
+       f4 = jointTraj(tnsample);
+       delta.at(tnsample) = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h);
+
+}
+
+void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, MatrixXf &Traj)
+{
+    int steps = tols.steps;
+    double delta = 1.0/steps;
+    std::vector<double> time;
+
+    std::vector<double> vel_0 = tols.bounds.vel_0;
+    std::vector<double> vel_f = tols.bounds.vel_f;
+    std::vector<double> acc_0 = tols.bounds.acc_0;
+    std::vector<double> acc_f = tols.bounds.acc_f;
+
+    double T = 1.0;
+
+    time.push_back(0.0);
+    for (int i = 0; i<steps; ++i){
+        time.push_back(time.at(i)+delta);
+    }
+    Traj = MatrixXf::Constant(steps+1,initPosture.size(),0);
+
+    for (int i = 0; i <= steps;++i){
+        for (std::size_t j = 0; j<initPosture.size(); ++j){
+            Traj(i,j) = initPosture.at(j) +
+                    (initPosture.at(j) - finalPosture.at(j))*
+                    (15*pow(time.at(i),4)-6*pow(time.at(i),5)-10*pow(time.at(i),3))+
+                    vel_0.at(j)*T*(time.at(i)-6*pow(time.at(i),3)+8*pow(time.at(i),4)-3*pow(time.at(i),5))+
+                    vel_f.at(j)*T*(-4*pow(time.at(i),3)+7*pow(time.at(i),4)-3*pow(time.at(i),5))+
+                    0.5*acc_0.at(j)*pow(T,2)*(pow(time.at(i),2)-3*pow(time.at(i),3)+3*pow(time.at(i),4)-pow(time.at(i),5))+
+                    0.5*acc_f.at(j)*pow(T,2)*(pow(time.at(i),3)-2*pow(time.at(i),4)+pow(time.at(i),5));
+        }
+    }
+
+}
+
+void HUMPlanner::backForthMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, MatrixXf &Traj)
+{
+
+    int steps = tols.steps;
+    double delta = 1.0/steps;
+    std::vector<double> time;
+
+    double tb = 0.5; // tb = [0,1], it constrols when the bounce posture is reached. 0.5 means at the middle of the movement
+
+    time.push_back(0.0);
+    for (int i = 0; i<steps; ++i){
+        time.push_back(time.at(i)+delta);
+    }
+    Traj = MatrixXf::Constant(steps+1,initPosture.size(),0);
+
+    for (int i = 0; i<steps;++i){ // the last row is zero for all the joints
+        for (std::size_t j = 0; j<initPosture.size(); ++j){
+              Traj(i,j) = (bouncePosture.at(j) - initPosture.at(j))* pow(sin(M_PI*time.at(i)),(-log(2.0)/log(tb)));
+        }
+    }
+}
+
+void HUMPlanner::computeTraj(const MatrixXf &dTraj, const MatrixXf &bTraj, MatrixXf& totTraj)
+{
+    totTraj = MatrixXf::Constant(dTraj.rows(),dTraj.cols(),0);
+
+    for (int i = 0; i<dTraj.rows();++i){
+        for (int j = 0; j<dTraj.cols(); ++j){
+            totTraj(i,j) = dTraj(i,j)+bTraj(i,j);
+        }
+    }
+}
+
+double HUMPlanner::getTrajectory(huml_params &tols,int mov_type,int arm_code, std::vector<double> initPosture,
+                                 std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXf &traj)
+{
+
+    double timestep;
+    MatrixXf dTraj;
+    MatrixXf bTraj;
+    MatrixXf totTraj;
+
+    switch (mov_type) {
+        case 0: // reach-to-grasp
+            this->directMovement(tols,initPosture,finalPosture,dTraj);
+            this->backForthMovement(tols,initPosture,bouncePosture,bTraj);
+            this->computeTraj(dTraj,bTraj,totTraj);
+            timestep = this->getTimeStep(tols,traj);
+            break;
+        case 1: // reaching
+            break;
+        case 2: // transport
+            break;
+        case 3: // engage
+        /*
+            switch(arm_code){
+
+            case 0: // both arms
+
+                // TO DO
+                break;
+
+            case 1: // right arm
+                this->scene->getHumanoid()->getRightPosture(initPosture);
+                finalPosture=this->rightFinalPosture;
+                fPosture_diseng=this->rightFinalPosture_diseng;
+                fPosture_eng=this->rightFinalPosture_eng;
+                bouncePosture=this->rightBouncePosture;
+                break;
+            case 2: // left arm
+                this->scene->getHumanoid()->getLeftPosture(initPosture);
+                finalPosture=this->leftFinalPosture;
+                fPosture_diseng=this->leftFinalPosture_diseng;
+                fPosture_eng=this->leftFinalPosture_eng;
+                bouncePosture=this->leftBouncePosture;
+                break;
+            }
+
+            this->directMovement(initPosture,fPosture_diseng,4,dTraj_diseng);
+            this->directMovement(fPosture_diseng,fPosture_eng,steps,dTraj);
+            this->backForthMovement(fPosture_diseng,bouncePosture,steps,bTraj);
+            this->computeTraj(dTraj,bTraj);
+            this->directMovement(fPosture_eng,finalPosture,4,dTraj_eng);
+
+            // compose the trajectory
+            totTraj.resize(this->optimalTraj.rows()+10,this->optimalTraj.cols());
+
+            totTraj.row(0) = dTraj_diseng.row(0);
+            totTraj.row(1) = dTraj_diseng.row(1);
+            totTraj.row(2) = dTraj_diseng.row(2);
+            totTraj.row(3) = dTraj_diseng.row(3);
+            totTraj.row(4) = dTraj_diseng.row(4);
+
+            for(int i =0; i < this->optimalTraj.rows(); ++i){
+                totTraj.row(i+5) = this->optimalTraj.row(i);
+            }
+
+            totTraj.row(totTraj.rows()-5) = dTraj_eng.row(0);
+            totTraj.row(totTraj.rows()-4) = dTraj_eng.row(1);
+            totTraj.row(totTraj.rows()-3) = dTraj_eng.row(2);
+            totTraj.row(totTraj.rows()-2) = dTraj_eng.row(3);
+            totTraj.row(totTraj.rows()-1) = dTraj_eng.row(4);
+
+            this->optimalTraj=totTraj;
+            traj = this->optimalTraj;
+
+            this->getTimeStep(traj,timeStep);
+
+            break;
+*/
+        case 4: // disengage
+            break;
+        case 5: // Go park
+            if(std::strcmp(this->obj_tar->getName().c_str(),"")!=0){
+                // an object has to be released
+                initPosture.at(7) = 0.0;
+                initPosture.at(8) = 0.0;
+                initPosture.at(9) = 0.0;
+                initPosture.at(10) = 0.0;
+            }
+            this->directMovement(tols,initPosture,finalPosture,dTraj);
+            this->backForthMovement(tols,initPosture,bouncePosture,bTraj);
+            this->computeTraj(dTraj,bTraj,totTraj);
+            timestep = this->getTimeStep(tols,traj);
+            break;
+        }
+    return timestep;
 }
 
 } // namespace HUMotion

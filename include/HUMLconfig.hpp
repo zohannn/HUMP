@@ -20,12 +20,12 @@
 #include <eigen3/Eigen/Dense>
 
 #include "../config/config.hpp"
-
+#include "object.hpp"
 
 
 
 /** version of the library */
-#define HUML_VERSION_MAJOR 1
+#define HUML_VERSION_MAJOR 2
 #define HUML_VERSION_MINOR 0
 
 
@@ -49,6 +49,8 @@ using namespace Eigen;
 /** This is the main namespace of the library */
 namespace HUMotion{
 
+typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in the scenario */
+
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
     vector<double> d; /**< distances between consecutive frames along the y axes in [mm] */
@@ -67,8 +69,8 @@ typedef struct{
     double D3; /**< depth of the fingertip in [mm] */
     double phi2; /**< angular displacement between the 1st part of the finger and the 1st phalax in [rad] */
     double phi3; /**< angular displacement between the 1st and the 2nd phalax in [rad] */
-    vector<double> rk; /**< r parameters of the barrett hand */
-    vector<double> jk; /**< j parameters of the barrett hand */
+    vector<int> rk; /**< r parameters of the barrett hand */
+    vector<int> jk; /**< j parameters of the barrett hand */
 } BarrettHand;
 
 /** this struct defines a human finger */
@@ -94,7 +96,21 @@ typedef struct{
   double maxAperture; /**< max aperture of the hand in [mm] */
 } HumanHand;
 
-
+/** this struct defines the parameters of the movement */
+typedef struct{
+    int arm_code; /**< the code of the arm: 0 = both arms, 1 = right arm, 2 = left arm */
+    int hand_code;/**< the code of the hand: 0 = human hand, 1 = barrett hand */
+    int griptype; /**< the type of the grip */
+    string mov_infoline; /**< description of the movement */
+    double dHO;/**< distanche hand-target*/
+    std::vector<double> finalHand;/**< final posture of the hand */
+    std::vector<double> target;/**< target to reach: tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(6)=yaw,*/
+    objectPtr obj; /**< object involved in the movement */
+    std::vector<double> pre_grasp_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
+    std::vector<double> post_grasp_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
+    std::vector<double> pre_place_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
+    std::vector<double> post_place_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
+}mov_params;
 /** this struct defines the boundary conditions of the movement*/
 typedef struct{
     vector<double> vel_0; /**< initial velocity of the joints in [rad/s] */
@@ -105,6 +121,7 @@ typedef struct{
 
 /** this struct defines the tolerances that have to be set before planning the trajectory*/
 typedef struct{
+    mov_params mov_specs; /**< specifications of the movement */
     vector<double> tolsArm; /**< radius of the spheres along the arm in [mm] */
     MatrixXf tolsHand; /**< radius of the spheres along the fingers in [mm] */
     MatrixXf final_tolsObstacles; /**< tolerances of the final posture against the obstacles in [mm] */
@@ -118,21 +135,25 @@ typedef struct{
     vector<double> lambda_final; /**< weights for the final posture optimization */
     vector<double> lambda_bounce; /**< weights for the bounce posture optimization */
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
-    //std::vector<float> tols_table; // tolernaces for the table
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
-    float eng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the eng_dir parameter.
-                        It defines the target for the sub-engage movement */
+    float eng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the eng_dir parameter. It defines the target for the sub-engage movement */
     int eng_dir; /**< direction of tolerance. eng_dir=0 means no direction; eng_dir=1 means the x axis; eng_dir=2 means the y axis; eng_dir=3 means the z axis;*/
-    vector<double> eng_tols; /**< tolerances in reaching the engage point in [mm].
-                                    eng_tols(0) along the x axis; eng_tols(1) along the y axis; eng_tols(2) along the z axis;*/
-    double diseng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the diseng_dir parameter.
-                        It defines the target for the sub-disengage movement */
+    vector<double> eng_tols; /**< tolerances in reaching the engage point in [mm].eng_tols(0) along the x axis; eng_tols(1) along the y axis; eng_tols(2) along the z axis;*/
+    double diseng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the diseng_dir parameter.It defines the target for the sub-disengage movement */
     int diseng_dir; /**< direction of tolerance. diseng_dir=0 means no direction; diseng_dir=1 means the x axis; diseng_dir=2 means the y axis; diseng_dir=3 means the z axis;*/
+    double tol_stop; /**< this tolerance defines the error between the norm of the final posture and the norm the current posture. It has to be set to stop the movement when the final posture is reached. A tipical value is 0.1  */
+} huml_params;
 
-    double tol_stop; /**< this tolerance defines the error between the norm of the final posture and the norm the current posture.
-                    It has to be set to stop the movement when the final posture is reached. A tipical value is 0.1  */
-} huml_tols;
+/** This struct defines the result of the planned trajectory */
+typedef struct{
+    int mov_type;/**< type of the planned movement */
+    int status;/**< status code of the planning */
+    string status_msg;/**< status message of the planning */
+    string object_id;/**< identity of the object involved in the movement */
+    vector<MatrixXf> trajectory_stages;/**< sequence of the trajectories */
+    vector<string> trajectory_descriptions;/**< description of the trajectories */
+}planning_result;
 
 
 
