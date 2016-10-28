@@ -109,49 +109,49 @@ public:
      * @brief setMatRightArm
      * @param m
      */
-    void setMatRightArm(Matrix4f &m);
+    void setMatRightArm(Matrix4d &m);
 
     /**
      * @brief getMatRightArm
      * @param m
      */
-    void getMatRightArm(Matrix4f &m);
+    void getMatRightArm(Matrix4d &m);
 
     /**
      * @brief setMatRightHand
      * @param m
      */
-    void setMatRightHand(Matrix4f &m);
+    void setMatRightHand(Matrix4d &m);
 
     /**
      * @brief getMatRightHand
      * @param m
      */
-    void getMatRightHand(Matrix4f &m);
+    void getMatRightHand(Matrix4d &m);
 
     /**
      * @brief setMatLeftArm
      * @param m
      */
-    void setMatLeftArm(Matrix4f &m);
+    void setMatLeftArm(Matrix4d &m);
 
     /**
      * @brief getMatLeftArm
      * @param m
      */
-    void getMatLeftArm(Matrix4f &m);
+    void getMatLeftArm(Matrix4d &m);
 
     /**
      * @brief setMatLeftHand
      * @param m
      */
-    void setMatLeftHand(Matrix4f &m);
+    void setMatLeftHand(Matrix4d &m);
 
     /**
      * @brief getMatLeftHand
      * @param m
      */
-    void getMatLeftHand(Matrix4f &m);
+    void getMatLeftHand(Matrix4d &m);
 
     /**
      * @brief setRightMinLimits
@@ -179,7 +179,7 @@ public:
 
     /**
      * @brief setLeftMinLimits
-     * @param min_rl
+     * @param min_ll
      */
     void setLeftMinLimits(vector<double> &min_ll);
 
@@ -273,16 +273,12 @@ public:
 
     /**
      * @brief plan_pick
-     * @param obj
      * @param params
+     * @param initPosture
      * @return
      */
-    planning_result plan_pick(huml_params& params);
+    planning_result plan_pick(huml_params& params, std::vector<double> initPosture);
 
-
-    bool singleArmBouncePostureReach_pick(huml_params& tols, int arm_code,int hand_code, int griptype,int mov_type, std::vector<double> target,
-                                                        std::vector<double> initPosture,std::vector<double> finalPosture, std::vector<double> finalHand, int targetAxis,
-                                                        double dHO, std::vector<double>& bouncePosture,string infoline ="");
 
 
 
@@ -295,12 +291,12 @@ private:
     //objectPtr obj_tar; /**< object that has the target of the movement (reach-to-grasp, transport, engage, disengage) */
     // humanoid info
     std::vector<double> shPos; /**< position of the shoulder of the humanoid: shPos(0)=x, shPos(1)=y, shPos(2)=z */
-    Matrix4f matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
-    Matrix4f matRightHand;/**< trabsformation matrix from the last joint of the right arm and the palm of the right hand (positions are in [mm]) */
+    Matrix4d matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
+    Matrix4d matRightHand;/**< trabsformation matrix from the last joint of the right arm and the palm of the right hand (positions are in [mm]) */
     std::vector<double> minRightLimits; /**< minimum right limits */
     std::vector<double> maxRightLimits; /**< maximum right limits */
-    Matrix4f matWorldToLeftArm; /**< transformation matrix from the fixed world frame and the reference frame of the left arm (positions are in [mm]) */
-    Matrix4f matLeftHand; /**< trabsformation matrix from the last joint of the left arm and the palm of the left hand (positions are in [mm]) */
+    Matrix4d matWorldToLeftArm; /**< transformation matrix from the fixed world frame and the reference frame of the left arm (positions are in [mm]) */
+    Matrix4d matLeftHand; /**< trabsformation matrix from the last joint of the left arm and the palm of the left hand (positions are in [mm]) */
     std::vector<double> minLeftLimits; /**< minimum left limits */
     std::vector<double> maxLeftLimits; /**< maximum left limits */
     std::vector<double> torso_size; /**< size of the torso: xsize, ysize, zsize */
@@ -309,18 +305,71 @@ private:
     BarrettHand bhand; /**< parameters of the barrett hand */
     HumanHand hhand; /**< parameters of the human hand */
 
-    double getTimeStep(huml_params& tols,MatrixXf& jointTraj);
+    /**
+     * @brief getTimeStep
+     * @param tols
+     * @param jointTraj
+     * @return
+     */
+    double getTimeStep(huml_params& tols,MatrixXd& jointTraj);
 
-    void getDelta(VectorXf& jointTraj, std::vector<double> &delta);
+    /**
+     * @brief getDelta
+     * @param jointTraj
+     * @param delta
+     */
+    void getDelta(VectorXd& jointTraj, std::vector<double> &delta);
 
-    void directMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXf& Traj);
+    /**
+     * @brief directMovement
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param Traj
+     */
+    void directMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Traj);
 
-    void backForthMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXf& Traj);
+    /**
+     * @brief backForthMovement
+     * @param tols
+     * @param initPosture
+     * @param bouncePosture
+     * @param Traj
+     */
+    void backForthMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Traj);
 
-    void computeTraj(const MatrixXf& dTraj, const MatrixXf& bTraj, MatrixXf& totTraj);
+    /**
+     * @brief computeTraj
+     * @param dTraj
+     * @param bTraj
+     * @param totTraj
+     */
+    void computeTraj(const MatrixXd& dTraj, const MatrixXd& bTraj, MatrixXd& totTraj);
 
-    double getTrajectory(huml_params &tols,int mov_type,int arm_code, std::vector<double> initPosture,
-                                     std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXf &traj);
+    /**
+     * @brief getTrajectory
+     * @param tols
+     * @param mov_type
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @param traj
+     * @return
+     */
+    double getTrajectory(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj);
+
+    /**
+     * @brief getVelocity
+     * @param tols
+     * @param mov_type
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @param traj
+     * @param vel
+     * @return
+     */
+    double getVelocity(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel);
 
     /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
@@ -343,7 +392,7 @@ private:
      * @param stream
      * @param dHO
      */
-    void write_dHO(std::ofstream& stream, float dHO);
+    void write_dHO(std::ofstream& stream, double dHO);
 
     /**
      * @brief This method writes down the joint limits of the arm
@@ -397,7 +446,7 @@ private:
      * @param final
      * @param transport
      */
-    void writeHumanHandDirKin(std::ofstream& stream,MatrixXf& tolsHand, bool final, bool transport);
+    void writeHumanHandDirKin(std::ofstream& stream,MatrixXd& tolsHand, bool final, bool transport);
 
     /**
      * @brief writeBarrettHandParams
@@ -420,7 +469,7 @@ private:
      * @param final
      * @param transport
      */
-    void writeBarrettHandDirKin(std::ofstream& stream, MatrixXf& tolsHand, bool final, bool transport);
+    void writeBarrettHandDirKin(std::ofstream& stream, MatrixXd& tolsHand, bool final, bool transport);
 
     /**
      * @brief writeInfoTarget
@@ -433,7 +482,7 @@ private:
     /**
      * @brief writeInfoObstacles
      * @param stream
-     * @param objs
+     * @param obstacles
      */
     void writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &obstacles);
 
@@ -470,8 +519,9 @@ private:
     /**
      * @brief writeInfoObjectsMod
      * @param stream
+     * @param vec
      */
-    void writeInfoObjectsMod(ofstream &stream);
+    void writeInfoObjectsMod(ofstream &stream,bool vec);
 
     /**
      * @brief writeRotMatObsts
@@ -487,7 +537,7 @@ private:
      * @param tolsArm
      * @param final
      */
-    void writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matrix4f &matHand, std::vector<double>& tolsArm, bool final);
+    void writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matrix4d &matHand, std::vector<double>& tolsArm, bool final);
 
     /**
      * @brief writeObjective
@@ -508,7 +558,7 @@ private:
      * @param rpy
      * @param Rot
      */
-    void RPY_matrix(std::vector<double>rpy, Matrix3f &Rot);
+    void RPY_matrix(std::vector<double>rpy, Matrix3d &Rot);
 
     /**
      * @brief Trans_matrix
@@ -516,7 +566,7 @@ private:
      * @param rpy
      * @param Trans
      */
-    void Trans_matrix(std::vector<double>xyz,std::vector<double>rpy,Matrix4f& Trans);
+    void Trans_matrix(std::vector<double>xyz,std::vector<double>rpy,Matrix4d& Trans);
 
     /**
      * @brief getRotAxis
@@ -554,21 +604,68 @@ private:
      */
     void getObstaclesSingleArm(std::vector<double> center, double radius, std::vector<objectPtr>& obsts, int hand_code);
 
+    /**
+     * @brief writeInfoApproachRetreat
+     * @param stream
+     * @param tar
+     * @param approach_retreat
+     */
+    void writeInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat);
+
+    /**
+     * @brief singleArmFinalPosture
+     * @param mov_type
+     * @param pre_post
+     * @param params
+     * @param initPosture
+     * @param finalPosture
+     * @return
+     */
+    bool singleArmFinalPosture(int mov_type,int pre_post,huml_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture);
+
+    /**
+     * @brief writeFilesFinalPosture
+     * @param params
+     * @param mov_type
+     * @param initArmPosture
+     * @param initialGuess
+     * @param obsts
+     * @param pre_post
+     * @return
+     */
+    bool writeFilesFinalPosture(huml_params& params,int mov_type, int pre_post,std::vector<double> initArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts);
 
 
-    bool singleArmFinalPosture_pick(huml_params& params, std::vector<double>& initPosture, std::vector<double>& finalPosture);
+    /**
+     * @brief singleArmBouncePosture
+     * @param mov_type
+     * @param pre_post
+     * @param params
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @return
+     */
+    bool singleArmBouncePosture(int mov_type,int pre_post,huml_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture);
 
 
-    bool writeFilesFinalPosture(huml_params& params,int mov_type, std::vector<double>& initArmPosture, std::vector<double>& initialGuess,std::vector<objectPtr>& obsts);
 
-
-    bool writeFilesBouncePosture(int mov_type, double dHO, int griptype, int steps, double totalTime,
-                                             std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,
-                                             std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture, std::vector<double> finalHand,
-                                             std::vector<double> initialGuess, std::vector<objectPtr> objs, std::vector<double> tar, int targetAxis,
-                                             boundaryConditions b, std::vector<double> tolsArm, MatrixXf tolsHand,
-                                             std::vector< MatrixXf > tolsTarget, std::vector< MatrixXf > tolsObstacles, std::vector<double> lambda, bool target_avoidance, bool obstacle_avoidance,
-                                             int arm_code,int hand_code,string mov_infoLine="");
+    /**
+     * @brief writeFilesBouncePosture
+     * @param params
+     * @param mov_type
+     * @param pre_post
+     * @param minAuxLimits
+     * @param maxAuxLimits
+     * @param initAuxPosture
+     * @param finalAuxPosture
+     * @param initialGuess
+     * @param objs
+     * @param bAux
+     * @return
+     */
+    bool writeFilesBouncePosture(huml_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
+                                             std::vector<double> initialGuess, std::vector<objectPtr> objs,boundaryConditions bAux);
 
 
 

@@ -47,7 +47,7 @@ set(TEST 0)
 ## Documentation
 # DOC=0. do not make the documentation
 # DOC=1, make the documentation
-set(DOC 0)
+set(DOC 1)
 
 ##############################################################################
 

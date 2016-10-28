@@ -14,7 +14,7 @@
 //#define LEFT_LOWER_LEG @LEFT_LOWER_LEG@
 //#define LEFT_FOOT @LEFT_FOOT@
 // Hand
-#define HAND @HAND@
+//#define HAND @HAND@
 
 //AMPL
 #define AMPL @AMPL@

@@ -106,6 +106,8 @@ typedef struct{
     std::vector<double> finalHand;/**< final posture of the hand */
     std::vector<double> target;/**< target to reach: tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(6)=yaw,*/
     objectPtr obj; /**< object involved in the movement */
+    bool approach;/**< true to use the approach options, false otherwise  */
+    bool retreat;/**< true to use the retreat options, false otherwise */
     std::vector<double> pre_grasp_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     std::vector<double> post_grasp_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     std::vector<double> pre_place_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
@@ -123,26 +125,26 @@ typedef struct{
 typedef struct{
     mov_params mov_specs; /**< specifications of the movement */
     vector<double> tolsArm; /**< radius of the spheres along the arm in [mm] */
-    MatrixXf tolsHand; /**< radius of the spheres along the fingers in [mm] */
-    MatrixXf final_tolsObstacles; /**< tolerances of the final posture against the obstacles in [mm] */
-    vector< MatrixXf > singleArm_tolsTarget; /**< tolerances of the trajectory against the target in [mm] */
-    vector< MatrixXf > singleArm_tolsObstacles; /**< tolerances of the trajectory against the obstacles in [mm] */
+    MatrixXd tolsHand; /**< radius of the spheres along the fingers in [mm] */
+    MatrixXd final_tolsObstacles; /**< tolerances of the final posture against the obstacles in [mm] */
+    vector< MatrixXd > singleArm_tolsTarget; /**< tolerances of the trajectory against the target in [mm] */
+    vector< MatrixXd > singleArm_tolsObstacles; /**< tolerances of the trajectory against the obstacles in [mm] */
     double tolTarPos; /**< tolerance of the final position of the hand against the target in [mm] */
     double tolTarOr; /**< tolerance of the final orientation of the hand against the target in [mm] */
     boundaryConditions bounds; /**< boundary condistions of the bounce problem */
     int steps; /**< number of steps for the trajectory */
-    //float totalTime; // normalized time of the movement (0 < t <= 1)
+    double totalTime; /**< normalized time of the movement (0 < t <= 1) */
     vector<double> lambda_final; /**< weights for the final posture optimization */
     vector<double> lambda_bounce; /**< weights for the bounce posture optimization */
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
-    float eng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the eng_dir parameter. It defines the target for the sub-engage movement */
-    int eng_dir; /**< direction of tolerance. eng_dir=0 means no direction; eng_dir=1 means the x axis; eng_dir=2 means the y axis; eng_dir=3 means the z axis;*/
-    vector<double> eng_tols; /**< tolerances in reaching the engage point in [mm].eng_tols(0) along the x axis; eng_tols(1) along the y axis; eng_tols(2) along the z axis;*/
-    double diseng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the diseng_dir parameter.It defines the target for the sub-disengage movement */
-    int diseng_dir; /**< direction of tolerance. diseng_dir=0 means no direction; diseng_dir=1 means the x axis; diseng_dir=2 means the y axis; diseng_dir=3 means the z axis;*/
-    double tol_stop; /**< this tolerance defines the error between the norm of the final posture and the norm the current posture. It has to be set to stop the movement when the final posture is reached. A tipical value is 0.1  */
+    //double eng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the eng_dir parameter. It defines the target for the sub-engage movement */
+    //int eng_dir; /**< direction of tolerance. eng_dir=0 means no direction; eng_dir=1 means the x axis; eng_dir=2 means the y axis; eng_dir=3 means the z axis;*/
+    //vector<double> eng_tols; /**< tolerances in reaching the engage point in [mm].eng_tols(0) along the x axis; eng_tols(1) along the y axis; eng_tols(2) along the z axis;*/
+    //double diseng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the diseng_dir parameter.It defines the target for the sub-disengage movement */
+    //int diseng_dir; /**< direction of tolerance. diseng_dir=0 means no direction; diseng_dir=1 means the x axis; diseng_dir=2 means the y axis; diseng_dir=3 means the z axis;*/
+    //double tol_stop; /**< this tolerance defines the error between the norm of the final posture and the norm the current posture. It has to be set to stop the movement when the final posture is reached. A tipical value is 0.1  */
 } huml_params;
 
 /** This struct defines the result of the planned trajectory */
@@ -151,7 +153,9 @@ typedef struct{
     int status;/**< status code of the planning */
     string status_msg;/**< status message of the planning */
     string object_id;/**< identity of the object involved in the movement */
-    vector<MatrixXf> trajectory_stages;/**< sequence of the trajectories */
+    vector<MatrixXd> trajectory_stages;/**< sequence of the trajectories */
+    vector<MatrixXd> velocity_stages;/**< sequence of the velocities */
+    vector<double> time_steps; /**< sequence of each time steps for each trajectory */
     vector<string> trajectory_descriptions;/**< description of the trajectories */
 }planning_result;
 

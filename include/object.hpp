@@ -1,5 +1,5 @@
-#ifndef OBJECT_HPP
-#define OBJECT_HPP
+#ifndef HUML_OBJECT_HPP
+#define HUML_OBJECT_HPP
 #include <string>
 #include <vector>
 
@@ -7,6 +7,9 @@ using namespace std;
 
 namespace HUMotion {
 
+/**
+ * @brief The Object class
+ */
 class Object
 {
 public:
@@ -117,4 +120,4 @@ private:
 
 }// namespace HUMotion
 
-#endif // OBJECT_HPP
+#endif // HUML_OBJECT_HPP

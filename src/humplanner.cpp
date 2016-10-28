@@ -14,10 +14,10 @@ HUMPlanner::HUMPlanner(string name = string ("Default Planner"))
     this->name = name;
 
     // humanoid settings
-    this->matWorldToRightArm = Matrix4f::Identity(4,4);
-    this->matWorldToLeftArm = Matrix4f::Identity(4,4);
-    this->matRightHand = Matrix4f::Identity(4,4);
-    this->matLeftHand = Matrix4f::Identity(4,4);
+    this->matWorldToRightArm = Matrix4d::Identity(4,4);
+    this->matWorldToLeftArm = Matrix4d::Identity(4,4);
+    this->matRightHand = Matrix4d::Identity(4,4);
+    this->matLeftHand = Matrix4d::Identity(4,4);
 
     this->minRightLimits = vector<double>(joints_arm+joints_hand);
     this->minLeftLimits = vector<double>(joints_arm+joints_hand);
@@ -56,7 +56,7 @@ HUMPlanner::HUMPlanner(const HUMPlanner &hp)
 
     // scenario settings
     if(!hp.obstacles.empty()){this->obstacles=hp.obstacles;}
-    if(hp.obj_tar!=NULL){this->obj_tar=objectPtr(new Object(*(hp.obj_tar.get())));}
+    //if(hp.obj_tar!=NULL){this->obj_tar=objectPtr(new Object(*(hp.obj_tar.get())));}
 }
 
 HUMPlanner::~HUMPlanner()
@@ -125,7 +125,7 @@ objectPtr HUMPlanner::getObstacle(std::string name)
     }
     return obj;
 }
-
+/*
 void HUMPlanner::setObjTarget(objectPtr obj)
 {
     this->obj_tar = objectPtr(new Object(*obj.get()));
@@ -135,14 +135,14 @@ objectPtr HUMPlanner::getObjTarget()
 {
     return this->obj_tar;
 }
-
+*/
 void HUMPlanner::clearScenario()
 {
     this->obstacles.clear();
-    this->obj_tar = NULL;
+    //this->obj_tar = NULL;
 }
 
-void HUMPlanner::setMatRightArm(Matrix4f &m)
+void HUMPlanner::setMatRightArm(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -151,7 +151,7 @@ void HUMPlanner::setMatRightArm(Matrix4f &m)
     }
 }
 
-void HUMPlanner::getMatRightArm(Matrix4f &m)
+void HUMPlanner::getMatRightArm(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -160,7 +160,7 @@ void HUMPlanner::getMatRightArm(Matrix4f &m)
     }
 }
 
-void HUMPlanner::setMatLeftArm(Matrix4f &m)
+void HUMPlanner::setMatLeftArm(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -169,7 +169,7 @@ void HUMPlanner::setMatLeftArm(Matrix4f &m)
     }
 }
 
-void HUMPlanner::getMatLeftArm(Matrix4f &m)
+void HUMPlanner::getMatLeftArm(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -178,7 +178,7 @@ void HUMPlanner::getMatLeftArm(Matrix4f &m)
     }
 }
 
-void HUMPlanner::setMatRightHand(Matrix4f &m)
+void HUMPlanner::setMatRightHand(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -187,7 +187,7 @@ void HUMPlanner::setMatRightHand(Matrix4f &m)
     }
 }
 
-void HUMPlanner::getMatRightHand(Matrix4f &m)
+void HUMPlanner::getMatRightHand(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -196,7 +196,7 @@ void HUMPlanner::getMatRightHand(Matrix4f &m)
     }
 }
 
-void HUMPlanner::setMatLeftHand(Matrix4f &m)
+void HUMPlanner::setMatLeftHand(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -205,7 +205,7 @@ void HUMPlanner::setMatLeftHand(Matrix4f &m)
     }
 }
 
-void HUMPlanner::getMatLeftHand(Matrix4f &m)
+void HUMPlanner::getMatLeftHand(Matrix4d &m)
 {
     for (unsigned i = 0; i < m.rows(); ++ i){
         for (unsigned j = 0; j < m.cols(); ++ j){
@@ -388,7 +388,7 @@ void HUMPlanner::writeArmDHParams(DHparameters dh, ofstream &stream, int k)
     }
 }
 
-void HUMPlanner::write_dHO(std::ofstream& stream, float dHO)
+void HUMPlanner::write_dHO(std::ofstream& stream, double dHO)
 {
 
     string dHOstr=  boost::str(boost::format("%.2f") % (dHO));
@@ -827,6 +827,44 @@ void HUMPlanner::writeInfoTarget(ofstream &stream, std::vector<double> tar)
 
 }
 
+
+void HUMPlanner::writeInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat)
+{
+    double dist = approach_retreat.at(3);
+    string dist_str = boost::str(boost::format("%.2f") % dist); boost::replace_all(dist_str,",",".");
+    double dist_1 = approach_retreat.at(3)*2/3;
+    string dist_str_1 = boost::str(boost::format("%.2f") % dist_1); boost::replace_all(dist_str_1,",",".");
+    double dist_2 = approach_retreat.at(3)/3;
+    string dist_str_2 = boost::str(boost::format("%.2f") % dist_2); boost::replace_all(dist_str_2,",",".");
+
+    std::vector<double> rpy = {tar.at(3),tar.at(4),tar.at(5)};
+    Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+    Vector3d v(approach_retreat.at(0),approach_retreat.at(1),approach_retreat.at(2));
+    Vector3d vv =Rot_tar*v;
+
+    stream << string("# VECTOR APPROACH/RETREAT DISTANCE \n");
+    stream << string("param dist :=")+dist_str+string(";\n");
+    stream << string("param dist_1 :=")+dist_str_1+string(";\n");
+    stream << string("param dist_2 :=")+dist_str_2+string(";\n");
+
+    stream << string("# VECTOR APPROACH/RETREAT ORIENTATION \n");
+
+    stream << string("param v_t := \n");
+    string tarxt0 =  boost::str(boost::format("%.2f") % (vv(0)));
+    boost::replace_all(tarxt0,",",".");
+    stream << to_string(1)+string(" ")+tarxt0+string("\n");
+
+    string tarxt1 =  boost::str(boost::format("%.2f") % (vv(1)));
+    boost::replace_all(tarxt1,",",".");
+    stream << to_string(2)+string(" ")+tarxt1+string("\n");
+
+    string tarxt2 =  boost::str(boost::format("%.2f") % (vv(2)));
+    boost::replace_all(tarxt2,",",".");
+    stream << to_string(3)+string(" ")+tarxt2+string(";\n");
+
+}
+
+
 void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &obstacles)
 {
     // obstacles
@@ -946,7 +984,7 @@ void HUMPlanner::write_dHOMod(ofstream &stream)
     stream << string("param dFH; \n");
 }
 
-void HUMPlanner::writeInfoObjectsMod(ofstream &stream)
+void HUMPlanner::writeInfoObjectsMod(ofstream &stream,bool vec)
 {
     //stream << string("# Table \n");
     //stream << string("param Table {i in 1..2} ; # x-->Table[1], z-->Table[2]\n");
@@ -957,6 +995,15 @@ void HUMPlanner::writeInfoObjectsMod(ofstream &stream)
     stream << string("param x_t {i in 1..3}; \n");
     stream << string("param y_t {i in 1..3}; \n");
     stream << string("param z_t {i in 1..3}; \n");
+
+    if(vec){
+        stream << string("# Vector approach/retreat distance \n");
+        stream << string("param dist; \n");
+        stream << string("param dist_1; \n");
+        stream << string("param dist_2; \n");
+        stream << string("# Vector approach/retreat orientation \n");
+        stream << string("param v_t {i in 1..3}; \n");
+    }
 
     stream << string("# Obstacles \n");
     stream << string("param n_Obstacles; \n");
@@ -994,7 +1041,7 @@ void HUMPlanner::writeRotMatObsts(ofstream &stream)
     stream << string("   ; \n");
 }
 
-void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matrix4f &matHand, std::vector<double> &tolsArm, bool final)
+void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matrix4d &matHand, std::vector<double> &tolsArm, bool final)
 {
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("#  Direct Kinematics model of the arm \n\n");
@@ -1214,7 +1261,7 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4f &matWorldToArm, Matri
     }
 }
 
-void HUMPlanner::writeHumanHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool final, bool transport)
+void HUMPlanner::writeHumanHandDirKin(ofstream &stream, MatrixXd &tolsHand, bool final, bool transport)
 {
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     stream << string("#  Direct Kinematics model of the fingers \n\n");
@@ -1812,7 +1859,7 @@ void HUMPlanner::writeHumanHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool
 
 }
 
-void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXf &tolsHand, bool final, bool transport)
+void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXd &tolsHand, bool final, bool transport)
 {
     std::vector<int> rk; std::vector<int> jk;
     rk = this->bhand.rk; jk = this->bhand.jk;
@@ -1894,12 +1941,14 @@ void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXf &tolsHand, bo
             // transport or engage movement
             for (unsigned i = 0 ; i < hand_fingers; ++i){
                 //for (int j = 0; j <N_PHALANGE; ++j){
+                /*
                 int k;
                 if (i == 2){
                     k = 8;
                 }else{
                     k = 9;
                 }
+                */
 
                 string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
                 string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
@@ -2080,14 +2129,14 @@ void HUMPlanner::writeBodyConstraints(ofstream &stream, bool final)
     }
 }
 
-void HUMPlanner::RPY_matrix(std::vector<double> rpy, Matrix3f &Rot)
+void HUMPlanner::RPY_matrix(std::vector<double> rpy, Matrix3d &Rot)
 {
-    Rot = Matrix3f::Zero();
+    Rot = Matrix3d::Zero();
 
     if(!rpy.empty()){
-        float roll = rpy.at(0); // around z
-        float pitch = rpy.at(1); // around y
-        float yaw = rpy.at(2); // around x
+        double roll = rpy.at(0); // around z
+        double pitch = rpy.at(1); // around y
+        double yaw = rpy.at(2); // around x
 
         // Rot = Rot_z * Rot_y * Rot_x
 
@@ -2100,9 +2149,9 @@ void HUMPlanner::RPY_matrix(std::vector<double> rpy, Matrix3f &Rot)
 
 void HUMPlanner::getRotAxis(vector<double> &xt, int id, std::vector<double> rpy)
 {
-    Matrix3f Rot;
+    Matrix3d Rot;
     this->RPY_matrix(rpy,Rot);
-    Vector3f v = Rot.col(id);
+    Vector3d v = Rot.col(id);
 
     // get the components of the axis
     xt.push_back(v(0)); // x
@@ -2110,11 +2159,11 @@ void HUMPlanner::getRotAxis(vector<double> &xt, int id, std::vector<double> rpy)
     xt.push_back(v(2)); // z
 }
 
-void HUMPlanner::Trans_matrix(std::vector<double> xyz, std::vector<double> rpy, Matrix4f &Trans)
+void HUMPlanner::Trans_matrix(std::vector<double> xyz, std::vector<double> rpy, Matrix4d &Trans)
 {
-    Trans = Matrix4f::Zero();
+    Trans = Matrix4d::Zero();
 
-    Matrix3f Rot;
+    Matrix3d Rot;
     this->RPY_matrix(rpy,Rot);
 
     Trans(0,0) = Rot(0,0); Trans(0,1) = Rot(0,1); Trans(0,2) = Rot(0,2); Trans(0,3) = xyz.at(0);
@@ -2124,7 +2173,7 @@ void HUMPlanner::Trans_matrix(std::vector<double> xyz, std::vector<double> rpy, 
 
 }
 
-bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::vector<double>& initArmPosture, std::vector<double>& initialGuess,std::vector<objectPtr>& obsts)
+bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pre_post, std::vector<double> initArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts)
 {
     //  --- create the "Models" directory if it does not exist ---
     struct stat st = {0};
@@ -2142,15 +2191,17 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
     std::vector<double> finalHand = params.mov_specs.finalHand;
     std::string mov_infoLine = params.mov_specs.mov_infoline;
     objectPtr obj_tar;
+    bool approach = params.mov_specs.approach;
+    bool retreat = params.mov_specs.retreat;
     std::vector<double> pre_grasp_approach;
     std::vector<double> post_grasp_retreat;
     std::vector<double> pre_place_approach;
     std::vector<double> post_place_retreat;
     switch(mov_type){
-    case 0: // reach-to-grasp/pick
+    case 0: // pick
         obj_tar = params.mov_specs.obj;
-        pre_grasp_approach = params.mov_specs.pre_grasp_approach;
-        post_grasp_retreat = params.mov_specs.post_grasp_retreat;
+        if(approach){pre_grasp_approach = params.mov_specs.pre_grasp_approach;}
+        if(retreat){post_grasp_retreat = params.mov_specs.post_grasp_retreat;}
         break;
 
     }
@@ -2159,14 +2210,14 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
     // tolerances
     std::vector<double> lambda = params.lambda_final;
     std::vector<double> tolsArm = params.tolsArm;
-    MatrixXf tolsHand = params.tolsHand;
-    MatrixXf tolsObstacles = params.final_tolsObstacles;
+    MatrixXd tolsHand = params.tolsHand;
+    MatrixXd tolsObstacles = params.final_tolsObstacles;
     double tolTarPos = params.tolTarPos;
     double tolTarOr = params.tolTarOr;
     bool obstacle_avoidance = params.obstacle_avoidance;
 
-    Matrix4f matWorldToArm;
-    Matrix4f matHand;
+    Matrix4d matWorldToArm;
+    Matrix4d matHand;
     std::vector<double> minLimits;
     std::vector<double> maxLimits;
     DHparameters dh_arm;
@@ -2246,11 +2297,26 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
     }
     // info of the target to reach
     this->writeInfoTarget(PostureDat,tar);
+    // info approach/retreat
+    switch(mov_type){
+    case 0: //pick
+        switch(pre_post){
+        case 0: // no approach, no retreat
+            break;
+        case 1: // approach
+            if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);}
+            break;
+        case 2: // retreat
+            if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_grasp_retreat);}
+            break;
+        }
+        break;
+    }
     //info objects
     this->writeInfoObstacles(PostureDat,obsts);
     // object that has the target
     switch(mov_type){
-    case 0: // reach-to-grasp/pick
+    case 0: //pick
         this->writeInfoObjectTarget(PostureDat,obj_tar);
         break;
     }
@@ -2299,7 +2365,9 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
         break;
     }
     // info objects
-    this->writeInfoObjectsMod(PostureMod);
+    bool vec=false;// true if there is some pre or post operation
+    if(approach && retreat && pre_post!=0){vec=true;}
+    this->writeInfoObjectsMod(PostureMod,vec);
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     PostureMod << string("# DECISION VARIABLES \n");
@@ -2359,7 +2427,7 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
     string taror = boost::str(boost::format("%.4f") % tolTarOr); boost::replace_all(taror,",",".");
 
     switch(mov_type){
-    case 0: // reach-to-grasp
+    case 0: // pick
         PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         break;
     case 1: // reaching
@@ -2371,60 +2439,32 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
         // (the constraint is equal to that one for reaching and grasping)
         PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         break;
-
     case 4: // disengage
-
         break;
-
     case 5: // Go park
-
         break;
-
     }
 
     PostureMod << string("# Hand orientation\n");
     switch(griptype){
     case 111: case 211: // side thumb left
-        switch (mov_type) {
-        case 0: // reach-to-grasp/pick
-            // hand constraints for approaching direction setting
-            switch (targetAxis) {
-            case 0: // none
-
+        switch (mov_type){
+        case 0: //pick
+            // hand constraints for approaching and retreating direction setting
+            if(pre_post==0){
+                // do not use approach/retreat options
                 PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = z_t \n");
-
-                break;
-            case 1: // x target
-
-                PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + x_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -x_t \n");
-                break;
-
-            case 2: // y target
-
-                PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -y_t \n");
-
-                break;
-
-            case 3: // z target
-
-                // error
-                // TO DO
-
-                break;
-
+            }else{
+                // use approach/retreat options
+                PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + v_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -v_t \n");
             }
-
             break;
-
         case 1:// reaching
             break;
-
         case 2: // transport
-
             break;
-
         case 3: // engage
-            /*
+/*
 
             // hand constraints for approaching direction setting
             // (TO REVIEW)
@@ -2453,16 +2493,14 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
                 break;
 
             }
-
-            break;
             */
 
-        case 4: // disengage
-
             break;
 
-        case 5: // Go park
 
+        case 4: // disengage
+            break;
+        case 5: // Go park
             break;
 
         }
@@ -2597,13 +2635,10 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, std::v
 
 }
 
-bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype, int steps, double totalTime,
-                                         std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,
-                                         std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture, std::vector<double> finalHand,
-                                         std::vector<double> initialGuess, std::vector<objectPtr> objs, std::vector<double> tar, int targetAxis,
-                                         boundaryConditions b, std::vector<double> tolsArm, MatrixXf tolsHand,
-                                         std::vector< MatrixXf > tolsTarget, std::vector< MatrixXf > tolsObstacles, std::vector<double> lambda, bool target_avoidance, bool obstacle_avoidance,
-                                         int arm_code,int hand_code,string mov_infoLine)
+
+
+bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
+                                         std::vector<double> initialGuess, std::vector<objectPtr> objs,boundaryConditions b)
 {
     //  --- create the "Models" directory if it does not exist ---
     struct stat st = {0};
@@ -2612,10 +2647,44 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
     }
     string path("Models/");
 
-    Matrix4f matWorldToArm;
-    Matrix4f matHand;
+    Matrix4d matWorldToArm;
+    Matrix4d matHand;
     DHparameters dh;
 
+    // movement setting
+    int arm_code = params.mov_specs.arm_code;
+    int hand_code = params.mov_specs.hand_code;
+    int griptype = params.mov_specs.griptype;
+    double dHO = params.mov_specs.dHO;
+    std::vector<double> finalHand = params.mov_specs.finalHand;
+    std::vector<double> tar = params.mov_specs.target;
+    objectPtr obj_tar = params.mov_specs.obj;
+    string mov_infoLine = params.mov_specs.mov_infoline;
+    bool approach = params.mov_specs.approach;
+    bool retreat = params.mov_specs.retreat;
+    std::vector<double> pre_grasp_approach;
+    std::vector<double> post_grasp_retreat;
+    std::vector<double> pre_place_approach;
+    std::vector<double> post_place_retreat;
+    switch(mov_type){
+    case 0: // pick
+        obj_tar = params.mov_specs.obj;
+        if(approach){pre_grasp_approach = params.mov_specs.pre_grasp_approach;}
+        if(retreat){post_grasp_retreat = params.mov_specs.post_grasp_retreat;}
+        break;
+
+    }
+
+    // tolerances
+    int steps = params.steps;
+    double totalTime = params.totalTime;
+    std::vector<double> lambda = params.lambda_bounce;
+    std::vector<double> tolsArm = params.tolsArm;
+    MatrixXd tolsHand = params.tolsHand;
+    vector< MatrixXd > tolsTarget = params.singleArm_tolsTarget;
+    vector< MatrixXd > tolsObstacles = params.singleArm_tolsObstacles;
+    bool obstacle_avoidance = params.obstacle_avoidance;
+    bool target_avoidance = params.target_avoidance;
     int k;
     switch(arm_code){
     case 0: // dual arm
@@ -2751,10 +2820,29 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
      }
      // info of the target to reach
      this->writeInfoTarget(PostureDat,tar);
+     // info approach/retreat
+     switch(mov_type){
+     case 0: //pick
+         switch(pre_post){
+         case 0: // no approach, no retreat
+             break;
+         case 1: // approach
+             if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);}
+             break;
+         case 2: // retreat
+             if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_grasp_retreat);}
+             break;
+         }
+         break;
+     }
      //info objects
      this->writeInfoObstacles(PostureDat,objs);
      // object that has the target
-     this->writeInfoObjectTarget(PostureDat,this->obj_tar);
+     switch(mov_type){
+     case 0: //pick
+         this->writeInfoObjectTarget(PostureDat,obj_tar);
+         break;
+     }
      //close the file
      PostureDat.close();
 
@@ -2798,7 +2886,9 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
          break;
      }
      // info objects
-     this->writeInfoObjectsMod(PostureMod);
+     bool vec=false;// true if there is some pre or post operation
+     if(approach && retreat && pre_post!=0){vec=true;}
+     this->writeInfoObjectsMod(PostureMod,vec);
 
      PostureMod << string("# Boundary Conditions \n");
      PostureMod << string("param vel_0 {i in 1..")+to_string(b.vel_0.size())+string("} ; \n");
@@ -2844,7 +2934,7 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
      // Direct Kinematics of the arm
      this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,false);
 
-     std::vector<double> obj_tar_size; this->obj_tar->getSize(obj_tar_size);
+     std::vector<double> obj_tar_size; obj_tar->getSize(obj_tar_size);
      string obj_radius =  boost::str(boost::format("%.2f") % std::max(obj_tar_size.at(0),obj_tar_size.at(1))); boost::replace_all(obj_radius,",",".");
      string obj_size_z =  boost::str(boost::format("%.2f") % obj_tar_size.at(2)); boost::replace_all(obj_size_z,",",".");
 
@@ -2902,7 +2992,7 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
 
      case 5: // Go park
          gopark=true;
-         release_object=std::strcmp(this->obj_tar->getName().c_str(),"")!=0;
+         release_object=std::strcmp(obj_tar->getName().c_str(),"")!=0;
          break;
      }
      // Direct Kinematics of the arm
@@ -2958,54 +3048,38 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
      PostureMod << string("#  \n");
      PostureMod << string("# joint limits for all the trajectory \n");
      PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
+
      // hand constraints for approaching direction setting
      switch (griptype) {
      case 111: case 211: // side thumb left
-
          switch (mov_type) {
-
-         case 0: // reach-to-grasp
-
-             switch (targetAxis) {
-
-             case 0: // none
-
-                 break;
-
-             case 1: // x target
-
+         case 0: // pick
+             // hand constraints for approaching and retreating direction settings
+             if(pre_post==0){
+                 // do not use approach/retreat options
+             }else if (pre_post == 1){
+                 // approach
+                 PostureMod << string("# Hand approach position\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps-2] + dFH*z_H[i,Nsteps-2] + dist*z_H[i,Nsteps-2] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps-1] + dFH*z_H[i,Nsteps-1] + dist_1*z_H[i,Nsteps-1] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps] + dFH*z_H[i,Nsteps] + dist_2*z_H[i,Nsteps] - Tar_pos[i])^2) <= 0.010; \n\n");
                  PostureMod << string("# Hand approach orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + x_t[i])^2 )<= 0.010; #  z_H = -x_t  \n\n");
-
-                 break;
-
-             case 2: // y target
-
-
-                 PostureMod << string("# Hand approach orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  z_H = -y_t  \n\n");
-
-                 break;
-
-             case 3: // z target
-
-                 //PostureMod << string("# Hand approach orientation\n");
-                 //PostureMod << string("subject to const_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + z_t[i])^2 )<= 0.010; #  z_H = -z_t  \n\n");
-
-                 break;
+                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
+             }else if(pre_post == 2){
+                 // retreat
+                 PostureMod << string("# Hand retreat position\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,4] + dFH*z_H[i,4] + dist*z_H[i,4] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,3] + dFH*z_H[i,3] + dist_1*z_H[i,3] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,2] + dFH*z_H[i,2] + dist_2*z_H[i,2] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("# Hand retreat orientation\n");
+                 PostureMod << string("subject to constr_hand_or {k in (1)..(5)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
              }
-
-             break;
-
          case 1: // reaching
-
              break;
-
          case 2: // transport
-
              break;
-
          case 3: // engage
+             /*
 
              switch (targetAxis) {
 
@@ -3037,15 +3111,15 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
 
                  break;
              }
+             */
 
              break;
 
          case 4: // disengage
-
              break;
-
          case 5: // Go park
 
+             /*
              switch (targetAxis) {
              case 0: // none
 
@@ -3073,10 +3147,9 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
 
                  break;
              }
+             */
 
              break;
-
-
          }
          break;
 
@@ -3105,9 +3178,9 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
            if(target_avoidance){
 
                 // constraints with the targets
-                MatrixXf tols_0 = tolsTarget.at(0);
-                MatrixXf tols_1 = tolsTarget.at(1);
-                MatrixXf tols_2 = tolsTarget.at(2);
+                MatrixXd tols_0 = tolsTarget.at(0);
+                MatrixXd tols_1 = tolsTarget.at(1);
+                MatrixXd tols_2 = tolsTarget.at(2);
 
                 //xx1
                 string txx1_0 = boost::str(boost::format("%.2f") % tols_0(0,0)); boost::replace_all(txx1_0,",",".");
@@ -3347,8 +3420,8 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
 
      if(obstacle_avoidance){
         // coinstraints with the obstacles
-        MatrixXf tolsObs_0 = tolsObstacles.at(0);
-        MatrixXf tolsObs_1 = tolsObstacles.at(1);
+        MatrixXd tolsObs_0 = tolsObstacles.at(0);
+        MatrixXd tolsObs_1 = tolsObstacles.at(1);
         //xx1
         string tbxx1_0 = boost::str(boost::format("%.2f") % tolsObs_0(0,0)); boost::replace_all(tbxx1_0,",",".");
         string tbxx1_1 = boost::str(boost::format("%.2f") % tolsObs_1(0,0)); boost::replace_all(tbxx1_1,",",".");
@@ -3568,6 +3641,8 @@ bool HUMPlanner::writeFilesBouncePosture(int mov_type, double dHO, int griptype,
 
 }
 
+
+
 void HUMPlanner::getObstaclesSingleArm(std::vector<double> center, double radius, std::vector<objectPtr> &obsts, int hand_code)
 {
     double tol;
@@ -3583,29 +3658,29 @@ void HUMPlanner::getObstaclesSingleArm(std::vector<double> center, double radius
     for (std::size_t i =0; i < this->obstacles.size(); ++i){
         objectPtr obj = obstacles.at(i);
         // get the RPY matrix
-        Matrix3f Rot; std::vector<double> rpy; obj->getOr(rpy); this->RPY_matrix(rpy,Rot);
+        Matrix3d Rot; std::vector<double> rpy; obj->getOr(rpy); this->RPY_matrix(rpy,Rot);
         // get the position of the object
         std::vector<double> pos; obj->getPos(pos);
         // get the size of the object
         std::vector<double> dim; obj->getSize(dim);
         // distance vector
-        Vector3f diff;
+        Vector3d diff;
         diff(0) = center.at(0) - pos.at(0);
         diff(1) = center.at(1) - pos.at(1);
         diff(2) = center.at(2) - pos.at(2);
         // A matrix
-        Matrix3f A;
+        Matrix3d A;
         A(0,0) = 1/pow(radius+dim.at(0)+tol,2); A(0,1) = 0; A(0,2) = 0;
         A(1,0) = 0; A(1,1) = 1/pow(radius+dim.at(1)+tol,2); A(1,2) = 0;
         A(2,0) = 0; A(2,1) = 0; A(2,2) = 1/pow(radius+dim.at(2)+tol,2);
 
-        MatrixXf diff1 = MatrixXf::Zero(3,1);
+        MatrixXd diff1 = MatrixXd::Zero(3,1);
         diff1(0,0) = diff(0); diff1(1,0) = diff(1); diff1(2,0) = diff(2);
 
-        MatrixXf diffT = diff1.transpose();
-        MatrixXf RotT = Rot.transpose();
+        MatrixXd diffT = diff1.transpose();
+        MatrixXd RotT = Rot.transpose();
 
-        MatrixXf to_check = diffT*RotT;
+        MatrixXd to_check = diffT*RotT;
         to_check = to_check * A;
         to_check = to_check * Rot;
         to_check = to_check * diff;
@@ -3706,27 +3781,14 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
     }
 }
 
-bool HUMPlanner::singleArmFinalPosture_pick(huml_params& params, std::vector<double>& initPosture, std::vector<double>& finalPosture)
+
+bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture)
 
 {
     // movement settings
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
     std::vector<double> target = params.mov_specs.target;
-    //double dHO = params.mov_specs.dHO;
-    //int griptype = params.mov_specs.griptype;
-    //std::vector<double> finalHand = params.mov_specs.finalHand;
-    //std::string infoline = params.mov_specs.mov_infoline;
-    //std::vector<double> pre_grasp_approach = params.mov_specs.pre_grasp_approach;
-    //std::vector<double> post_grasp_retreat = params.mov_specs.post_grasp_retreat;
-    //tolerances
-    //std::vector<double> tolsArm = params.tolsArm;
-    //MatrixXf tolsHand = params.tolsHand;
-    //MatrixXf tolsObstacles = params.final_tolsObstacles;
-    //double tolTarPos = params.tolTarPos;
-    //double tolTarOr = params.tolTarOr;
-    //std::vector<double> lambda = params.lambda_final;
-    //bool obstacle_avoidance = params.obstacle_avoidance;
 
     std::vector<double> initArmPosture(initPosture.begin(),initPosture.begin()+joints_arm);
 
@@ -3760,8 +3822,7 @@ bool HUMPlanner::singleArmFinalPosture_pick(huml_params& params, std::vector<dou
     this->getObstaclesSingleArm(this->shPos,max_ext,obsts,hand_code);
 
     // write the files for the final posture selection
-    int mov_type = 0; // reach-to-grasp/pick
-    bool written = this->writeFilesFinalPosture(params,mov_type,initArmPosture,initialGuess,obsts);
+    bool written = this->writeFilesFinalPosture(params,mov_type,pre_post,initArmPosture,initialGuess,obsts);
 
     if(written){
         // call AMPL the produce the .nl file
@@ -3787,9 +3848,8 @@ bool HUMPlanner::singleArmFinalPosture_pick(huml_params& params, std::vector<dou
 
 }
 
-bool HUMPlanner::singleArmBouncePostureReachToGrasp(huml_params& tols, int arm_code,int hand_code, int griptype,int mov_type,std::vector<double> shPos, std::vector<double> target,
-                                                    std::vector<double> initPosture,std::vector<double> finalPosture, std::vector<double> finalHand,int targetAxis,
-                                                    double dHO, std::vector<double>& bouncePosture,string infoline)
+
+bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture)
 {
 
 
@@ -3797,18 +3857,13 @@ bool HUMPlanner::singleArmBouncePostureReachToGrasp(huml_params& tols, int arm_c
     std::vector<double> minLimits;
     std::vector<double> maxLimits;
     DHparameters dh;
+    // movement settings
+    int arm_code = params.mov_specs.arm_code;
+    int hand_code = params.mov_specs.hand_code;
     //tolerances
-    boundaryConditions b = tols.bounds;
+    boundaryConditions b = params.bounds;
     boundaryConditions bAux;
-    int steps = tols.steps;
-    double totalTime = 1.0;
-    std::vector<double> tolsArm = tols.tolsArm;
-    MatrixXf tolsHand = tols.tolsHand;
-    std::vector< MatrixXf > tolsTarget = tols.singleArm_tolsTarget;
-    std::vector< MatrixXf > tolsObstacles = tols.singleArm_tolsObstacles;
-    std::vector<double> lambda = tols.lambda_bounce;
-    bool target_avoidance = tols.target_avoidance;
-    bool obstacle_avoidance = tols.obstacle_avoidance;
+    std::vector<double> lambda = params.lambda_bounce;
 
     switch(arm_code){
     case 1: // right arm
@@ -3895,11 +3950,10 @@ bool HUMPlanner::singleArmBouncePostureReachToGrasp(huml_params& tols, int arm_c
     double max_ext = Lh+Ll+Lu;
     // get the obstacles of the workspace
     std::vector<objectPtr> obsts;
-    this->getObstaclesSingleArm(shPos,max_ext,obsts,hand_code);
+    this->getObstaclesSingleArm(this->shPos,max_ext,obsts,hand_code);
 
-    bool written = this->writeFilesBouncePosture(mov_type,dHO,griptype,steps,totalTime,minAuxLimits,maxAuxLimits,initAuxPosture,finalAuxPosture,
-                                                 finalHand,initialGuess,obsts,target,targetAxis,bAux,tolsArm,tolsHand,tolsTarget,tolsObstacles,
-                                                 lambda,target_avoidance,obstacle_avoidance,arm_code,hand_code,infoline);
+    bool written = this->writeFilesBouncePosture(params,mov_type,pre_post,minAuxLimits,maxAuxLimits,initAuxPosture,finalAuxPosture,initialGuess,obsts,bAux);
+
     if (written){
         // call AMPL the produce the .nl file
         string fn = string("BouncePosture");
@@ -3950,7 +4004,8 @@ bool HUMPlanner::singleArmBouncePostureReachToGrasp(huml_params& tols, int arm_c
 
 }
 
-double HUMPlanner::getTimeStep(huml_params &tols, MatrixXf &jointTraj)
+
+double HUMPlanner::getTimeStep(huml_params &tols, MatrixXd &jointTraj)
 {
     int steps1 = jointTraj.rows();
     int n_joints = jointTraj.cols();
@@ -3992,7 +4047,7 @@ double HUMPlanner::getTimeStep(huml_params &tols, MatrixXf &jointTraj)
     return timestep;
 }
 
-void HUMPlanner::getDelta(VectorXf& jointTraj, std::vector<double> &delta)
+void HUMPlanner::getDelta(VectorXd& jointTraj, std::vector<double> &delta)
 {
     // Formula of the numarical differentiation with 5 points
        // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
@@ -4064,7 +4119,7 @@ void HUMPlanner::getDelta(VectorXf& jointTraj, std::vector<double> &delta)
 
 }
 
-void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, MatrixXf &Traj)
+void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, MatrixXd &Traj)
 {
     int steps = tols.steps;
     double delta = 1.0/steps;
@@ -4075,13 +4130,13 @@ void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPost
     std::vector<double> acc_0 = tols.bounds.acc_0;
     std::vector<double> acc_f = tols.bounds.acc_f;
 
-    double T = 1.0;
+    double T = tols.totalTime;
 
     time.push_back(0.0);
     for (int i = 0; i<steps; ++i){
         time.push_back(time.at(i)+delta);
     }
-    Traj = MatrixXf::Constant(steps+1,initPosture.size(),0);
+    Traj = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
     for (int i = 0; i <= steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
@@ -4097,7 +4152,7 @@ void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPost
 
 }
 
-void HUMPlanner::backForthMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, MatrixXf &Traj)
+void HUMPlanner::backForthMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, MatrixXd &Traj)
 {
 
     int steps = tols.steps;
@@ -4110,7 +4165,7 @@ void HUMPlanner::backForthMovement(huml_params &tols, std::vector<double> &initP
     for (int i = 0; i<steps; ++i){
         time.push_back(time.at(i)+delta);
     }
-    Traj = MatrixXf::Constant(steps+1,initPosture.size(),0);
+    Traj = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
     for (int i = 0; i<steps;++i){ // the last row is zero for all the joints
         for (std::size_t j = 0; j<initPosture.size(); ++j){
@@ -4119,9 +4174,9 @@ void HUMPlanner::backForthMovement(huml_params &tols, std::vector<double> &initP
     }
 }
 
-void HUMPlanner::computeTraj(const MatrixXf &dTraj, const MatrixXf &bTraj, MatrixXf& totTraj)
+void HUMPlanner::computeTraj(const MatrixXd &dTraj, const MatrixXd &bTraj, MatrixXd& totTraj)
 {
-    totTraj = MatrixXf::Constant(dTraj.rows(),dTraj.cols(),0);
+    totTraj = MatrixXd::Constant(dTraj.rows(),dTraj.cols(),0);
 
     for (int i = 0; i<dTraj.rows();++i){
         for (int j = 0; j<dTraj.cols(); ++j){
@@ -4130,17 +4185,17 @@ void HUMPlanner::computeTraj(const MatrixXf &dTraj, const MatrixXf &bTraj, Matri
     }
 }
 
-double HUMPlanner::getTrajectory(huml_params &tols,int mov_type,int arm_code, std::vector<double> initPosture,
-                                 std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXf &traj)
+double HUMPlanner::getTrajectory(huml_params &tols, int mov_type, std::vector<double> initPosture,
+                                 std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj)
 {
 
     double timestep;
-    MatrixXf dTraj;
-    MatrixXf bTraj;
-    MatrixXf totTraj;
+    MatrixXd dTraj;
+    MatrixXd bTraj;
+    MatrixXd totTraj;
 
     switch (mov_type) {
-        case 0: // reach-to-grasp
+        case 0: // pick
             this->directMovement(tols,initPosture,finalPosture,dTraj);
             this->backForthMovement(tols,initPosture,bouncePosture,bTraj);
             this->computeTraj(dTraj,bTraj,totTraj);
@@ -4210,7 +4265,8 @@ double HUMPlanner::getTrajectory(huml_params &tols,int mov_type,int arm_code, st
         case 4: // disengage
             break;
         case 5: // Go park
-            if(std::strcmp(this->obj_tar->getName().c_str(),"")!=0){
+        /*
+            if(std::strcmp(obj_tar->getName().c_str(),"")!=0){
                 // an object has to be released
                 initPosture.at(7) = 0.0;
                 initPosture.at(8) = 0.0;
@@ -4221,9 +4277,71 @@ double HUMPlanner::getTrajectory(huml_params &tols,int mov_type,int arm_code, st
             this->backForthMovement(tols,initPosture,bouncePosture,bTraj);
             this->computeTraj(dTraj,bTraj,totTraj);
             timestep = this->getTimeStep(tols,traj);
+                        */
             break;
+
         }
     return timestep;
+}
+
+double HUMPlanner::getVelocity(huml_params &tols, int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel)
+{
+    double timestep = this->getTrajectory(tols,mov_type,initPosture,finalPosture,bouncePosture,traj);
+    vel.resize(traj.rows(),traj.cols());
+
+    std::vector<double> delta;
+    VectorXd posture;
+    for (int k = 0; k < traj.cols(); ++k){
+        posture = traj.col(k);
+        this->getDelta(posture,delta);
+        for (int i =0; i < traj.rows(); ++i){
+            vel(i,k) = delta.at(i)/timestep;
+        }
+    }
+
+    return timestep;
+}
+
+
+planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> initPosture)
+{
+    planning_result res;
+
+    int mov_type = 0; // pick
+    res.mov_type = mov_type;
+    res.object_id = params.mov_specs.obj->getName();
+    bool approach = params.mov_specs.approach;
+    bool retreat = params.mov_specs.retreat;
+    int pre_post = 0;
+
+    try
+    {
+        if(approach){pre_post=1;}; // use approach options (if they are enabled) to approach the object to pick
+        std::vector<double> finalPosture;
+        bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
+        if(FPosture){
+            std::vector<double> bouncePosture;
+            bool BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+            if (BPosture){
+                if(retreat){
+                    pre_post = 2; // use retreat options (if they are enabled) to retreat from object picked up
+                    //  TO DO
+
+                }else{res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
+                    MatrixXd traj; MatrixXd vel;
+                    double timestep = this->getVelocity(params,mov_type,initPosture,finalPosture,bouncePosture,traj,vel);
+                    res.time_steps.push_back(timestep);
+                    res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object ")+res.object_id);
+                    res.velocity_stages.push_back(vel);
+                }
+            }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection faild ");}
+        }else{res.status = 10; res.status_msg = string("HUML: final posture selection faild ");}
+    }catch (const string message){throw message;}
+    catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
+
+    return res;
+
+
 }
 
 } // namespace HUMotion
