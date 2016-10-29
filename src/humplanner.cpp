@@ -888,7 +888,7 @@ void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &ob
         string obspitch =  boost::str(boost::format("%.2f") % (orientation.at(1))); boost::replace_all(obspitch,",",".");
         string obsyaw =  boost::str(boost::format("%.2f") % (orientation.at(2))); boost::replace_all(obsyaw,",",".");
 
-        stream << to_string(obstacles.size())+string(" ")+
+        stream << to_string(i+1)+string(" ")+
                            obsx+string(" ")+
                            obsy+string(" ")+
                            obsz+string(" ")+
@@ -2208,7 +2208,7 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
 
 
     // tolerances
-    std::vector<double> lambda = params.lambda_final;
+    std::vector<double> lambda(params.lambda_final.begin(),params.lambda_final.begin()+joints_arm);
     std::vector<double> tolsArm = params.tolsArm;
     MatrixXd tolsHand = params.tolsHand;
     MatrixXd tolsObstacles = params.final_tolsObstacles;
@@ -2366,7 +2366,7 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     }
     // info objects
     bool vec=false;// true if there is some pre or post operation
-    if(approach && retreat && pre_post!=0){vec=true;}
+    if((approach || retreat) && pre_post!=0){vec=true;}
     this->writeInfoObjectsMod(PostureMod,vec);
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
@@ -3694,6 +3694,20 @@ void HUMPlanner::getObstaclesSingleArm(std::vector<double> center, double radius
 
 }
 
+/*
+std::string HUMPlanner::exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get())) {
+        if (fgets(buffer, 128, pipe.get()) != NULL)
+            result += buffer;
+    }
+    return result;
+}
+*/
+
 bool HUMPlanner::amplRead(string &datFile, string &modFile, string &nlFile)
 {
     string cmdLine;
@@ -3705,9 +3719,14 @@ bool HUMPlanner::amplRead(string &datFile, string &modFile, string &nlFile)
     cmdLine = AMPL_PATH+string("/./ampl -ogModels/")+nlFile+string(" Models/")+modFile+string(".mod")+
             string(" Models/")+datFile+string(".dat")+string(" Models/options.run");
 #endif
+//#ifdef DEBUG
     int status = system(cmdLine.c_str());
-
-    return (status >= 0);
+    return(status==0);
+//#else
+//    std::string result = this->exec(cmdLine.c_str());
+//    bool status = (std::strcmp(result.c_str(),"")==0);
+//    return (status);
+//#endif
 }
 
 bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, double acc_tol)
@@ -4336,8 +4355,8 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                 }
             }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection faild ");}
         }else{res.status = 10; res.status_msg = string("HUML: final posture selection faild ");}
-    }catch (const string message){throw message;}
-    catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
+    }catch (const string message){throw message;
+}catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
 
     return res;
 

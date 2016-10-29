@@ -577,6 +577,13 @@ private:
     void getRotAxis(vector<double>& xt, int id,std::vector<double>rpy);
 
     /**
+     * @brief exec
+     * @param cmd
+     * @return
+     */
+    //std::string exec(const char* cmd);
+
+    /**
      * @brief amplRead
      * @param datFile
      * @param modFile
