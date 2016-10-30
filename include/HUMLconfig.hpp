@@ -132,6 +132,8 @@ typedef struct{
     double tolTarPos; /**< tolerance of the final position of the hand against the target in [mm] */
     double tolTarOr; /**< tolerance of the final orientation of the hand against the target in [mm] */
     boundaryConditions bounds; /**< boundary condistions of the bounce problem */
+    vector<double> vel_approach; /**< velocity of the joints in [rad/s] at the beginning of the approach stage */
+    vector<double> acc_approach; /**< acceleration of the joints in [rad/s²] at the beginning of the approach stage */
     int steps; /**< number of steps for the trajectory */
     double totalTime; /**< normalized time of the movement (0 < t <= 1) */
     vector<double> lambda_final; /**< weights for the final posture optimization */
@@ -155,6 +157,7 @@ typedef struct{
     string object_id;/**< identity of the object involved in the movement */
     vector<MatrixXd> trajectory_stages;/**< sequence of the trajectories */
     vector<MatrixXd> velocity_stages;/**< sequence of the velocities */
+    vector<MatrixXd> acceleration_stages;/**< sequence of the accelerations */
     vector<double> time_steps; /**< sequence of each time steps for each trajectory */
     vector<string> trajectory_descriptions;/**< description of the trajectories */
 }planning_result;

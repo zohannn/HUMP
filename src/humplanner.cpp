@@ -2887,7 +2887,7 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      }
      // info objects
      bool vec=false;// true if there is some pre or post operation
-     if(approach && retreat && pre_post!=0){vec=true;}
+     if((approach || retreat) && pre_post!=0){vec=true;}
      this->writeInfoObjectsMod(PostureMod,vec);
 
      PostureMod << string("# Boundary Conditions \n");
@@ -2943,12 +2943,12 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      bool gopark = false; // true when the movement is Go park
      bool release_object = false; // true when Go park and release an object
 
+     /*
+     // object to transport (place movements)
      switch (mov_type) {
-     case 0: // reach to grasp
-
+     case 0: // pick
          break;
      case 1: // reaching
-
          break;
      case 2: // transport
          transport = true;
@@ -2995,15 +2995,14 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
          release_object=std::strcmp(obj_tar->getName().c_str(),"")!=0;
          break;
      }
-     // Direct Kinematics of the arm
-     this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,true);
+     */
 
      switch(hand_code){
      case 0: // human hand
-         this->writeHumanHandDirKin(PostureMod,tolsHand,true,false);
+         this->writeHumanHandDirKin(PostureMod,tolsHand,false,engage || transport);
          break;
      case 1: // barrett hand
-         this->writeBarrettHandDirKin(PostureMod,tolsHand,true,false);
+         this->writeBarrettHandDirKin(PostureMod,tolsHand,false,engage || transport);
          break;
      }
      // Points of the arm
@@ -3060,17 +3059,17 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
              }else if (pre_post == 1){
                  // approach
                  PostureMod << string("# Hand approach position\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps-2] + dFH*z_H[i,Nsteps-2] + dist*z_H[i,Nsteps-2] - Tar_pos[i])^2) <= 0.010; \n\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps-1] + dFH*z_H[i,Nsteps-1] + dist_1*z_H[i,Nsteps-1] - Tar_pos[i])^2) <= 0.010; \n\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps] + dFH*z_H[i,Nsteps] + dist_2*z_H[i,Nsteps] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps-5] + dFH*z_H[i,Nsteps-5] + dist*z_H[i,Nsteps-5] - Tar_pos[i])^2) <= 2; \n\n");
+                 //PostureMod << string("subject to contr_hand_pos_1: (sum{i in 1..3} (Hand[i,Nsteps-1] + dFH*z_H[i,Nsteps-1] + dist_1*z_H[i,Nsteps-1] - Tar_pos[i])^2) <= 1; \n\n");
+                 //PostureMod << string("subject to contr_hand_pos_2: (sum{i in 1..3} (Hand[i,Nsteps] + dFH*z_H[i,Nsteps] + dist_2*z_H[i,Nsteps] - Tar_pos[i])^2) <= 1; \n\n");
                  PostureMod << string("# Hand approach orientation\n");
                  PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
              }else if(pre_post == 2){
                  // retreat
                  PostureMod << string("# Hand retreat position\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,4] + dFH*z_H[i,4] + dist*z_H[i,4] - Tar_pos[i])^2) <= 0.010; \n\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,3] + dFH*z_H[i,3] + dist_1*z_H[i,3] - Tar_pos[i])^2) <= 0.010; \n\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,2] + dFH*z_H[i,2] + dist_2*z_H[i,2] - Tar_pos[i])^2) <= 0.010; \n\n");
+                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,4] + dFH*z_H[i,4] + dist*z_H[i,4] - Tar_pos[i])^2) <= 1; \n\n");
+                 PostureMod << string("subject to contr_hand_pos_1: (sum{i in 1..3} (Hand[i,3] + dFH*z_H[i,3] + dist_1*z_H[i,3] - Tar_pos[i])^2) <= 1; \n\n");
+                 PostureMod << string("subject to contr_hand_pos_2: (sum{i in 1..3} (Hand[i,2] + dFH*z_H[i,2] + dist_2*z_H[i,2] - Tar_pos[i])^2) <= 1; \n\n");
                  PostureMod << string("# Hand retreat orientation\n");
                  PostureMod << string("subject to constr_hand_or {k in (1)..(5)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
              }
@@ -3879,6 +3878,7 @@ bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& p
     // movement settings
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
+    std::vector<double> finalHand = params.mov_specs.finalHand;
     //tolerances
     boundaryConditions b = params.bounds;
     boundaryConditions bAux;
@@ -3910,9 +3910,9 @@ bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& p
         initAuxPosture.push_back(initPosture.at(7));
         initAuxPosture.push_back(initPosture.at(8));
         initAuxPosture.push_back(initPosture.at(10));
-        finalAuxPosture.push_back(finalPosture.at(7));
-        finalAuxPosture.push_back(finalPosture.at(8));
-        finalAuxPosture.push_back(finalPosture.at(10));
+        finalAuxPosture.push_back(finalHand.at(0));
+        finalAuxPosture.push_back(finalHand.at(1));
+        finalAuxPosture.push_back(finalHand.at(3));
         minAuxLimits.push_back(minLimits.at(7));
         minAuxLimits.push_back(minLimits.at(8));
         minAuxLimits.push_back(minLimits.at(10));
@@ -3938,8 +3938,8 @@ bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& p
     case 1:// barrett hand
         initAuxPosture.push_back(initPosture.at(8));
         initAuxPosture.push_back(initPosture.at(10));
-        finalAuxPosture.push_back(finalPosture.at(8));
-        finalAuxPosture.push_back(finalPosture.at(10));
+        finalAuxPosture.push_back(finalHand.at(1));
+        finalAuxPosture.push_back(finalHand.at(3));
         minAuxLimits.push_back(minLimits.at(8));
         minAuxLimits.push_back(minLimits.at(10));
         maxAuxLimits.push_back(maxLimits.at(8));
@@ -4315,6 +4315,26 @@ double HUMPlanner::getVelocity(huml_params &tols, int mov_type, std::vector<doub
         this->getDelta(posture,delta);
         for (int i =0; i < traj.rows(); ++i){
             vel(i,k) = delta.at(i)/timestep;
+        }
+    }
+
+    return timestep;
+}
+
+double HUMPlanner::getAcceleration(huml_params &tols, int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc)
+{
+
+    this->getTrajectory(tols,mov_type,initPosture,finalPosture,bouncePosture,traj);
+    double timestep = this->getVelocity(tols,mov_type,initPosture,finalPosture,bouncePosture,traj,vel);
+    acc.resize(traj.rows(),traj.cols());
+
+    std::vector<double> delta;
+    VectorXd vel_posture;
+    for (int k = 0; k < vel.cols(); ++k){
+        vel_posture = vel.col(k);
+        this->getDelta(vel_posture,delta);
+        for (int i =0; i < vel.rows(); ++i){
+            acc(i,k) = delta.at(i)/timestep;
         }
     }
 

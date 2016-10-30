@@ -372,6 +372,20 @@ private:
     double getVelocity(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel);
 
     /**
+     * @brief getAcceleration
+     * @param tols
+     * @param mov_type
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @param traj
+     * @param vel
+     * @param acc
+     * @return
+     */
+    double getAcceleration(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc);
+
+    /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
      * @param h_xsize
      * @param h_ysize
@@ -576,11 +590,7 @@ private:
      */
     void getRotAxis(vector<double>& xt, int id,std::vector<double>rpy);
 
-    /**
-     * @brief exec
-     * @param cmd
-     * @return
-     */
+
     //std::string exec(const char* cmd);
 
     /**
