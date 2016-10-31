@@ -832,10 +832,6 @@ void HUMPlanner::writeInfoApproachRetreat(ofstream &stream, std::vector<double> 
 {
     double dist = approach_retreat.at(3);
     string dist_str = boost::str(boost::format("%.2f") % dist); boost::replace_all(dist_str,",",".");
-    double dist_1 = approach_retreat.at(3)*2/3;
-    string dist_str_1 = boost::str(boost::format("%.2f") % dist_1); boost::replace_all(dist_str_1,",",".");
-    double dist_2 = approach_retreat.at(3)/3;
-    string dist_str_2 = boost::str(boost::format("%.2f") % dist_2); boost::replace_all(dist_str_2,",",".");
 
     std::vector<double> rpy = {tar.at(3),tar.at(4),tar.at(5)};
     Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
@@ -844,8 +840,6 @@ void HUMPlanner::writeInfoApproachRetreat(ofstream &stream, std::vector<double> 
 
     stream << string("# VECTOR APPROACH/RETREAT DISTANCE \n");
     stream << string("param dist :=")+dist_str+string(";\n");
-    stream << string("param dist_1 :=")+dist_str_1+string(";\n");
-    stream << string("param dist_2 :=")+dist_str_2+string(";\n");
 
     stream << string("# VECTOR APPROACH/RETREAT ORIENTATION \n");
 
@@ -986,8 +980,6 @@ void HUMPlanner::write_dHOMod(ofstream &stream)
 
 void HUMPlanner::writeInfoObjectsMod(ofstream &stream,bool vec)
 {
-    //stream << string("# Table \n");
-    //stream << string("param Table {i in 1..2} ; # x-->Table[1], z-->Table[2]\n");
 
     stream << string("# Target Position \n");
     stream << string("param Tar_pos {i in 1..3}; \n");
@@ -999,8 +991,6 @@ void HUMPlanner::writeInfoObjectsMod(ofstream &stream,bool vec)
     if(vec){
         stream << string("# Vector approach/retreat distance \n");
         stream << string("param dist; \n");
-        stream << string("param dist_1; \n");
-        stream << string("param dist_2; \n");
         stream << string("# Vector approach/retreat orientation \n");
         stream << string("param v_t {i in 1..3}; \n");
     }
@@ -2420,12 +2410,22 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     PostureMod << string("#  \n");
     PostureMod << string("#		      Constraints                  # \n");
     PostureMod << string("#  \n");
-    PostureMod << string("# Hand position \n");
-    PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
-
     string tarpos = boost::str(boost::format("%.2f") % tolTarPos); boost::replace_all(tarpos,",",".");
     string taror = boost::str(boost::format("%.4f") % tolTarOr); boost::replace_all(taror,",",".");
+    PostureMod << string("# Hand position \n");
+    switch (mov_type){
+    case 0: //pick
+        if(pre_post == 0){
+            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }else{
+            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }
+        break;
+    }
 
+/*
     switch(mov_type){
     case 0: // pick
         PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
@@ -2444,6 +2444,7 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     case 5: // Go park
         break;
     }
+    */
 
     PostureMod << string("# Hand orientation\n");
     switch(griptype){
@@ -2666,6 +2667,8 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
     std::vector<double> post_grasp_retreat;
     std::vector<double> pre_place_approach;
     std::vector<double> post_place_retreat;
+    std::vector<double> vel_approach = params.vel_approach;
+    std::vector<double> acc_approach = params.acc_approach;
     switch(mov_type){
     case 0: // pick
         obj_tar = params.mov_specs.obj;
@@ -2759,55 +2762,111 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
              PostureDat << to_string(i+1)+string(" ")+guess+string("\n");
          }
      }
-     // boundary conditions initial velocity
-     PostureDat << string("# INITIAL VELOCITY \n");
-     PostureDat << string("param vel_0 := \n");
-     for (std::size_t i=0; i < b.vel_0.size(); ++i){
-         string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
-         boost::replace_all(vel_0,",",".");
-         if (i == b.vel_0.size()-1){
-             PostureDat << to_string(i+1)+string(" ")+vel_0+string(";\n");
-         }else{
-             PostureDat << to_string(i+1)+string(" ")+vel_0+string("\n");
-         }
-     }
-     // boundary conditions final velocity
-     PostureDat << string("# FINAL VELOCITY \n");
-     PostureDat << string("param vel_f := \n");
-     for (std::size_t i=0; i < b.vel_f.size(); ++i){
-         string vel_f =  boost::str(boost::format("%.2f") % (b.vel_f.at(i)));
-         boost::replace_all(vel_f,",",".");
-         if (i == b.vel_f.size()-1){
-             PostureDat << to_string(i+1)+string(" ")+vel_f+string(";\n");
-         }else{
-             PostureDat << to_string(i+1)+string(" ")+vel_f+string("\n");
-         }
-     }
-     // boundary conditions initial acceleration
-     PostureDat << string("# INITIAL ACCELERATION \n");
-     PostureDat << string("param acc_0 := \n");
 
-     for (std::size_t i=0; i < b.acc_0.size(); ++i){
-         string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
-         boost::replace_all(acc_0,",",".");
-         if (i == b.acc_0.size()-1){
-             PostureDat << to_string(i+1)+string(" ")+acc_0+string(";\n");
-         }else{
-             PostureDat << to_string(i+1)+string(" ")+acc_0+string("\n");
+     // boundary conditions
+     if(pre_post==0 || !approach){
+         // boundary conditions initial velocity
+         PostureDat << string("# INITIAL VELOCITY \n");
+         PostureDat << string("param vel_0 := \n");
+         for (std::size_t i=0; i < b.vel_0.size(); ++i){
+             string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
+             boost::replace_all(vel_0,",",".");
+             if (i == b.vel_0.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+vel_0+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+vel_0+string("\n");
+             }
          }
-     }
-     // boundary conditions final acceleration
-     PostureDat << string("# FINAL ACCELERATION \n");
-     PostureDat << string("param acc_f := \n");
-     for (std::size_t i=0; i < b.acc_f.size(); ++i){
-         string acc_f =  boost::str(boost::format("%.2f") % (b.acc_f.at(i)));
-         boost::replace_all(acc_f,",",".");
+         // boundary conditions initial acceleration
+         PostureDat << string("# INITIAL ACCELERATION \n");
+         PostureDat << string("param acc_0 := \n");
 
-         if (i == b.acc_f.size()-1){
-             PostureDat << to_string(i+1)+string(" ")+acc_f+string(";\n");
-         }else{
-             PostureDat << to_string(i+1)+string(" ")+acc_f+string("\n");
+         for (std::size_t i=0; i < b.acc_0.size(); ++i){
+             string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
+             boost::replace_all(acc_0,",",".");
+             if (i == b.acc_0.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+acc_0+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+acc_0+string("\n");
+             }
          }
+         // boundary conditions final velocity
+         PostureDat << string("# FINAL VELOCITY \n");
+         PostureDat << string("param vel_f := \n");
+         for (std::size_t i=0; i < b.vel_f.size(); ++i){
+             string vel_f =  boost::str(boost::format("%.2f") % (b.vel_f.at(i)));
+             boost::replace_all(vel_f,",",".");
+             if (i == b.vel_f.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+vel_f+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+vel_f+string("\n");
+             }
+         }
+         // boundary conditions final acceleration
+         PostureDat << string("# FINAL ACCELERATION \n");
+         PostureDat << string("param acc_f := \n");
+         for (std::size_t i=0; i < b.acc_f.size(); ++i){
+             string acc_f =  boost::str(boost::format("%.2f") % (b.acc_f.at(i)));
+             boost::replace_all(acc_f,",",".");
+
+             if (i == b.acc_f.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+acc_f+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+acc_f+string("\n");
+             }
+         }
+     }else if (approach && pre_post==1){ // use approach options
+         // boundary conditions initial velocity
+         PostureDat << string("# INITIAL VELOCITY \n");
+         PostureDat << string("param vel_0 := \n");
+         for (std::size_t i=0; i < b.vel_0.size(); ++i){
+             string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
+             boost::replace_all(vel_0,",",".");
+             if (i == b.vel_0.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+vel_0+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+vel_0+string("\n");
+             }
+         }
+         // boundary conditions initial acceleration
+         PostureDat << string("# INITIAL ACCELERATION \n");
+         PostureDat << string("param acc_0 := \n");
+
+         for (std::size_t i=0; i < b.acc_0.size(); ++i){
+             string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
+             boost::replace_all(acc_0,",",".");
+             if (i == b.acc_0.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+acc_0+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+acc_0+string("\n");
+             }
+         }
+         // boundary conditions final velocity
+         PostureDat << string("# FINAL VELOCITY \n");
+         PostureDat << string("param vel_f := \n");
+         for (std::size_t i=0; i < b.vel_f.size(); ++i){
+             string vel_f =  boost::str(boost::format("%.2f") % (vel_approach.at(i)));
+             boost::replace_all(vel_f,",",".");
+             if (i == b.vel_f.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+vel_f+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+vel_f+string("\n");
+             }
+         }
+         // boundary conditions final acceleration
+         PostureDat << string("# FINAL ACCELERATION \n");
+         PostureDat << string("param acc_f := \n");
+         for (std::size_t i=0; i < b.acc_f.size(); ++i){
+             string acc_f =  boost::str(boost::format("%.2f") % (acc_approach.at(i)));
+             boost::replace_all(acc_f,",",".");
+
+             if (i == b.acc_f.size()-1){
+                 PostureDat << to_string(i+1)+string(" ")+acc_f+string(";\n");
+             }else{
+                 PostureDat << to_string(i+1)+string(" ")+acc_f+string("\n");
+             }
+         }
+
      }
      // Parameters of the Fingers
      switch(hand_code){
@@ -2822,7 +2881,11 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      this->writeInfoTarget(PostureDat,tar);
      // info approach/retreat
      switch(mov_type){
-     case 0: //pick
+     case 0: //pick         
+         if (pre_post!=0){this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);}
+         break;
+
+     /*
          switch(pre_post){
          case 0: // no approach, no retreat
              break;
@@ -2834,7 +2897,9 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
              break;
          }
          break;
+         */
      }
+
      //info objects
      this->writeInfoObstacles(PostureDat,objs);
      // object that has the target
@@ -2887,7 +2952,7 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      }
      // info objects
      bool vec=false;// true if there is some pre or post operation
-     if((approach || retreat) && pre_post!=0){vec=true;}
+     if(approach && pre_post!=0){vec=true;}
      this->writeInfoObjectsMod(PostureMod,vec);
 
      PostureMod << string("# Boundary Conditions \n");
@@ -3054,24 +3119,9 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
          switch (mov_type) {
          case 0: // pick
              // hand constraints for approaching and retreating direction settings
-             if(pre_post==0){
-                 // do not use approach/retreat options
-             }else if (pre_post == 1){
-                 // approach
-                 PostureMod << string("# Hand approach position\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,Nsteps-5] + dFH*z_H[i,Nsteps-5] + dist*z_H[i,Nsteps-5] - Tar_pos[i])^2) <= 2; \n\n");
-                 //PostureMod << string("subject to contr_hand_pos_1: (sum{i in 1..3} (Hand[i,Nsteps-1] + dFH*z_H[i,Nsteps-1] + dist_1*z_H[i,Nsteps-1] - Tar_pos[i])^2) <= 1; \n\n");
-                 //PostureMod << string("subject to contr_hand_pos_2: (sum{i in 1..3} (Hand[i,Nsteps] + dFH*z_H[i,Nsteps] + dist_2*z_H[i,Nsteps] - Tar_pos[i])^2) <= 1; \n\n");
+             if(approach && pre_post!=0){
                  PostureMod << string("# Hand approach orientation\n");
                  PostureMod << string("subject to constr_hand_or {k in (Nsteps-5)..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
-             }else if(pre_post == 2){
-                 // retreat
-                 PostureMod << string("# Hand retreat position\n");
-                 PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i,4] + dFH*z_H[i,4] + dist*z_H[i,4] - Tar_pos[i])^2) <= 1; \n\n");
-                 PostureMod << string("subject to contr_hand_pos_1: (sum{i in 1..3} (Hand[i,3] + dFH*z_H[i,3] + dist_1*z_H[i,3] - Tar_pos[i])^2) <= 1; \n\n");
-                 PostureMod << string("subject to contr_hand_pos_2: (sum{i in 1..3} (Hand[i,2] + dFH*z_H[i,2] + dist_2*z_H[i,2] - Tar_pos[i])^2) <= 1; \n\n");
-                 PostureMod << string("# Hand retreat orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (1)..(5)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
              }
          case 1: // reaching
              break;
@@ -3849,7 +3899,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& pa
         if(nlwritten){
             // call ipopt for optimization
             string nlfile = string("Models/")+fn+string(".nl");
-            std::vector<Number> x_sol = std::vector<Number>(joints_arm);
+            std::vector<Number> x_sol;
             try
             {
                 double tol_stop = 1e-2;
@@ -3980,12 +4030,12 @@ bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& p
         if(nlwritten){
             // call ipopt for optimization
             string nlfile = string("Models/")+fn+string(".nl");
-            std::vector<Number> x_sol = std::vector<Number>(joints_arm);
+            std::vector<Number> x_sol;
             try
             {
                 double tol_stop = 1e-6;
                 if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
-                    bouncePosture = std::vector<double>(joints_arm);
+                    bouncePosture = std::vector<double>(joints_arm+joints_hand);
                     for (std::size_t i=0; i < x_sol.size()-2; ++i){
                        // printf("x[%i] = %f\n", i, x_sol[i]);
                         //switch(arm_code){
@@ -4043,12 +4093,9 @@ double HUMPlanner::getTimeStep(huml_params &tols, MatrixXd &jointTraj)
         double deltaTheta = 0;
         std::vector<double> diffs;
         for (int i = 1; i < steps1; ++i){
-
             double diff = abs(jointTraj(i,k) - jointTraj(i-1,k))*180/M_PI;
             diffs.push_back(diff);
             deltaTheta = deltaTheta + diff;
-
-
         }
         std::vector<double>::iterator res = std::max_element(diffs.begin(),diffs.end());
         int poss = std::distance(diffs.begin(),res);
@@ -4138,18 +4185,48 @@ void HUMPlanner::getDelta(VectorXd& jointTraj, std::vector<double> &delta)
 
 }
 
-void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, MatrixXd &Traj)
+void HUMPlanner::directMovement(huml_params &tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd &Traj, int mod)
 {
     int steps = tols.steps;
-    double delta = 1.0/steps;
     std::vector<double> time;
+    std::vector<double> vel_0;
+    std::vector<double> vel_f;
+    std::vector<double> acc_0;
+    std::vector<double> acc_f;
 
-    std::vector<double> vel_0 = tols.bounds.vel_0;
-    std::vector<double> vel_f = tols.bounds.vel_f;
-    std::vector<double> acc_0 = tols.bounds.acc_0;
-    std::vector<double> acc_f = tols.bounds.acc_f;
+    switch(mod){
+    case 0: // move
+        vel_0 = tols.bounds.vel_0;
+        vel_f = tols.bounds.vel_f;
+        acc_0 = tols.bounds.acc_0;
+        acc_f = tols.bounds.acc_f;
+        break;
+    case 1:// pre_approach
+        vel_0 = tols.bounds.vel_0;
+        vel_f = tols.vel_approach;
+        acc_0 = tols.bounds.acc_0;
+        acc_f = tols.acc_approach;
+        break;
+    case 2: // approach
+        vel_0 = tols.vel_approach;
+        vel_f = std::vector<double>(tols.vel_approach.size(),0.0);
+        acc_0 = tols.acc_approach;
+        acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
+        steps = 5;
+        break;
+    case 3:// retreat
+        vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
+        vel_f = tols.bounds.vel_f;
+        acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
+        acc_f = tols.bounds.acc_f;
+        steps = 5;
+        break;
+    }
+
+
 
     double T = tols.totalTime;
+    double delta = T/steps;
 
     time.push_back(0.0);
     for (int i = 0; i<steps; ++i){
@@ -4166,6 +4243,7 @@ void HUMPlanner::directMovement(huml_params &tols, std::vector<double> &initPost
                     vel_f.at(j)*T*(-4*pow(time.at(i),3)+7*pow(time.at(i),4)-3*pow(time.at(i),5))+
                     0.5*acc_0.at(j)*pow(T,2)*(pow(time.at(i),2)-3*pow(time.at(i),3)+3*pow(time.at(i),4)-pow(time.at(i),5))+
                     0.5*acc_f.at(j)*pow(T,2)*(pow(time.at(i),3)-2*pow(time.at(i),4)+pow(time.at(i),5));
+
         }
     }
 
@@ -4204,15 +4282,29 @@ void HUMPlanner::computeTraj(const MatrixXd &dTraj, const MatrixXd &bTraj, Matri
     }
 }
 
-double HUMPlanner::getTrajectory(huml_params &tols, int mov_type, std::vector<double> initPosture,
-                                 std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj)
+double HUMPlanner::getTrajectory(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod)
+{
+    double timestep;
+    this->directMovement(tols,initPosture,finalPosture,traj,mod);
+    timestep = this->getTimeStep(tols,traj);
+
+    return timestep;
+}
+
+double HUMPlanner::getTrajectory(huml_params &tols,std::vector<double> initPosture,
+                                 std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj,int mod)
 {
 
     double timestep;
     MatrixXd dTraj;
     MatrixXd bTraj;
-    MatrixXd totTraj;
 
+    this->directMovement(tols,initPosture,finalPosture,dTraj,mod);
+    this->backForthMovement(tols,initPosture,bouncePosture,bTraj);
+    this->computeTraj(dTraj,bTraj,traj);
+    timestep = this->getTimeStep(tols,traj);
+
+    /*
     switch (mov_type) {
         case 0: // pick
             this->directMovement(tols,initPosture,finalPosture,dTraj);
@@ -4225,7 +4317,8 @@ double HUMPlanner::getTrajectory(huml_params &tols, int mov_type, std::vector<do
         case 2: // transport
             break;
         case 3: // engage
-        /*
+*/
+    /*
             switch(arm_code){
 
             case 0: // both arms
@@ -4280,11 +4373,11 @@ double HUMPlanner::getTrajectory(huml_params &tols, int mov_type, std::vector<do
             this->getTimeStep(traj,timeStep);
 
             break;
-*/
+
         case 4: // disengage
             break;
         case 5: // Go park
-        /*
+
             if(std::strcmp(obj_tar->getName().c_str(),"")!=0){
                 // an object has to be released
                 initPosture.at(7) = 0.0;
@@ -4296,16 +4389,17 @@ double HUMPlanner::getTrajectory(huml_params &tols, int mov_type, std::vector<do
             this->backForthMovement(tols,initPosture,bouncePosture,bTraj);
             this->computeTraj(dTraj,bTraj,totTraj);
             timestep = this->getTimeStep(tols,traj);
-                        */
+
             break;
 
         }
+         */
     return timestep;
 }
 
-double HUMPlanner::getVelocity(huml_params &tols, int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel)
+double HUMPlanner::getVelocity(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod)
 {
-    double timestep = this->getTrajectory(tols,mov_type,initPosture,finalPosture,bouncePosture,traj);
+    double timestep = this->getTrajectory(tols,initPosture,finalPosture,traj,mod);
     vel.resize(traj.rows(),traj.cols());
 
     std::vector<double> delta;
@@ -4321,11 +4415,46 @@ double HUMPlanner::getVelocity(huml_params &tols, int mov_type, std::vector<doub
     return timestep;
 }
 
-double HUMPlanner::getAcceleration(huml_params &tols, int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc)
+double HUMPlanner::getVelocity(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod)
+{
+    double timestep = this->getTrajectory(tols,initPosture,finalPosture,bouncePosture,traj,mod);
+    vel.resize(traj.rows(),traj.cols());
+
+    std::vector<double> delta;
+    VectorXd posture;
+    for (int k = 0; k < traj.cols(); ++k){
+        posture = traj.col(k);
+        this->getDelta(posture,delta);
+        for (int i =0; i < traj.rows(); ++i){
+            vel(i,k) = delta.at(i)/timestep;
+        }
+    }
+
+    return timestep;
+}
+
+double HUMPlanner::getAcceleration(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod)
+{
+    double timestep = this->getVelocity(tols,initPosture,finalPosture,traj,vel,mod);
+    acc.resize(traj.rows(),traj.cols());
+
+    std::vector<double> delta;
+    VectorXd vel_posture;
+    for (int k = 0; k < vel.cols(); ++k){
+        vel_posture = vel.col(k);
+        this->getDelta(vel_posture,delta);
+        for (int i =0; i < vel.rows(); ++i){
+            acc(i,k) = delta.at(i)/timestep;
+        }
+    }
+
+    return timestep;
+}
+
+double HUMPlanner::getAcceleration(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod)
 {
 
-    this->getTrajectory(tols,mov_type,initPosture,finalPosture,bouncePosture,traj);
-    double timestep = this->getVelocity(tols,mov_type,initPosture,finalPosture,bouncePosture,traj,vel);
+    double timestep = this->getVelocity(tols,initPosture,finalPosture,bouncePosture,traj,vel,mod);
     acc.resize(traj.rows(),traj.cols());
 
     std::vector<double> delta;
@@ -4348,15 +4477,110 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
 
     int mov_type = 0; // pick
     res.mov_type = mov_type;
+    std::vector<double> finalHand = params.mov_specs.finalHand;
+    double ap = 3.0*static_cast<double>(M_PI)/180; // aperture of the fingers
+    int arm_code = params.mov_specs.hand_code;
+    std::vector<double> minLimits; std::vector<double> maxLimits;
+    switch(arm_code){
+    case 1: // right arm
+        minLimits = this->minRightLimits;
+        maxLimits = this->maxRightLimits;
+        break;
+    case 2: // left arm
+        minLimits = this->minLeftLimits;
+        maxLimits = this->maxLeftLimits;
+        break;
+    }
+
     res.object_id = params.mov_specs.obj->getName();
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
-    int pre_post = 0;
+    int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
 
     try
     {
+        if(approach){
+            pre_post = 1;
+            std::vector<double> finalPosture_pre_grasp;
+            bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp);
+            if (FPosture){
+                std::vector<double> bouncePosture_pre_grasp;
+                bool BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
+                if(BPosture){
+                    pre_post = 0;
+                    std::vector<double> finalPosture_grasp;
+                    bool FPosture_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture_grasp);
+                    if(FPosture_grasp){
+                        res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
+                        res.time_steps.clear();
+                        res.trajectory_stages.clear(); res.trajectory_descriptions.clear();
+                        res.velocity_stages.clear();
+                        res.acceleration_stages.clear();
+                        int mod;
+                        // extend the final postures
+                        std::vector<double> finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
+                        std::vector<double> finalPosture_grasp_ext = finalPosture_grasp;
+                        finalPosture_grasp_ext.push_back(finalHand.at(0));
+                        finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
+                        for(size_t i=1;i<finalHand.size();++i){
+                            finalPosture_grasp_ext.push_back(finalHand.at(i));
+                            if(((finalHand.at(i) -ap) > minLimits.at(i+7))){
+                                finalPosture_pre_grasp_ext.push_back(finalHand.at(i)-ap);
+                            }else{
+                               finalPosture_pre_grasp_ext.push_back(minLimits.at(i+7));
+                            }
+                        }
+                        // pre-approach stage
+                        MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1;
+                        timestep = this->getAcceleration(params,initPosture,finalPosture_pre_grasp_ext,bouncePosture_pre_grasp,traj,vel,acc,mod);
+                        res.time_steps.push_back(timestep);
+                        res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, pre-approach ")+res.object_id);
+                        res.velocity_stages.push_back(vel);
+                        res.acceleration_stages.push_back(acc);
+                        // approach stage
+                        mod = 2;
+                        timestep = this->getAcceleration(params,finalPosture_pre_grasp_ext,finalPosture_grasp_ext,traj,vel,acc,mod);
+                        res.time_steps.push_back(timestep);
+                        res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, approach ")+res.object_id);
+                        res.velocity_stages.push_back(vel);
+                        res.acceleration_stages.push_back(acc);
+                    }else{res.status = 30; res.status_msg = string("HUML: final posture grasp selection faild ");}
+                }else{ res.status = 20; res.status_msg = string("HUML: bounce posture pre grasp selection faild ");}
+            }else{res.status = 10; res.status_msg = string("HUML: final posture pre grasp selection faild ");}
+        }else{
+            pre_post = 0;
+            std::vector<double> finalPosture;
+            bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
+            if (FPosture){
+                std::vector<double> bouncePosture;
+                bool BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+                if(BPosture){
+                    res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
+                    res.time_steps.clear();
+                    res.trajectory_stages.clear(); res.trajectory_descriptions.clear();
+                    res.velocity_stages.clear();
+                    res.acceleration_stages.clear();
+                    int mod;
+                    // extend the final postures
+                    std::vector<double> finalPosture_ext = finalPosture;
+                    for(size_t i=0;i<finalHand.size();++i){
+                        finalPosture_ext.push_back(finalHand.at(i));
+                    }
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0;
+                    double timestep = this->getAcceleration(params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,mod);
+                    res.time_steps.push_back(timestep);
+                    res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, grasp ")+res.object_id);
+                    res.velocity_stages.push_back(vel);
+                    res.acceleration_stages.push_back(acc);
+                }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection faild ");}
+            }else{res.status = 10; res.status_msg = string("HUML: final posture selection faild ");}
+
+        }
+        if(retreat){
+            // TO DO
+        }
+        /*
         if(approach){pre_post=1;}; // use approach options (if they are enabled) to approach the object to pick
-        std::vector<double> finalPosture;
         bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
         if(FPosture){
             std::vector<double> bouncePosture;
@@ -4375,6 +4599,7 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                 }
             }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection faild ");}
         }else{res.status = 10; res.status_msg = string("HUML: final posture selection faild ");}
+        */
     }catch (const string message){throw message;
 }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
 

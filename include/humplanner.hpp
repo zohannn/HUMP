@@ -285,10 +285,8 @@ public:
 private:
 
     string name;/**< name of the planner */
-    //int targetAxis; /**< approaching direction towards the target: 0 = none , 1 = x axis , 2 = y axis, 3 = z axis*/
-    // scenario info    this->planner_id=planner_id;
+    // scenario info
     vector<objectPtr> obstacles; /**< obstacles in the scenario */
-    //objectPtr obj_tar; /**< object that has the target of the movement (reach-to-grasp, transport, engage, disengage) */
     // humanoid info
     std::vector<double> shPos; /**< position of the shoulder of the humanoid: shPos(0)=x, shPos(1)=y, shPos(2)=z */
     Matrix4d matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
@@ -326,8 +324,9 @@ private:
      * @param initPosture
      * @param finalPosture
      * @param Traj
+     * @param mod
      */
-    void directMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Traj);
+    void directMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Traj,int mod);
 
     /**
      * @brief backForthMovement
@@ -349,41 +348,77 @@ private:
     /**
      * @brief getTrajectory
      * @param tols
-     * @param mov_type
      * @param initPosture
      * @param finalPosture
      * @param bouncePosture
      * @param traj
+     * @param mod
      * @return
      */
-    double getTrajectory(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj);
+    double getTrajectory(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj,int mod);
+
+    /**
+     * @brief getTrajectory
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param traj
+     * @param mod
+     * @return
+     */
+    double getTrajectory(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod);
 
     /**
      * @brief getVelocity
      * @param tols
-     * @param mov_type
      * @param initPosture
      * @param finalPosture
      * @param bouncePosture
      * @param traj
      * @param vel
+     * @param mod
      * @return
      */
-    double getVelocity(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel);
+    double getVelocity(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod);
+
+    /**
+     * @brief getVelocity
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param traj
+     * @param vel
+     * @param mod
+     * @return
+     */
+    double getVelocity(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod);
 
     /**
      * @brief getAcceleration
      * @param tols
-     * @param mov_type
      * @param initPosture
      * @param finalPosture
      * @param bouncePosture
      * @param traj
      * @param vel
      * @param acc
+     * @param mod
      * @return
      */
-    double getAcceleration(huml_params &tols,int mov_type, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc);
+    double getAcceleration(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod);
+
+    /**
+     * @brief getAcceleration
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param traj
+     * @param vel
+     * @param acc
+     * @param mod
+     * @return
+     */
+    double getAcceleration(huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod);
 
     /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
