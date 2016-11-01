@@ -4405,7 +4405,8 @@ void HUMPlanner::backForthTrajectory(huml_params &tols, std::vector<double> &ini
 
     for (int i = 0; i<=steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-              Traj(i,j) = (bouncePosture.at(j) - initPosture.at(j))* pow(sin(M_PI*pow(tau.at(i),phi)),2);
+            double ttau = tau.at(i);
+            Traj(i,j) = ((ttau*(1-ttau))/(tb*(1-tb)))*(bouncePosture.at(j) - initPosture.at(j))* pow(sin(M_PI*pow(ttau,phi)),2);
         }
     }
 }
@@ -4431,7 +4432,9 @@ void HUMPlanner::backForthVelocity(huml_params &tols, std::vector<double> &initP
 
     for (int i = 0; i<=steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-              Vel(i,j) = (2*M_PI/pow(T,phi))*(bouncePosture.at(j) - initPosture.at(j))*sin(M_PI*pow(tau.at(i),phi))*cos(M_PI*pow(tau.at(i),phi));
+            double ttau = tau.at(i);
+            Vel(i,j) = ((ttau*(1-ttau))/(tb*(1-tb)))*(bouncePosture.at(j) - initPosture.at(j))*((1-2*ttau)*pow(sin(M_PI*pow(ttau,phi)),2)+
+                                                                                                (1-ttau)*M_PI*phi*pow(ttau,phi)*sin(2*M_PI*pow(ttau,phi)));
         }
     }
 }
@@ -4457,7 +4460,10 @@ void HUMPlanner::backForthAcceleration(huml_params &tols, std::vector<double> &i
 
     for (int i = 0; i<=steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-              Acc(i,j) = (2*pow(M_PI,2)/pow(T,2*phi))*(bouncePosture.at(j) - initPosture.at(j))*cos(2*M_PI*pow(tau.at(i),phi));
+            double ttau = tau.at(i);
+            Acc(i,j) = ((ttau*(1-ttau))/(tb*(1-tb)))*(bouncePosture.at(j) - initPosture.at(j))*(2*pow(M_PI,2)*pow(phi,2)*pow(ttau,(2*phi-1))*(1-ttau)*cos(2*M_PI*pow(ttau,phi))
+                                                                                                -2*pow(sin(M_PI*pow(ttau,2)),2)
+                                                                                                -2*M_PI*phi*pow(ttau,(phi-1))*(2*ttau-1)*sin(2*M_PI*pow(ttau,phi)));
         }
     }
 }
