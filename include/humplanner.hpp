@@ -60,7 +60,7 @@ public:
     void addObstacle(objectPtr obs);
 
     /**
-     * @brief setObstacle
+     * @brief setObstacleStagiare sviluppatore, informatico presso la sede principale
      * @param obs
      * @param pos
      * @return
@@ -311,39 +311,72 @@ private:
      */
     double getTimeStep(huml_params& tols,MatrixXd& jointTraj);
 
-    /**
-     * @brief getDelta
-     * @param jointTraj
-     * @param delta
-     */
-    void getDelta(VectorXd& jointTraj, std::vector<double> &delta);
+
+    //void getDelta(VectorXd& jointTraj, std::vector<double> &delta);
 
     /**
-     * @brief directMovement
+     * @brief directTrajectory
      * @param tols
      * @param initPosture
      * @param finalPosture
      * @param Traj
      * @param mod
      */
-    void directMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Traj,int mod);
+    void directTrajectory(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Traj,int mod);
 
     /**
-     * @brief backForthMovement
+     * @brief directVelocity
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param Vel
+     * @param mod
+     */
+    void directVelocity(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Vel, int mod);
+
+    /**
+     * @brief directAcceleration
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param Acc
+     * @param mod
+     */
+    void directAcceleration(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Acc,int mod);
+    /**
+     * @brief backForthTrajectory
      * @param tols
      * @param initPosture
      * @param bouncePosture
      * @param Traj
      */
-    void backForthMovement(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Traj);
+    void backForthTrajectory(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Traj);
 
     /**
-     * @brief computeTraj
-     * @param dTraj
-     * @param bTraj
-     * @param totTraj
+     * @brief backForthVelocity
+     * @param tols
+     * @param initPosture
+     * @param bouncePosture
+     * @param Vel
      */
-    void computeTraj(const MatrixXd& dTraj, const MatrixXd& bTraj, MatrixXd& totTraj);
+    void backForthVelocity(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Vel);
+
+    /**
+     * @brief backForthAcceleration
+     * @param tols
+     * @param initPosture
+     * @param bouncePosture
+     * @param Acc
+     */
+    void backForthAcceleration(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Acc);
+
+    /**
+     * @brief computeMovement
+     * @param direct
+     * @param back
+     * @param tot
+     */
+    void computeMovement(const MatrixXd& direct, const MatrixXd& back, MatrixXd& tot);
 
     /**
      * @brief getTrajectory
