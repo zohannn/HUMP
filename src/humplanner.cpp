@@ -2868,6 +2868,15 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
          }
 
      }
+     // tb and phi
+     PostureDat << string("# TB and PHI \n");
+     PostureDat << string("param TB := ");
+     string tb_str =  boost::str(boost::format("%.2f") % (TB));
+     PostureDat << tb_str+string(";\n");
+     PostureDat << string("param PHI := ");
+     string phi_str =  boost::str(boost::format("%.2f") % (PHI));
+     PostureDat << phi_str+string(";\n");
+
      // Parameters of the Fingers
      switch(hand_code){
      case 0: // human hand
@@ -2884,20 +2893,6 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      case 0: //pick         
          if (pre_post!=0){this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);}
          break;
-
-     /*
-         switch(pre_post){
-         case 0: // no approach, no retreat
-             break;
-         case 1: // approach
-             if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);}
-             break;
-         case 2: // retreat
-             if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_grasp_retreat);}
-             break;
-         }
-         break;
-         */
      }
 
      //info objects
@@ -2963,11 +2958,13 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
 
      PostureMod << string("# Time and iterations\n");
      PostureMod << string("param Nsteps;\n");
+     PostureMod << string("param TB;\n");
+     PostureMod << string("param PHI;\n");
      PostureMod << string("param TotalTime;\n");
      PostureMod << string("set Iterations := 1..(Nsteps+1);\n");
      PostureMod << string("set nJoints := 1..")+to_string(initialGuess.size())+string(";\n");
      PostureMod << string("set Iterations_nJoints := Iterations cross nJoints;\n");
-     PostureMod << string("param time {i in Iterations} = (i-1)/Nsteps;\n");
+     PostureMod << string("param time {i in Iterations} = ((i-1)*TotalTime)/Nsteps;\n");
 
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
      PostureMod << string("# DECISION VARIABLES \n");
@@ -2975,7 +2972,7 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      PostureMod << string("var theta_b {i in 1..")+to_string(initialGuess.size())+string("} >= llim[i], <= ulim[i]; \n");
 
      PostureMod << string("# Direct Movement \n");
-     PostureMod << string("param the_direct {(i,j) in Iterations_nJoints} := \n");
+     PostureMod << string("param the_direct {(i,j) in Iterations_nJoints} := thet_init[j]+ \n");
      PostureMod << string("( thet_final[j] - thet_init[j] ) * (10*(time[i])^3 -15*(time[i])^4 +6*(time[i])^5) \n");
      PostureMod << string("+ \n");
      PostureMod << string("vel_0[j] *TotalTime* (time[i] - 6 *(time[i])^3 +8*(time[i])^4 -3*(time[i])^5) \n");
@@ -2988,11 +2985,11 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
 
      PostureMod << string("# Back and forth Movement \n");
      PostureMod << string("var the_bf 	{(i,j) in Iterations_nJoints} =  \n");
-     PostureMod << string("(theta_b[j] - thet_init[j])*(sin(pi*time[i]))^2; \n");
+     PostureMod << string("((time[i]*(1-time[i]))/(TB*(1-TB)))*(theta_b[j] - thet_init[j])*(sin(pi*(time[i])^PHI))^2; \n");
 
      PostureMod << string("# Composite Movement \n");
      PostureMod << string("var theta 	{(i,j) in Iterations_nJoints} = \n");
-     PostureMod << string("thet_init[j] + 	the_direct[i,j] + the_bf[i,j];\n");
+     PostureMod << string("the_direct[i,j] + the_bf[i,j];\n");
 
      // Rotation matrix of the obstacles
      this->writeRotMatObsts(PostureMod);
@@ -4390,8 +4387,6 @@ void HUMPlanner::backForthTrajectory(huml_params &tols, std::vector<double> &ini
     std::vector<double> time = std::vector<double>(steps+1); // time
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
-    double tb = 0.5; // tb = ]0,1[, it constrols when the bounce posture is reached. 0.5 means at the middle of the movement
-    double phi = (-log(2.0)/log(tb));
 
     double T = tols.totalTime;
     double delta = T/steps;
@@ -4406,7 +4401,7 @@ void HUMPlanner::backForthTrajectory(huml_params &tols, std::vector<double> &ini
     for (int i = 0; i<=steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
             double ttau = tau.at(i);
-            Traj(i,j) = ((ttau*(1-ttau))/(tb*(1-tb)))*(bouncePosture.at(j) - initPosture.at(j))* pow(sin(M_PI*pow(ttau,phi)),2);
+            Traj(i,j) = ((ttau*(1-ttau))/(TB*(1-TB)))*(bouncePosture.at(j) - initPosture.at(j))* pow(sin(M_PI*pow(ttau,PHI)),2);
         }
     }
 }
@@ -4417,8 +4412,6 @@ void HUMPlanner::backForthVelocity(huml_params &tols, std::vector<double> &initP
     std::vector<double> time = std::vector<double>(steps+1); // time
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
-    double tb = 0.5; // tb = ]0,1[, it constrols when the bounce posture is reached. 0.5 means at the middle of the movement
-    double phi = (-log(2.0)/log(tb));
 
     double T = tols.totalTime;
     double delta = T/steps;
@@ -4433,8 +4426,8 @@ void HUMPlanner::backForthVelocity(huml_params &tols, std::vector<double> &initP
     for (int i = 0; i<=steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
             double ttau = tau.at(i);
-            Vel(i,j) = ((ttau*(1-ttau))/(tb*(1-tb)))*(bouncePosture.at(j) - initPosture.at(j))*((1-2*ttau)*pow(sin(M_PI*pow(ttau,phi)),2)+
-                                                                                                (1-ttau)*M_PI*phi*pow(ttau,phi)*sin(2*M_PI*pow(ttau,phi)));
+            Vel(i,j) = ((ttau*(1-ttau))/(TB*(1-TB)))*(bouncePosture.at(j) - initPosture.at(j))*((1-2*ttau)*pow(sin(M_PI*pow(ttau,PHI)),2)+
+                                                                                                (1-ttau)*M_PI*PHI*pow(ttau,PHI)*sin(2*M_PI*pow(ttau,PHI)));
         }
     }
 }
@@ -4445,8 +4438,6 @@ void HUMPlanner::backForthAcceleration(huml_params &tols, std::vector<double> &i
     std::vector<double> time = std::vector<double>(steps+1); // time
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
-    double tb = 0.5; // tb = ]0,1[, it constrols when the bounce posture is reached. 0.5 means at the middle of the movement
-    double phi = (-log(2.0)/log(tb));
 
     double T = tols.totalTime;
     double delta = T/steps;
@@ -4461,9 +4452,9 @@ void HUMPlanner::backForthAcceleration(huml_params &tols, std::vector<double> &i
     for (int i = 0; i<=steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
             double ttau = tau.at(i);
-            Acc(i,j) = ((ttau*(1-ttau))/(tb*(1-tb)))*(bouncePosture.at(j) - initPosture.at(j))*(2*pow(M_PI,2)*pow(phi,2)*pow(ttau,(2*phi-1))*(1-ttau)*cos(2*M_PI*pow(ttau,phi))
+            Acc(i,j) = ((ttau*(1-ttau))/(TB*(1-TB)))*(bouncePosture.at(j) - initPosture.at(j))*(2*pow(M_PI,2)*pow(PHI,2)*pow(ttau,(2*PHI-1))*(1-ttau)*cos(2*M_PI*pow(ttau,PHI))
                                                                                                 -2*pow(sin(M_PI*pow(ttau,2)),2)
-                                                                                                -2*M_PI*phi*pow(ttau,(phi-1))*(2*ttau-1)*sin(2*M_PI*pow(ttau,phi)));
+                                                                                                -2*M_PI*PHI*pow(ttau,(PHI-1))*(2*ttau-1)*sin(2*M_PI*pow(ttau,PHI)));
         }
     }
 }
@@ -4789,9 +4780,9 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                         res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, approach ")+res.object_id);
                         res.velocity_stages.push_back(vel);
                         res.acceleration_stages.push_back(acc);
-                    }else{res.status = 30; res.status_msg = string("HUML: final posture grasp selection faild ");}
-                }else{ res.status = 20; res.status_msg = string("HUML: bounce posture pre grasp selection faild ");}
-            }else{res.status = 10; res.status_msg = string("HUML: final posture pre grasp selection faild ");}
+                    }else{res.status = 30; res.status_msg = string("HUML: final posture grasp selection failed ");}
+                }else{ res.status = 20; res.status_msg = string("HUML: bounce posture pre grasp selection failed ");}
+            }else{res.status = 10; res.status_msg = string("HUML: final posture pre grasp selection failed ");}
         }else{
             pre_post = 0;
             std::vector<double> finalPosture;
@@ -4817,34 +4808,13 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                     res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, grasp ")+res.object_id);
                     res.velocity_stages.push_back(vel);
                     res.acceleration_stages.push_back(acc);
-                }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection faild ");}
-            }else{res.status = 10; res.status_msg = string("HUML: final posture selection faild ");}
+                }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection failed ");}
+            }else{res.status = 10; res.status_msg = string("HUML: final posture selection failed ");}
 
         }
         if(retreat){
             // TO DO
         }
-        /*
-        if(approach){pre_post=1;}; // use approach options (if they are enabled) to approach the object to pick
-        bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
-        if(FPosture){
-            std::vector<double> bouncePosture;
-            bool BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
-            if (BPosture){
-                if(retreat){
-                    pre_post = 2; // use retreat options (if they are enabled) to retreat from object picked up
-                    //  TO DO
-
-                }else{res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
-                    MatrixXd traj; MatrixXd vel;
-                    double timestep = this->getVelocity(params,mov_type,initPosture,finalPosture,bouncePosture,traj,vel);
-                    res.time_steps.push_back(timestep);
-                    res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object ")+res.object_id);
-                    res.velocity_stages.push_back(vel);
-                }
-            }else{ res.status = 20; res.status_msg = string("HUML: bounce posture selection faild ");}
-        }else{res.status = 10; res.status_msg = string("HUML: final posture selection faild ");}
-        */
     }catch (const string message){throw message;
 }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
 

@@ -16,6 +16,8 @@
 // Hand
 //#define HAND 
 
+//TB
+#define TB 0.5
 //AMPL
 #define AMPL 0
 #define AMPL_PATH "/home/gianpaolo/AMPL"

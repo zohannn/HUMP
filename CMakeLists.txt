@@ -30,6 +30,10 @@ endif()
 ##############################################################################
 
 
+## tb = ]0,1[,
+## it constrols when the bounce posture is reached.
+## 0.5 means at the middle of the movement
+set(TB 0.5)
 ## AMPL software
 # AMPL=0 use wine to run ampl for windows
 # AMPL=1 use ampl for linux

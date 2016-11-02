@@ -51,6 +51,8 @@ namespace HUMotion{
 
 typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in the scenario */
 
+const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce posture is reached */
+
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
     vector<double> d; /**< distances between consecutive frames along the y axes in [mm] */
