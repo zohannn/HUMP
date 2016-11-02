@@ -4714,7 +4714,6 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
     int mov_type = 0; // pick
     res.mov_type = mov_type;
     std::vector<double> finalHand = params.mov_specs.finalHand;
-    double ap = 3.0*static_cast<double>(M_PI)/180; // aperture of the fingers
     int arm_code = params.mov_specs.hand_code;
     std::vector<double> minLimits; std::vector<double> maxLimits;
     switch(arm_code){
@@ -4760,8 +4759,8 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                         finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
                         for(size_t i=1;i<finalHand.size();++i){
                             finalPosture_grasp_ext.push_back(finalHand.at(i));
-                            if(((finalHand.at(i) -ap) > minLimits.at(i+7))){
-                                finalPosture_pre_grasp_ext.push_back(finalHand.at(i)-ap);
+                            if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
+                                finalPosture_pre_grasp_ext.push_back(finalHand.at(i)-AP);
                             }else{
                                finalPosture_pre_grasp_ext.push_back(minLimits.at(i+7));
                             }
