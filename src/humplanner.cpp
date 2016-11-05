@@ -4731,34 +4731,36 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
+    int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
 
     try
     {
+        std::vector<double> finalPosture_pre_grasp; bool FPosture_pre_grasp;
+        std::vector<double> bouncePosture_pre_grasp; bool BPosture_pre_grasp;
+        std::vector<double> bouncePosture; bool BPosture;
+        std::vector<double> finalPosture; bool FPosture; std::vector<double> finalPosture_ext;
+        std::vector<double> finalPosture_post_grasp; bool FPosture_post_grasp;
         if(approach){
             pre_post = 1;
-            std::vector<double> finalPosture_pre_grasp;
-            bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp);
-            if (FPosture){
-                std::vector<double> bouncePosture_pre_grasp;
-                bool BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
-                if(BPosture){
+            FPosture_pre_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp);
+            if (FPosture_pre_grasp){
+                BPosture_pre_grasp = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
+                if(BPosture_pre_grasp){
                     pre_post = 0;
-                    std::vector<double> finalPosture_grasp;
-                    bool FPosture_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture_grasp);
-                    if(FPosture_grasp){
+                    FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
+                    if(FPosture){
                         res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
                         res.time_steps.clear();
                         res.trajectory_stages.clear(); res.trajectory_descriptions.clear();
                         res.velocity_stages.clear();
                         res.acceleration_stages.clear();
-                        int mod;
                         // extend the final postures
                         std::vector<double> finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
-                        std::vector<double> finalPosture_grasp_ext = finalPosture_grasp;
-                        finalPosture_grasp_ext.push_back(finalHand.at(0));
+                        finalPosture_ext = finalPosture;
+                        finalPosture_ext.push_back(finalHand.at(0));
                         finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
                         for(size_t i=1;i<finalHand.size();++i){
-                            finalPosture_grasp_ext.push_back(finalHand.at(i));
+                            finalPosture_ext.push_back(finalHand.at(i));
                             if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
                                 finalPosture_pre_grasp_ext.push_back(finalHand.at(i)-AP);
                             }else{
@@ -4774,7 +4776,7 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                         res.acceleration_stages.push_back(acc);
                         // approach stage
                         mod = 2;
-                        timestep = this->getAcceleration(params,finalPosture_pre_grasp_ext,finalPosture_grasp_ext,traj,vel,acc,mod);
+                        timestep = this->getAcceleration(params,finalPosture_pre_grasp_ext,finalPosture_ext,traj,vel,acc,mod);
                         res.time_steps.push_back(timestep);
                         res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, approach ")+res.object_id);
                         res.velocity_stages.push_back(vel);
@@ -4784,11 +4786,9 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
             }else{res.status = 10; res.status_msg = string("HUML: final posture pre grasp selection failed ");}
         }else{
             pre_post = 0;
-            std::vector<double> finalPosture;
-            bool FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
-            if (FPosture){
-                std::vector<double> bouncePosture;
-                bool BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+            FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
+            if (FPosture){             
+                BPosture = this->singleArmBouncePosture(mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
                 if(BPosture){
                     res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
                     res.time_steps.clear();
@@ -4797,10 +4797,11 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
                     res.acceleration_stages.clear();
                     int mod;
                     // extend the final postures
-                    std::vector<double> finalPosture_ext = finalPosture;
+                    finalPosture_ext = finalPosture;
                     for(size_t i=0;i<finalHand.size();++i){
                         finalPosture_ext.push_back(finalHand.at(i));
                     }
+                    // move stage
                     MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0;
                     double timestep = this->getAcceleration(params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,mod);
                     res.time_steps.push_back(timestep);
@@ -4812,7 +4813,22 @@ planning_result HUMPlanner::plan_pick(huml_params &params, std::vector<double> i
 
         }
         if(retreat){
-            // TO DO
+            pre_post=2;
+            FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+            if (FPosture_post_grasp){
+                res.status = 0; res.status_msg = string("HUML: trajectory planned successfully ");
+                std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
+                for(size_t i=0;i<finalHand.size();++i){
+                    finalPosture_post_grasp_ext.push_back(finalHand.at(i));
+                }
+                // retreat stage
+                MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
+                timestep = this->getAcceleration(params,finalPosture_ext,finalPosture_post_grasp_ext,traj,vel,acc,mod);
+                res.time_steps.push_back(timestep);
+                res.trajectory_stages.push_back(traj); res.trajectory_descriptions.push_back(string("HUML: pick of the object, retreat ")+res.object_id);
+                res.velocity_stages.push_back(vel);
+                res.acceleration_stages.push_back(acc);
+            }else{res.status = 40; res.status_msg = string("HUML: final posture post grasp selection failed ");}
         }
     }catch (const string message){throw message;
 }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
