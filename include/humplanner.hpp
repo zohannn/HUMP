@@ -10,6 +10,8 @@ using namespace std;
 
 namespace HUMotion{
 
+typedef boost::shared_ptr<planning_result> planning_result_ptr; /**< pointer to the results of the planning process*/
+
 //! The Object class
 /**
  * @brief This class defines the concept of the Human-like Motion planner
@@ -277,7 +279,7 @@ public:
      * @param initPosture
      * @return
      */
-    planning_result plan_pick(huml_params& params, std::vector<double> initPosture);
+    planning_result_ptr plan_pick(huml_params& params, std::vector<double> initPosture);
 
 
 
