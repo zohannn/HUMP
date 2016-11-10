@@ -144,12 +144,6 @@ typedef struct{
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
-    //double eng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the eng_dir parameter. It defines the target for the sub-engage movement */
-    //int eng_dir; /**< direction of tolerance. eng_dir=0 means no direction; eng_dir=1 means the x axis; eng_dir=2 means the y axis; eng_dir=3 means the z axis;*/
-    //vector<double> eng_tols; /**< tolerances in reaching the engage point in [mm].eng_tols(0) along the x axis; eng_tols(1) along the y axis; eng_tols(2) along the z axis;*/
-    //double diseng_dist; /**< distance in [mm] of tolerance from the engage point along the axis  indicated by the diseng_dir parameter.It defines the target for the sub-disengage movement */
-    //int diseng_dir; /**< direction of tolerance. diseng_dir=0 means no direction; diseng_dir=1 means the x axis; diseng_dir=2 means the y axis; diseng_dir=3 means the z axis;*/
-    //double tol_stop; /**< this tolerance defines the error between the norm of the final posture and the norm the current posture. It has to be set to stop the movement when the final posture is reached. A tipical value is 0.1  */
 } huml_params;
 
 /** This struct defines the result of the planned trajectory */
