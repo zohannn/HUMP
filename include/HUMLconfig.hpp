@@ -107,8 +107,8 @@ typedef struct{
     string mov_infoline; /**< description of the movement */
     double dHO;/**< distanche hand-target*/
     std::vector<double> finalHand;/**< final posture of the hand */
-    std::vector<double> target;/**< target to reach: tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(6)=yaw,*/
-    objectPtr obj; /**< object involved in the movement */
+    std::vector<double> target;/**< target / location to reach: target(0)=x, target(1)=y, target(2)=z, target(3)=roll, target(4)=pitch, target(6)=yaw,*/
+    objectPtr obj; /**< object involved in the movement. The info of the object have to be updated according to the selected movement */
     bool approach;/**< true to use the approach options, false otherwise  */
     bool retreat;/**< true to use the retreat options, false otherwise */
     std::vector<double> pre_grasp_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/

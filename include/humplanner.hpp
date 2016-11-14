@@ -281,6 +281,14 @@ public:
      */
     planning_result_ptr plan_pick(huml_params& params, std::vector<double> initPosture);
 
+    /**
+     * @brief plan_place
+     * @param params
+     * @param initPosture
+     * @return
+     */
+    planning_result_ptr plan_place(huml_params& params, std::vector<double> initPosture);
+
 
 
 
