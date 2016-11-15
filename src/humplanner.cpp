@@ -2220,6 +2220,13 @@ void HUMPlanner::getRotAxis(vector<double> &xt, int id, std::vector<double> rpy)
     xt.push_back(v(2)); // z
 }
 
+double HUMPlanner::getRand(double min, double max)
+{
+
+    double f = (double)std::rand() / RAND_MAX;
+    return min + f * (max - min);
+}
+
 void HUMPlanner::Trans_matrix(std::vector<double> xyz, std::vector<double> rpy, Matrix4d &Trans)
 {
     Trans = Matrix4d::Zero();
@@ -3846,19 +3853,16 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& pa
             pow(target.at(2) -this->shPos.at(2),2))>= max_ext){
         throw string("The movement to be planned goes out of the reacheble workspace");
     }
-
-    // initial guess choice
+    // initial guess
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
     std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
-    std::vector<double> initialGuess;
-    for(size_t i=0; i < minArmLimits.size();++i){
-        if(pow(initArmPosture.at(i) - minArmLimits.at(i),2)<=0.01){
-            initialGuess.push_back(initArmPosture.at(i)+(5*M_PI/180));
-        }else if(pow(initArmPosture.at(i) - maxArmLimits.at(i),2)<=0.01){
-            initialGuess.push_back(initArmPosture.at(i)-(5*M_PI/180));
-        }else{
-            initialGuess.push_back(initArmPosture.at(i));
+    std::vector<double> initialGuess(minArmLimits.size(),0.0);
+    if (pre_post==1){ // approach
+        for(size_t i=0; i < minArmLimits.size();++i){
+            initialGuess.at(i)=getRand(minArmLimits.at(i),maxArmLimits.at(i));
         }
+    }else{
+        initialGuess = initArmPosture;
     }
     // get the obstacles of the workspace
     std::vector<objectPtr> obsts;
@@ -3896,7 +3900,6 @@ bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& p
 {
 
 
-    std::vector<double> initialGuess;
     std::vector<double> minLimits;
     std::vector<double> maxLimits;
     DHparameters dh;
@@ -3990,17 +3993,11 @@ bool HUMPlanner::singleArmBouncePosture(int mov_type,int pre_post,huml_params& p
     bAux.vel_f=velfAux;
     bAux.acc_0=acc0Aux;
     bAux.acc_f=accfAux;
-    // initial guess choice
-    for(size_t i=0; i < minAuxLimits.size();++i){
-        if(pow(initAuxPosture.at(i) - minAuxLimits.at(i),2)<=0.01){
-            initialGuess.push_back(initAuxPosture.at(i)+(5*M_PI/180));
-        }else if(pow(initAuxPosture.at(i) - maxAuxLimits.at(i),2)<=0.01){
-            initialGuess.push_back(initAuxPosture.at(i)-(5*M_PI/180));
-        }else{
-            initialGuess.push_back(initAuxPosture.at(i));
-        }
+    // initial guess
+    std::vector<double> initialGuess(initAuxPosture.size(),0.0);
+    for(size_t i=0; i < initAuxPosture.size();++i){
+        initialGuess.at(i) = (initAuxPosture.at(i)+finalAuxPosture.at(i))/2;
     }
-
     double Lu = dh.d.at(2);
     double Ll = dh.d.at(4);
     double Lh = dh.d.at(6);

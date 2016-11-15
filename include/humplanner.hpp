@@ -675,6 +675,14 @@ private:
      */
     void getRotAxis(vector<double>& xt, int id,std::vector<double>rpy);
 
+    /**
+     * @brief getRand
+     * @param min
+     * @param max
+     * @return
+     */
+    double getRand(double min, double max);
+
 
     //std::string exec(const char* cmd);
 
