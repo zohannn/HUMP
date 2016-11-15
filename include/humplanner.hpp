@@ -616,6 +616,13 @@ private:
     void writeInfoObjectsMod(ofstream &stream,bool vec);
 
     /**
+     * @brief writeInfoObjectsMod_place
+     * @param stream
+     * @param vec
+     */
+    void writeInfoObjectsMod_place(ofstream &stream,bool vec);
+
+    /**
      * @brief writeRotMatObsts
      * @param stream
      */
@@ -706,6 +713,15 @@ private:
      * @param approach_retreat
      */
     void writeInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat);
+
+    /**
+     * @brief writeInfoApproachRetreat_place
+     * @param stream
+     * @param tar
+     * @param approach
+     * @param retreat
+     */
+    void writeInfoApproachRetreat_place(ofstream &stream, std::vector<double> tar, std::vector<double> approach, std::vector<double> retreat);
 
     /**
      * @brief singleArmFinalPosture
