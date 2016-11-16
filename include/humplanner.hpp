@@ -289,6 +289,23 @@ public:
      */
     planning_result_ptr plan_place(huml_params& params, std::vector<double> initPosture);
 
+    /**
+     * @brief plan_move
+     * @param params
+     * @param initPosture
+     * @return
+     */
+    planning_result_ptr plan_move(huml_params& params, std::vector<double> initPosture);
+
+    /**
+     * @brief plan_move
+     * @param params
+     * @param initPosture
+     * @param finalPosture
+     * @return
+     */
+    planning_result_ptr plan_move(huml_params& params, std::vector<double> initPosture, std::vector<double> finalPosture);
+
 
 
 
