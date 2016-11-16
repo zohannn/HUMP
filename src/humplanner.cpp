@@ -2222,7 +2222,7 @@ void HUMPlanner::getRotAxis(vector<double> &xt, int id, std::vector<double> rpy)
 
 double HUMPlanner::getRand(double min, double max)
 {
-
+    std::srand(std::time(NULL));
     double f = (double)std::rand() / RAND_MAX;
     return min + f * (max - min);
 }
@@ -2385,12 +2385,6 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
         }
         break;
     case 1: // place
-        /*
-        if((pre_post!=0) && (approach && retreat)){
-            this->writeInfoApproachRetreat_place(PostureDat,tar,pre_place_approach,post_place_retreat);
-        }
-        */
-
         switch(pre_post){
         case 0: // no approach, no retreat
             break;
@@ -2463,12 +2457,6 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
         if((approach || retreat) && pre_post!=0){vec=true;}
         this->writeInfoObjectsMod(PostureMod,vec);
         break;
-        /*
-    case 1: // place
-        if((approach && retreat) && pre_post!=0){vec=true;}
-        this->writeInfoObjectsMod_place(PostureMod,vec);
-        break;
-        */
     }
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     PostureMod << string("# DECISION VARIABLES \n");
@@ -2580,35 +2568,20 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
         }
 
         break;
-
     case 112: case 212: // side thumb right
-
         PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] + z_t[i])^2) <= ")+taror+string("; #  x_H = -z_t \n");
-
         break;
-
     case 113: case 213: // side thumb up
-
         PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (y_H[i] + z_t[i])^2) <= ")+taror+string("; #  y_H = -z_t \n");
-
         break;
-
     case 114: case 214: // side thumb down
-
         PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (y_H[i] - z_t[i])^2) <= ")+taror+string("; #  y_H = z_t \n");
-
         break;
-
     case 121: case 221: // above
-
         PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (z_H[i] + z_t[i])^2) <= ")+to_string(tolTarOr)+string("; #  z_H = -z_t \n");
-
         break;
-
     case 122: case 222: // below
-
         PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (z_H[i] - z_t[i])^2) <= ")+to_string(tolTarOr)+string("; #  z_H = z_t \n");
-
         break;
     }
 
@@ -2682,8 +2655,6 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     // constraints with the body
     this->writeBodyConstraints(PostureMod,true);
 
-    // constraints with the table
-    // this->writeTableConstraints(PostureMod,true,griptype,tols_table);
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
 
@@ -3820,6 +3791,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& pa
     // movement settings
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
+    bool rand_init = params.mov_specs.rand_init;
     std::vector<double> target = params.mov_specs.target;
     std::vector<double> minLimits;
     std::vector<double> maxLimits;
@@ -3857,13 +3829,11 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& pa
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
     std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
     std::vector<double> initialGuess(minArmLimits.size(),0.0);
-    if (pre_post==1){ // approach
+    if ((pre_post==1) && rand_init){ // pre_posture for approaching
         for(size_t i=0; i < minArmLimits.size();++i){
             initialGuess.at(i)=getRand(minArmLimits.at(i),maxArmLimits.at(i));
         }
-    }else{
-        initialGuess = initArmPosture;
-    }
+    }else{initialGuess = initArmPosture;}
     // get the obstacles of the workspace
     std::vector<objectPtr> obsts;
     this->getObstaclesSingleArm(this->shPos,max_ext,obsts,hand_code);
