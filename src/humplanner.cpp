@@ -919,9 +919,11 @@ void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &ob
     // obstacles
     stream << string("# OBSTACLES POSITION+RADIUS+ORIENTATION \n");
 
+    if(!obstacles.empty()){
+        stream << string("param Obstacles : 1 2 3 4 5 6 7 8 9 := \n");
+    }
 
     for (std::size_t i = 0; i < obstacles.size(); ++i){
-        stream << string("param Obstacles : 1 2 3 4 5 6 7 8 9 := \n");
         objectPtr obs = obstacles.at(i);
         std::vector<double> position; obs->getPos(position);
         std::vector<double> orientation; obs->getOr(orientation);
