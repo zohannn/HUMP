@@ -918,10 +918,10 @@ void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &ob
 {
     // obstacles
     stream << string("# OBSTACLES POSITION+RADIUS+ORIENTATION \n");
-    stream << string("param Obstacles : 1 2 3 4 5 6 7 8 9 := \n");
+
 
     for (std::size_t i = 0; i < obstacles.size(); ++i){
-
+        stream << string("param Obstacles : 1 2 3 4 5 6 7 8 9 := \n");
         objectPtr obs = obstacles.at(i);
         std::vector<double> position; obs->getPos(position);
         std::vector<double> orientation; obs->getOr(orientation);
@@ -2414,7 +2414,6 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     ofstream PostureMod;
     // open the file
     PostureMod.open(path+filenamemod);
-
     PostureMod << string("# FINAL POSTURE MODEL FILE \n");
     PostureMod << string("# Movement to plan: \n");
     PostureMod << string("# ")+mov_infoLine+string("\n\n");
@@ -2451,12 +2450,12 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     }
     // info objects
     bool vec=false;// true if there is some pre or post operation
-    switch(mov_type){
-    case 0: case 1: // pick, place
-        if((approach || retreat) && pre_post!=0){vec=true;}
-        this->writeInfoObjectsMod(PostureMod,vec);
-        break;
-    }
+    //switch(mov_type){
+    //case 0: case 1: // pick, place
+    if((approach || retreat) && pre_post!=0){vec=true;}
+    this->writeInfoObjectsMod(PostureMod,vec);
+        //break;
+    //}
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     PostureMod << string("# DECISION VARIABLES \n");
     PostureMod << string("var theta {i in 1..")+to_string(joints_arm)+string("} >= llim[i], <= ulim[i]; \n");
