@@ -111,11 +111,13 @@ typedef struct{
     objectPtr obj; /**< object involved in the movement. The info of the object have to be updated according to the selected movement */
     bool approach;/**< true to use the approach options, false otherwise  */
     bool retreat;/**< true to use the retreat options, false otherwise */
-    bool rand_init; /**< true to select randon initialization in "plan" stages */
     std::vector<double> pre_grasp_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     std::vector<double> post_grasp_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     std::vector<double> pre_place_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     std::vector<double> post_place_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
+    bool rand_init; /**< true to select randon initialization in "plan" stages */
+    bool use_move_plane; /**< true to constrain the end-effector to move on a plane in move movements, false otherwise*/
+    std::vector<double> plane_params; /**< plane cartesian parameters in move movements: a*x+b*y+c*z+d=0. a=plane_params(0), b=plane_params(1), c=plane_params(2), d=plane_params(3) */
 }mov_params;
 /** this struct defines the boundary conditions of the movement*/
 typedef struct{

@@ -2704,6 +2704,8 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
     string mov_infoLine = params.mov_specs.mov_infoline;    
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
+    bool use_plane = params.mov_specs.use_move_plane;
+    std::vector<double> plane_params = params.mov_specs.plane_params;
     std::vector<double> pre_grasp_approach;
     std::vector<double> post_grasp_retreat;
     std::vector<double> pre_place_approach;
@@ -3146,6 +3148,12 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
              if(approach && pre_post!=0){
                  PostureMod << string("# Hand approach orientation\n");
                  PostureMod << string("subject to constr_hand_or {k in (Nsteps-3)..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
+             }
+             break;
+         case 2: // move
+             if(use_plane && !plane_params.empty()){
+                PostureMod << string("# Hand plane constraints\n");
+
              }
              break;
          }
