@@ -3078,7 +3078,8 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
          }
      }else if(mov_type==2){
          // move
-         move=true;
+         move=true;         
+
      }
 
      switch(hand_code){
@@ -3132,6 +3133,8 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      PostureMod << string("# joint limits for all the trajectory \n");
      PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
 
+     // plane paramters
+     string a_str; string b_str; string c_str; string d_str;
      // hand constraints for approaching direction setting
      switch (griptype) {
      case 111: case 211: // side thumb left
@@ -3150,12 +3153,6 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
                  PostureMod << string("subject to constr_hand_or {k in (Nsteps-3)..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
              }
              break;
-         case 2: // move
-             if(use_plane && !plane_params.empty()){
-                PostureMod << string("# Hand plane constraints\n");
-
-             }
-             break;
          }
          break;
      case 112: case 212: // side thumb right
@@ -3170,6 +3167,20 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
          break;
      default:// move movements (there is no griptype)
          break;
+     }
+
+     // move plane constraints
+     if(move && use_plane && !plane_params.empty()){
+        a_str =  boost::str(boost::format("%.2f") % (plane_params.at(0))); boost::replace_all(a_str,",",".");
+        b_str =  boost::str(boost::format("%.2f") % (plane_params.at(1))); boost::replace_all(b_str,",",".");
+        if(plane_params.at(1)>=0){b_str = string("+")+b_str;}
+        c_str =  boost::str(boost::format("%.2f") % (plane_params.at(2))); boost::replace_all(c_str,",",".");
+        if(plane_params.at(2)>=0){c_str = string("+")+c_str;}
+        d_str =  boost::str(boost::format("%.2f") % (plane_params.at(3))); boost::replace_all(d_str,",",".");
+        if(plane_params.at(3)>=0){d_str = string("+")+d_str;}
+        PostureMod << string("# Hand plane constraints\n");
+        PostureMod << string("subject to constr_hand_plane {k in 5..(Nsteps-5)}: ((")+a_str+string("*Hand[1,k]")+b_str+string("*Hand[2,k]")+
+                      c_str+string("*Hand[3,k]")+d_str+string(")^2) <= 10; # the hand must be a point of the plane \n\n");
      }
 
    if(target_avoidance && !place && !move){
