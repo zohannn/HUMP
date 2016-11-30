@@ -38,10 +38,10 @@ set(TB 0.5)
 # AMPL=0 use wine to run ampl for windows
 # AMPL=1 use ampl for linux
 set (AMPL 0)
-set (AMPL_PATH /home/gianpaolo/AMPL)
+set (AMPL_PATH /home/$ENV{USER}/AMPL)
 
 # -- IPOPT Solver
-set(IPOPT_HOME /home/gianpaolo/CoinIpopt)
+set(IPOPT_HOME /home/$ENV{USER}/CoinIpopt)
 
 ## Tests
 # TEST=0. do not run the tests
@@ -60,7 +60,6 @@ include_directories(
     ${IPOPT_HOME}/${CMAKE_BUILD_TYPE}/include/coin
     ${IPOPT_HOME}/${CMAKE_BUILD_TYPE}/include/coin/ThirdParty
     ${IPOPT_HOME}/${CMAKE_BUILD_TYPE}/include/extra
-
 )
 
 # sources
