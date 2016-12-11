@@ -4066,27 +4066,26 @@ double HUMPlanner::getTimeStep(huml_params &tols, MatrixXd &jointTraj)
     std::vector<double> lambda = tols.lambda_bounce;
 
 
-    double num = 0;
-    double den = 0;
+    double num = 0.0;
+    double den = 0.0;
 
     for (int k =0; k < n_joints; ++k){
 
-        double time_k;
-        double deltaTheta = 0;
+        double deltaTheta_k = 0.0;
         std::vector<double> diffs;
         for (int i = 1; i < steps1; ++i){
             double diff = abs(jointTraj(i,k) - jointTraj(i-1,k))*180/M_PI;
             diffs.push_back(diff);
-            deltaTheta = deltaTheta + diff;
+            deltaTheta_k += diff;
         }
         std::vector<double>::iterator res = std::max_element(diffs.begin(),diffs.end());
         int poss = std::distance(diffs.begin(),res);
         double deltaThetaMax = diffs.at(poss);
         double tol = -3.0; // tolerance in [deg/sec]
-        time_k = ((steps1-1)*deltaThetaMax/(w_max.at(k)+tol)) + (lambda.at(k)*log(1+deltaTheta));
+        double time_k = ((steps1-1)*deltaThetaMax/(w_max.at(k)+tol)) + (lambda.at(k)*log(1+deltaTheta_k));
 
-        num = num + lambda.at(k)*deltaTheta*time_k;
-        den = den + lambda.at(k)*deltaTheta;
+        num += lambda.at(k)*deltaTheta_k*time_k;
+        den += lambda.at(k)*deltaTheta_k;
 
     }
 
