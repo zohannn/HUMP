@@ -52,7 +52,7 @@ namespace HUMotion{
 typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in the scenario */
 
 const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce posture is reached */
-const double AP = 6.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick */
+const double AP = 10.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick */
 
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
