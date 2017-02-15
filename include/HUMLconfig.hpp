@@ -141,7 +141,6 @@ typedef struct{
     vector<double> vel_approach; /**< velocity of the joints in [rad/s] at the beginning of the approach stage */
     vector<double> acc_approach; /**< acceleration of the joints in [rad/s²] at the beginning of the approach stage */
     int steps; /**< number of steps for the trajectory */
-    double totalTime; /**< normalized time of the movement (0 < t <= 1) */
     vector<double> lambda_final; /**< weights for the final posture optimization */
     vector<double> lambda_bounce; /**< weights for the bounce posture optimization */
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */

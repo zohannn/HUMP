@@ -2727,7 +2727,7 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
 
     // tolerances
     int steps = params.steps;
-    double totalTime = params.totalTime;
+    //double totalTime = params.totalTime;
     std::vector<double> lambda = params.lambda_bounce;
     std::vector<double> tolsArm = params.tolsArm;
     MatrixXd tolsHand = params.tolsHand;
@@ -2768,9 +2768,9 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      PostureDat << string("param Nsteps :=")+to_string(steps)+string(";\n");
 
      // total time
-     string time =  boost::str(boost::format("%.2f") % (totalTime));
-     boost::replace_all(time,",",".");
-     PostureDat << string("param TotalTime :=")+time+string(";\n");
+     //string time =  boost::str(boost::format("%.2f") % (totalTime));
+     //boost::replace_all(time,",",".");
+     //PostureDat << string("param TotalTime :=")+time+string(";\n");
      // Body dimension
      this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
      // D-H Parameters of the Arm
@@ -3011,11 +3011,12 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      PostureMod << string("param Nsteps;\n");
      PostureMod << string("param TB;\n");
      PostureMod << string("param PHI;\n");
-     PostureMod << string("param TotalTime;\n");
+     //PostureMod << string("param TotalTime;\n");
      PostureMod << string("set Iterations := 1..(Nsteps+1);\n");
      PostureMod << string("set nJoints := 1..")+to_string(initialGuess.size())+string(";\n");
      PostureMod << string("set Iterations_nJoints := Iterations cross nJoints;\n");
-     PostureMod << string("param time {i in Iterations} = ((i-1)*TotalTime)/Nsteps;\n");
+     //PostureMod << string("param time {i in Iterations} = ((i-1)*TotalTime)/Nsteps;\n");
+     PostureMod << string("param time {i in Iterations} = (i-1)/Nsteps;\n");
 
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
      PostureMod << string("# DECISION VARIABLES \n");
@@ -3026,13 +3027,13 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      PostureMod << string("param the_direct {(i,j) in Iterations_nJoints} := thet_init[j]+ \n");
      PostureMod << string("( thet_final[j] - thet_init[j] ) * (10*(time[i])^3 -15*(time[i])^4 +6*(time[i])^5) \n");
      PostureMod << string("+ \n");
-     PostureMod << string("vel_0[j] *TotalTime* (time[i] - 6 *(time[i])^3 +8*(time[i])^4 -3*(time[i])^5) \n");
+     PostureMod << string("vel_0[j] * (time[i] - 6 *(time[i])^3 +8*(time[i])^4 -3*(time[i])^5) \n");
      PostureMod << string("+ \n");
-     PostureMod << string("vel_f[j] *TotalTime* (- 4 *(time[i])^3 +7*(time[i])^4 -3*(time[i])^5) \n");
+     PostureMod << string("vel_f[j] * (- 4 *(time[i])^3 +7*(time[i])^4 -3*(time[i])^5) \n");
      PostureMod << string("+ \n");
-     PostureMod << string("acc_0[j]/2 *TotalTime^2* (time[i]^2 - 3 *(time[i])^3 +3*(time[i])^4 -(time[i])^5) \n");
+     PostureMod << string("acc_0[j]/2 * (time[i]^2 - 3 *(time[i])^3 +3*(time[i])^4 -(time[i])^5) \n");
      PostureMod << string("+ \n");
-     PostureMod << string("acc_f[j]/2 *TotalTime^2* ((time[i])^3 -2*(time[i])^4 +(time[i])^5); \n");
+     PostureMod << string("acc_f[j]/2 * ((time[i])^3 -2*(time[i])^4 +(time[i])^5); \n");
 
      PostureMod << string("# Back and forth Movement \n");
      PostureMod << string("var the_bf 	{(i,j) in Iterations_nJoints} =  \n");
@@ -4209,13 +4210,12 @@ void HUMPlanner::directTrajectory(huml_params &tols, std::vector<double>& initPo
 
 
 
-    double T = tols.totalTime;
-    double delta = T/steps;
+    //double T = tols.totalTime;
+    double delta = ((double)1)/steps;
 
-    time.at(0)=0.0; tau.at(0)=0.0;
+    tau.at(0)=0.0;
     for (int i = 1; i<=steps; ++i){
-        time.at(i) = time.at(i-1)+delta;
-        tau.at(i) = time.at(i)/T;
+        tau.at(i) = tau.at(i-1)+delta;
     }
     Traj = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
@@ -4224,10 +4224,10 @@ void HUMPlanner::directTrajectory(huml_params &tols, std::vector<double>& initPo
             Traj(i,j) = initPosture.at(j) +
                     (finalPosture.at(j) - initPosture.at(j))*
                     (10*pow(tau.at(i),3)-15*pow(tau.at(i),4)+6*pow(tau.at(i),5))+
-                    vel_0.at(j)*T*(tau.at(i)-6*pow(tau.at(i),3)+8*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
-                    vel_f.at(j)*T*(-4*pow(tau.at(i),3)+7*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
-                    0.5*acc_0.at(j)*pow(T,2)*(pow(tau.at(i),2)-3*pow(tau.at(i),3)+3*pow(tau.at(i),4)-pow(tau.at(i),5))+
-                    0.5*acc_f.at(j)*pow(T,2)*(pow(tau.at(i),3)-2*pow(tau.at(i),4)+pow(tau.at(i),5));
+                    vel_0.at(j)*(tau.at(i)-6*pow(tau.at(i),3)+8*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
+                    vel_f.at(j)*(-4*pow(tau.at(i),3)+7*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
+                    0.5*acc_0.at(j)*(pow(tau.at(i),2)-3*pow(tau.at(i),3)+3*pow(tau.at(i),4)-pow(tau.at(i),5))+
+                    0.5*acc_f.at(j)*(pow(tau.at(i),3)-2*pow(tau.at(i),4)+pow(tau.at(i),5));
 
         }
     }
@@ -4275,24 +4275,23 @@ void HUMPlanner::directVelocity(huml_params &tols, std::vector<double> &initPost
 
 
 
-    double T = tols.totalTime;
-    double delta = T/steps;
+    //double T = tols.totalTime;
+    double delta = ((double)1)/steps;
 
-    time.at(0)=0.0; tau.at(0)=0.0;
+    tau.at(0)=0.0;
     for (int i = 1; i<=steps; ++i){
-        time.at(i) = time.at(i-1)+delta;
-        tau.at(i) = time.at(i)/T;
+        tau.at(i) = tau.at(i-1)+delta;
     }
     Vel = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
     for (int i = 0; i <= steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-            Vel(i,j) = (30/T)*(finalPosture.at(j) - initPosture.at(j))*
+            Vel(i,j) = 30*(finalPosture.at(j) - initPosture.at(j))*
                     (pow(tau.at(i),2)-2*pow(tau.at(i),3)+pow(tau.at(i),4))+
                     vel_0.at(j)*(1-18*pow(tau.at(i),2)+32*pow(tau.at(i),3)-15*pow(tau.at(i),4))+
                     vel_f.at(j)*(-12*pow(tau.at(i),2)+28*pow(tau.at(i),3)-15*pow(tau.at(i),4))+
-                    0.5*acc_0.at(j)*T*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
-                    0.5*acc_f.at(j)*T*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
+                    0.5*acc_0.at(j)*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
+                    0.5*acc_f.at(j)*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
 
         }
     }
@@ -4341,22 +4340,21 @@ void HUMPlanner::directAcceleration(huml_params &tols, std::vector<double> &init
 
 
 
-    double T = tols.totalTime;
-    double delta = T/steps;
+    //double T = tols.totalTime;
+    double delta = ((double)1)/steps;
 
-    time.at(0)=0.0; tau.at(0)=0.0;
+    tau.at(0)=0.0;
     for (int i = 1; i<=steps; ++i){
-        time.at(i) = time.at(i-1)+delta;
-        tau.at(i) = time.at(i)/T;
+        tau.at(i) = tau.at(i-1)+delta;
     }
     Acc = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
     for (int i = 0; i <= steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-            Acc(i,j) = (60/pow(T,2))*(finalPosture.at(j) - initPosture.at(j))*
+            Acc(i,j) = 60*(finalPosture.at(j) - initPosture.at(j))*
                     (tau.at(i)-3*pow(tau.at(i),2)+2*pow(tau.at(i),3))+
-                    (12*vel_0.at(j)/T)*(-3*tau.at(i)+8*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
-                    (12*vel_f.at(j)/T)*(-2*tau.at(i)+7*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
+                    12*vel_0.at(j)*(-3*tau.at(i)+8*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
+                    12*vel_f.at(j)*(-2*tau.at(i)+7*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
                     acc_0.at(j)*(1-9*tau.at(i)+18*pow(tau.at(i),2)-10*pow(tau.at(i),3))+
                     acc_f.at(j)*(3*tau.at(i)-12*pow(tau.at(i),2)+10*pow(tau.at(i),3));
 
@@ -4372,13 +4370,12 @@ void HUMPlanner::backForthTrajectory(huml_params &tols, std::vector<double> &ini
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
 
-    double T = tols.totalTime;
-    double delta = T/steps;
+    //double T = tols.totalTime;
+    double delta = ((double)1)/steps;
 
-    time.at(0)=0.0; tau.at(0)=0.0;
+    tau.at(0)=0.0;
     for (int i = 1; i<=steps; ++i){
-        time.at(i) = time.at(i-1)+delta;
-        tau.at(i) = time.at(i)/T;
+        tau.at(i) = tau.at(i-1)+delta;
     }
     Traj = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
@@ -4397,13 +4394,12 @@ void HUMPlanner::backForthVelocity(huml_params &tols, std::vector<double> &initP
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
 
-    double T = tols.totalTime;
-    double delta = T/steps;
+    //double T = tols.totalTime;
+    double delta = ((double)1)/steps;
 
-    time.at(0)=0.0; tau.at(0)=0.0;
+    tau.at(0)=0.0;
     for (int i = 1; i<=steps; ++i){
-        time.at(i) = time.at(i-1)+delta;
-        tau.at(i) = time.at(i)/T;
+        tau.at(i) = tau.at(i-1)+delta;
     }
     Vel = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
@@ -4423,13 +4419,12 @@ void HUMPlanner::backForthAcceleration(huml_params &tols, std::vector<double> &i
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
 
-    double T = tols.totalTime;
-    double delta = T/steps;
+    //double T = tols.totalTime;
+    double delta = ((double)1)/steps;
 
-    time.at(0)=0.0; tau.at(0)=0.0;
+    tau.at(0)=0.0;
     for (int i = 1; i<=steps; ++i){
-        time.at(i) = time.at(i-1)+delta;
-        tau.at(i) = time.at(i)/T;
+        tau.at(i) = tau.at(i-1)+delta;
     }
     Acc = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
