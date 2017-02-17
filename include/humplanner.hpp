@@ -356,20 +356,22 @@ private:
      * @param tols
      * @param initPosture
      * @param finalPosture
+     * @param timestep
      * @param Vel
      * @param mod
      */
-    void directVelocity(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Vel, int mod);
+    void directVelocity(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep,MatrixXd& Vel, int mod);
 
     /**
      * @brief directAcceleration
      * @param tols
      * @param initPosture
      * @param finalPosture
+     * @param timestep
      * @param Acc
      * @param mod
      */
-    void directAcceleration(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Acc,int mod);
+    void directAcceleration(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,int mod);
     /**
      * @brief backForthTrajectory
      * @param tols
@@ -384,18 +386,20 @@ private:
      * @param tols
      * @param initPosture
      * @param bouncePosture
+     * @param timestep
      * @param Vel
      */
-    void backForthVelocity(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Vel);
+    void backForthVelocity(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Vel);
 
     /**
      * @brief backForthAcceleration
      * @param tols
      * @param initPosture
      * @param bouncePosture
+     * @param timestep
      * @param Acc
      */
-    void backForthAcceleration(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Acc);
+    void backForthAcceleration(huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Acc);
 
     /**
      * @brief computeMovement
