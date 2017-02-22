@@ -2335,7 +2335,8 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     //PostureDat << string("param pi := 4*atan(1); \n");
 
     // Body dimension
-    this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
+    double tol=0.0;
+    this->writeBodyDim(this->torso_size.at(0)+tol,this->torso_size.at(1)+tol,PostureDat);
     // D-H Parameters of the Arm
     this->writeArmDHParams(dh_arm,PostureDat,k);
     // distance between the hand and the object
@@ -2772,7 +2773,8 @@ bool HUMPlanner::writeFilesBouncePosture(huml_params& params,int mov_type, int p
      //boost::replace_all(time,",",".");
      //PostureDat << string("param TotalTime :=")+time+string(";\n");
      // Body dimension
-     this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
+     double tol=0.0;
+     this->writeBodyDim(this->torso_size.at(0)+tol,this->torso_size.at(1)+tol,PostureDat);
      // D-H Parameters of the Arm
      this->writeArmDHParams(dh,PostureDat,k);
      // distance between the hand and the object
