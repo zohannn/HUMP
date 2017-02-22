@@ -54,6 +54,9 @@ typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in 
 const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce posture is reached */
 const double AP = 15.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick */
 
+const int N_STEP_MIN = 5; // minimum number of steps
+const int N_STEP_MAX = 100; // maximum number of steps
+
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
     vector<double> d; /**< distances between consecutive frames along the y axes in [mm] */
@@ -140,7 +143,6 @@ typedef struct{
     boundaryConditions bounds; /**< boundary condistions of the bounce problem */
     vector<double> vel_approach; /**< velocity of the joints in [rad/s] at the beginning of the approach stage */
     vector<double> acc_approach; /**< acceleration of the joints in [rad/s²] at the beginning of the approach stage */
-    int steps; /**< number of steps for the trajectory */
     vector<double> lambda_final; /**< weights for the final posture optimization */
     vector<double> lambda_bounce; /**< weights for the bounce posture optimization */
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
