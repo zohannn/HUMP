@@ -55,7 +55,7 @@ const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce
 const double AP = 15.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick */
 
 const int N_STEP_MIN = 5; // minimum number of steps
-const int N_STEP_MAX = 50; // maximum number of steps
+const int N_STEP_MAX = 100; // maximum number of steps
 
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
@@ -119,6 +119,7 @@ typedef struct{
     std::vector<double> pre_place_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     std::vector<double> post_place_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
     bool rand_init; /**< true to select randon initialization in "plan" stages */
+    bool coll; /**< true to enable collisions with the environment (body of the robot included) */
     bool use_move_plane; /**< true to constrain the end-effector to move on a plane in move movements, false otherwise*/
     std::vector<double> plane_params; /**< plane cartesian parameters in move movements: a*x+b*y+c*z+d=0. a=plane_params(0), b=plane_params(1), c=plane_params(2), d=plane_params(3) */
 }mov_params;
