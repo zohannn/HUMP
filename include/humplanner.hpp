@@ -347,10 +347,20 @@ private:
      * @param tols
      * @param initPosture
      * @param finalPosture
+     * @param timestep
      * @param Traj
      * @param mod
      */
-    void directTrajectory(int steps,huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd& Traj,int mod);
+    void directTrajectory(int steps, huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, int mod);
+
+    /**
+     * @brief directTrajectoryNoBound
+     * @param steps
+     * @param initPosture
+     * @param finalPosture
+     * @param Traj
+     */
+    void directTrajectoryNoBound(int steps,std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd &Traj);
 
     /**
      * @brief directVelocity
