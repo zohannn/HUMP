@@ -457,6 +457,7 @@ private:
 
     /**
      * @brief getVelocity
+     * @param steps
      * @param tols
      * @param initPosture
      * @param finalPosture

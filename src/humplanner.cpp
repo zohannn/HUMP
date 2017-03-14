@@ -4138,14 +4138,12 @@ void HUMPlanner::directTrajectory(int steps,huml_params &tols, std::vector<doubl
         vel_f = std::vector<double>(tols.vel_approach.size(),0.0);
         acc_0 = tols.acc_approach;
         acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
-        steps = 5;
         break;
     case 3:// retreat
         vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
         vel_f = tols.bounds.vel_f;
         acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         acc_f = tols.bounds.acc_f;
-        steps = 5;
         break;
     }
 
@@ -4202,20 +4200,19 @@ void HUMPlanner::directVelocity(int steps,huml_params &tols, std::vector<double>
         vel_f = std::vector<double>(tols.vel_approach.size(),0.0);
         acc_0 = tols.acc_approach;
         acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
-        steps = 5;
         break;
     case 3:// retreat
         vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
         vel_f = tols.bounds.vel_f;
         acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         acc_f = tols.bounds.acc_f;
-        steps = 5;
         break;
     }
 
 
 
-    double T = timestep*steps;
+    //double T = timestep*steps;
+    double T = 1;
     double delta = ((double)1)/steps;
 
     tau.at(0)=0.0;
@@ -4267,20 +4264,19 @@ void HUMPlanner::directAcceleration(int steps,huml_params &tols, std::vector<dou
         vel_f = std::vector<double>(tols.vel_approach.size(),0.0);
         acc_0 = tols.acc_approach;
         acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
-        steps = 5;
         break;
     case 3:// retreat
         vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
         vel_f = tols.bounds.vel_f;
         acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         acc_f = tols.bounds.acc_f;
-        steps = 5;
         break;
     }
 
 
 
-    double T = timestep*steps;
+    //double T = timestep*steps;
+    double T = 1;
     double delta = ((double)1)/steps;
 
     tau.at(0)=0.0;
@@ -4310,7 +4306,7 @@ void HUMPlanner::backForthTrajectory(int steps,huml_params &tols, std::vector<do
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
 
-    //double T = tols.totalTime;
+
     double delta = ((double)1)/steps;
 
     tau.at(0)=0.0;
@@ -4334,7 +4330,8 @@ void HUMPlanner::backForthVelocity(int steps,huml_params &tols, std::vector<doub
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
 
-    double T = timestep*steps;
+    //double T = timestep*steps;
+    double T = 1;
     double delta = ((double)1)/steps;
 
     tau.at(0)=0.0;
@@ -4359,7 +4356,8 @@ void HUMPlanner::backForthAcceleration(int steps,huml_params &tols, std::vector<
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
 
-    double T = timestep*steps;
+    //double T = timestep*steps;
+    double T = 1;
     double delta = ((double)1)/steps;
 
     tau.at(0)=0.0;
@@ -4528,9 +4526,32 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                         finalPosture_ext.push_back(finalHand.at(i));
                     }
                     int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
+                    /*
                     // calculate the approach boundary conditions
+                    double delta = ((double)1)/steps_app;
+                    std::vector<double> tau = std::vector<double>(steps_app+1); // normalized time
+                    tau.at(0)=0.0;
+                    for (int i = 1; i<=steps_app; ++i){
+                        tau.at(i) = tau.at(i-1)+delta;
+                    }
+                    MatrixXd fakeTraj = MatrixXd::Constant(steps_app+1,finalPosture_pre_grasp_ext.size(),0);
+                    for (int i = 0; i <= steps_app;++i){
+                        for (std::size_t j = 0; j<finalPosture_pre_grasp_ext.size(); ++j){
+                            fakeTraj(i,j) = finalPosture_pre_grasp_ext.at(j) +
+                                    (finalPosture_ext.at(j) - finalPosture_pre_grasp_ext.at(j))*
+                                    (10*pow(tau.at(i),3)-15*pow(tau.at(i),4)+6*pow(tau.at(i),5));
+
+                        }
+                    }
+                    double timestep_app = this->getTimeStep(params,fakeTraj);
+                    double T_app = timestep_app*steps_app;
                     params.vel_approach.clear(); params.acc_approach.clear();
                     params.acc_approach = std::vector<double>(finalPosture_ext.size(),0.0);
+                    for (std::size_t i = 0; i<finalPosture_pre_grasp_ext.size(); ++i){
+                        double dd = finalPosture_ext.at(i)-finalPosture_pre_grasp_ext.at(i);
+                        params.vel_approach.push_back(((double)15*dd)/(8*T_app));
+                    }
+                    */
 
                     if(coll){// collisions
                         pre_post = 1;
