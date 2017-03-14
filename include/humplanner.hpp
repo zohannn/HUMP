@@ -389,12 +389,11 @@ private:
     /**
      * @brief backForthTrajectory
      * @param steps
-     * @param tols
      * @param initPosture
      * @param bouncePosture
      * @param Traj
      */
-    void backForthTrajectory(int steps,huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Traj);
+    void backForthTrajectory(int steps, std::vector<double>& initPosture, std::vector<double>& bouncePosture, MatrixXd& Traj);
 
     /**
      * @brief backForthVelocity
