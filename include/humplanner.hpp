@@ -338,6 +338,16 @@ private:
      */
     double getTimeStep(huml_params& tols,MatrixXd& jointTraj);
 
+    /**
+     * @brief setBoundaryConditions
+     * @param params
+     * @param steps
+     * @param initPosture
+     * @param finalPosture
+     * @param mod
+     */
+    void setBoundaryConditions(huml_params& params,int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
+
 
     //void getDelta(VectorXd& jointTraj, std::vector<double> &delta);
 
