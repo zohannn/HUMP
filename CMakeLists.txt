@@ -8,14 +8,14 @@
 #   Email:       gianpaologulletta@gmail.com; d6468@dei.uminho.pt
 #   Date:        2016 01 12
 #
-#   Description: Human-like Upper-limbs Motion Library
+#   Description: Human-like Upper-limbs Motion Planner (HUMP)
 #
 #   Credits:
 #==========================================================================
 
 cmake_minimum_required(VERSION 2.8)
 #project name
-set(PROJECT_NAME_STR HUML)
+set(PROJECT_NAME_STR HUMP)
 project(${PROJECT_NAME_STR} C CXX)
 
 SET(CMAKE_CXX_FLAGS "-g -Wall -std=c++11")
@@ -73,7 +73,7 @@ configure_file (
 )
 
 # add the library
-add_library(HUML STATIC ${HPP_SOURCES} ${CPP_SOURCES})
+add_library(HUMP STATIC ${HPP_SOURCES} ${CPP_SOURCES})
 
 
 ##############################################################################
@@ -91,7 +91,7 @@ if(TEST)
     #add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES} ${TEST_HPP_FILES})
     add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES})
     target_link_libraries(${PROJECT_TEST_NAME} gtest gtest_main)
-    target_link_libraries(${PROJECT_TEST_NAME} HUML)
+    target_link_libraries(${PROJECT_TEST_NAME} HUMP)
     add_test (NAME Tests_on_point COMMAND ${PROJECT_TEST_NAME})
 
 endif()
