@@ -4123,7 +4123,8 @@ void HUMPlanner::setBoundaryConditions(huml_params &params, int steps, std::vect
 
     acc = std::vector<double>(finalPosture.size(),0.0);
     for (std::size_t i = 0; i<finalPosture.size(); ++i){
-        vel.push_back(((double)15*(finalPosture.at(i)-initPosture.at(i)))/(8*T));
+        double peak =((double)15*(finalPosture.at(i)-initPosture.at(i)))/(8*T);
+        vel.push_back(peak);
     }
 
     switch(mod)
@@ -4558,7 +4559,7 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
     try
     {
         std::vector<double> finalPosture_pre_grasp; bool FPosture_pre_grasp = false;
-        std::vector<double> bouncePosture_pre_grasp; bool BPosture_pre_grasp = false;
+        std::vector<double> bouncePosture_pre_grasp; //bool BPosture_pre_grasp = false;
         std::vector<double> bouncePosture; bool BPosture = false;
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> finalPosture_post_grasp; bool FPosture_post_grasp = false;
@@ -4594,8 +4595,8 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
 
                     if(coll){// collisions
                         pre_post = 1;
-                        BPosture_pre_grasp = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
-                        if(BPosture_pre_grasp){
+                        BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
+                        if(BPosture){
                             res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
                             res->time_steps.clear();
                             res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
@@ -4694,27 +4695,52 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                 }
             }else{res->status = 10; res->status_msg = string("HUML: final posture selection failed ");}
         }
-        if(retreat && FPosture){// retreat stage
-            pre_post=2;
-            FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
-            if (FPosture_post_grasp){
-                res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
-                std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
-                for(size_t i=0;i<finalHand.size();++i){
-                    finalPosture_post_grasp_ext.push_back(finalHand.at(i));
-                }
-                int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_grasp_ext);
-                // calculate the retreat boundary conditions
-                // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
-                this->setBoundaryConditions(params,steps_ret,finalPosture_ext,finalPosture_post_grasp_ext,1);
-                // retreat stage
-                MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
-                timestep = this->getAcceleration(steps_ret,params,finalPosture_ext,finalPosture_post_grasp_ext,traj,vel,acc,mod);
-                res->time_steps.push_back(timestep);
-                res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
-                res->velocity_stages.push_back(vel);
-                res->acceleration_stages.push_back(acc);
-            }else{res->status = 40; res->status_msg = string("HUML: final posture post grasp selection failed ");}
+        if(coll){ // collisions
+            if(retreat && FPosture && BPosture){// retreat stage
+                pre_post=2;
+                FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                if (FPosture_post_grasp){
+                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
+                    for(size_t i=0;i<finalHand.size();++i){
+                        finalPosture_post_grasp_ext.push_back(finalHand.at(i));
+                    }
+                    int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_grasp_ext);
+                    // calculate the retreat boundary conditions
+                    // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    this->setBoundaryConditions(params,steps_ret,finalPosture_ext,finalPosture_post_grasp_ext,1);
+                    // retreat stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
+                    timestep = this->getAcceleration(steps_ret,params,finalPosture_ext,finalPosture_post_grasp_ext,traj,vel,acc,mod);
+                    res->time_steps.push_back(timestep);
+                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
+                    res->velocity_stages.push_back(vel);
+                    res->acceleration_stages.push_back(acc);
+                }else{res->status = 40; res->status_msg = string("HUML: final posture post grasp selection failed ");}
+            }
+        }else{ // no collisions
+            if(retreat && FPosture){// retreat stage
+                pre_post=2;
+                FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                if (FPosture_post_grasp){
+                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
+                    for(size_t i=0;i<finalHand.size();++i){
+                        finalPosture_post_grasp_ext.push_back(finalHand.at(i));
+                    }
+                    int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_grasp_ext);
+                    // calculate the retreat boundary conditions
+                    // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    this->setBoundaryConditions(params,steps_ret,finalPosture_ext,finalPosture_post_grasp_ext,1);
+                    // retreat stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
+                    timestep = this->getAcceleration(steps_ret,params,finalPosture_ext,finalPosture_post_grasp_ext,traj,vel,acc,mod);
+                    res->time_steps.push_back(timestep);
+                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
+                    res->velocity_stages.push_back(vel);
+                    res->acceleration_stages.push_back(acc);
+                }else{res->status = 40; res->status_msg = string("HUML: final posture post grasp selection failed ");}
+            }
         }
     }catch (const string message){throw message;
     }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
@@ -4755,7 +4781,7 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
     try
     {
         std::vector<double> finalPosture_pre_place; bool FPosture_pre_place = false;
-        std::vector<double> bouncePosture_pre_place; bool BPosture_pre_place = false;
+        std::vector<double> bouncePosture_pre_place; //bool BPosture_pre_place = false;
         std::vector<double> bouncePosture; bool BPosture = false;
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> finalPosture_post_place; bool FPosture_post_place = false;
@@ -4785,8 +4811,8 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                     this->setBoundaryConditions(params,steps_app,finalPosture_pre_place_ext,finalPosture_ext,0);
 
                     if(coll){ // collisions
-                        BPosture_pre_place = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
-                        if(BPosture_pre_place){
+                        BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
+                        if(BPosture){
                                 res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
                                 res->time_steps.clear();
                                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
@@ -4884,36 +4910,71 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                 }
             }else{res->status = 10; res->status_msg = string("HUML: final posture selection failed ");}
         }
-        if(retreat && FPosture){
-            pre_post=2;
-            FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
-            if (FPosture_post_place){
-                res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
-                // extend the final postures
-                std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
-                finalPosture_ext = finalPosture;
-                finalPosture_ext.push_back(finalHand.at(0));
-                finalPosture_post_place_ext.push_back(finalHand.at(0));
-                for(size_t i=1;i<finalHand.size();++i){
-                    finalPosture_ext.push_back(finalHand.at(i));
-                    if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
-                        finalPosture_post_place_ext.push_back(finalHand.at(i)-AP);
-                    }else{
-                       finalPosture_post_place_ext.push_back(minLimits.at(i+7));
+        if(coll){// collisions
+            if(retreat && FPosture && BPosture){
+                pre_post=2;
+                FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
+                if (FPosture_post_place){
+                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    // extend the final postures
+                    std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
+                    finalPosture_ext = finalPosture;
+                    finalPosture_ext.push_back(finalHand.at(0));
+                    finalPosture_post_place_ext.push_back(finalHand.at(0));
+                    for(size_t i=1;i<finalHand.size();++i){
+                        finalPosture_ext.push_back(finalHand.at(i));
+                        if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
+                            finalPosture_post_place_ext.push_back(finalHand.at(i)-AP);
+                        }else{
+                           finalPosture_post_place_ext.push_back(minLimits.at(i+7));
+                        }
                     }
-                }
-                int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
-                // calculate the retreat boundary conditions
-                // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
-                this->setBoundaryConditions(params,steps_ret,finalPosture_ext,finalPosture_post_place_ext,1);
-                // retreat stage
-                MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
-                timestep = this->getAcceleration(steps_ret,params,finalPosture_ext,finalPosture_post_place_ext,traj,vel,acc,mod);
-                res->time_steps.push_back(timestep);
-                res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
-                res->velocity_stages.push_back(vel);
-                res->acceleration_stages.push_back(acc);
-            }else{res->status = 40; res->status_msg = string("HUML: final posture post place selection failed ");}
+                    int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
+                    // calculate the retreat boundary conditions
+                    // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    this->setBoundaryConditions(params,steps_ret,finalPosture_ext,finalPosture_post_place_ext,1);
+                    // retreat stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
+                    timestep = this->getAcceleration(steps_ret,params,finalPosture_ext,finalPosture_post_place_ext,traj,vel,acc,mod);
+                    res->time_steps.push_back(timestep);
+                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
+                    res->velocity_stages.push_back(vel);
+                    res->acceleration_stages.push_back(acc);
+                }else{res->status = 40; res->status_msg = string("HUML: final posture post place selection failed ");}
+            }
+        }else{// no collisions
+            if(retreat && FPosture){
+                pre_post=2;
+                FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
+                if (FPosture_post_place){
+                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    // extend the final postures
+                    std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
+                    finalPosture_ext = finalPosture;
+                    finalPosture_ext.push_back(finalHand.at(0));
+                    finalPosture_post_place_ext.push_back(finalHand.at(0));
+                    for(size_t i=1;i<finalHand.size();++i){
+                        finalPosture_ext.push_back(finalHand.at(i));
+                        if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
+                            finalPosture_post_place_ext.push_back(finalHand.at(i)-AP);
+                        }else{
+                           finalPosture_post_place_ext.push_back(minLimits.at(i+7));
+                        }
+                    }
+                    int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
+                    // calculate the retreat boundary conditions
+                    // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    this->setBoundaryConditions(params,steps_ret,finalPosture_ext,finalPosture_post_place_ext,1);
+                    // retreat stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3;
+                    timestep = this->getAcceleration(steps_ret,params,finalPosture_ext,finalPosture_post_place_ext,traj,vel,acc,mod);
+                    res->time_steps.push_back(timestep);
+                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
+                    res->velocity_stages.push_back(vel);
+                    res->acceleration_stages.push_back(acc);
+                }else{res->status = 40; res->status_msg = string("HUML: final posture post place selection failed ");}
+            }
+
         }
     }catch (const string message){throw message;
     }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
