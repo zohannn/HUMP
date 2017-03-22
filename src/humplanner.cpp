@@ -2485,7 +2485,8 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     }
 
     // Points of the arm
-    PostureMod << string("var Points_Arm {j in 1..21, i in 1..4} = \n");
+    //PostureMod << string("var Points_Arm {j in 1..21, i in 1..4} = \n");
+    PostureMod << string("var Points_Arm {j in 1..15, i in 1..4} = \n");
     PostureMod << string("if ( j=1 ) then 	(Shoulder[i]+Elbow[i])/2  \n");
     PostureMod << string("else	if ( j=2 ) then 	Elbow[i] \n");
     PostureMod << string("else    if ( j=3 ) then 	(Wrist[i]+Elbow[i])/2  \n");
@@ -2495,6 +2496,7 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     PostureMod << string("else	if ( j=7 ) then 	Finger1_1[i] \n");
     PostureMod << string("else	if ( j=8 ) then 	Finger2_1[i] \n");
     PostureMod << string("else	if ( j=9 ) then 	Finger3_1[i]\n");
+    /*
     PostureMod << string("else	if ( j=10 ) then 	(Finger1_1[i]+Finger1_2[i])/2 \n");
     PostureMod << string("else	if ( j=11 ) then 	(Finger2_1[i]+Finger2_2[i])/2 \n");
     PostureMod << string("else	if ( j=12 ) then 	(Finger3_1[i]+Finger3_2[i])/2 \n");
@@ -2507,6 +2509,13 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
     PostureMod << string("else	if ( j=19 ) then 	Finger1_tip[i]\n");
     PostureMod << string("else	if ( j=20 ) then 	Finger2_tip[i] \n");
     PostureMod << string("else	if ( j=21 ) then 	Finger3_tip[i] \n");
+    */
+    PostureMod << string("else	if ( j=10 ) then 	 Finger1_2[i] \n");
+    PostureMod << string("else	if ( j=11 ) then 	 Finger2_2[i] \n");
+    PostureMod << string("else	if ( j=12 ) then 	 Finger3_2[i] \n");
+    PostureMod << string("else	if ( j=13 ) then 	Finger1_tip[i]\n");
+    PostureMod << string("else	if ( j=14 ) then 	Finger2_tip[i] \n");
+    PostureMod << string("else	if ( j=15 ) then 	Finger3_tip[i] \n");
     PostureMod << string("; \n\n");
 
     // objective function
@@ -2623,7 +2632,8 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
 
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
-        PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
+        //PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..n_Obstacles}:  \n");
         PostureMod << string("((Points_Arm[j,1]-Obstacles[i,1])^2)*(  \n");
         PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]+")+txx1+string(")^2) + \n");
         PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]+")+txx2+string(")^2) + \n");
@@ -2735,11 +2745,6 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,huml_params& params,int mov_t
     }
 
     // tolerances
-
-    // steps
-    //int steps = params.steps;
-    //int steps = this->getSteps(maxAuxLimits,minAuxLimits,initAuxPosture,finalAuxPosture);
-
     double timestep; MatrixXd traj_no_bound;
     this->directTrajectoryNoBound(steps,initAuxPosture,finalAuxPosture,traj_no_bound);
     timestep = this->getTimeStep(params,traj_no_bound);
@@ -3120,18 +3125,29 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,huml_params& params,int mov_t
      PostureMod << string("else	if ( j=4 ) then 	Wrist[i,k] \n");
      PostureMod << string("else	if ( j=5 ) then 	Wrist[i,k]+0.45*(Hand[i,k]-Wrist[i,k]) \n");
      PostureMod << string("else	if ( j=6 ) then 	Wrist[i,k]+0.75*(Hand[i,k]-Wrist[i,k]) \n");
+     /*
      PostureMod << string("else	if ( j=7 ) then 	Finger1_1[i,k] \n");
      PostureMod << string("else	if ( j=8 ) then 	Finger2_1[i,k] \n");
      PostureMod << string("else	if ( j=9 ) then 	Finger3_1[i,k]\n");
-     PostureMod << string("#else	if ( j=10 ) then 	(Finger1_1[i,k]+Finger1_2[i,k])/2 \n");
-     PostureMod << string("#else	if ( j=11 ) then 	(Finger2_1[i,k]+Finger2_2[i,k])/2 \n");
-     PostureMod << string("#else	if ( j=12 ) then 	(Finger3_1[i,k]+Finger3_2[i,k])/2 \n");
+     PostureMod << string("else	if ( j=10 ) then 	(Finger1_1[i,k]+Finger1_2[i,k])/2 \n");
+     PostureMod << string("else	if ( j=11 ) then 	(Finger2_1[i,k]+Finger2_2[i,k])/2 \n");
+     PostureMod << string("else	if ( j=12 ) then 	(Finger3_1[i,k]+Finger3_2[i,k])/2 \n");
+     PostureMod << string("else	if ( j=13 ) then 	 Finger1_2[i,k] \n");
+     PostureMod << string("else	if ( j=14 ) then 	 Finger2_2[i,k] \n");
+     PostureMod << string("else	if ( j=15 ) then 	 Finger3_2[i,k] \n");
+     PostureMod << string("else	if ( j=16 ) then 	(Finger1_2[i,k]+Finger1_tip[i,k])/2	 \n");
+     PostureMod << string("else	if ( j=17 ) then 	(Finger2_2[i,k]+Finger2_tip[i,k])/2 \n");
+     PostureMod << string("else	if ( j=18 ) then 	(Finger3_2[i,k]+Finger3_tip[i,k])/2 \n");
+     PostureMod << string("else	if ( j=19 ) then 	Finger1_tip[i,k]\n");
+     PostureMod << string("else	if ( j=20 ) then 	Finger2_tip[i,k] \n");
+     PostureMod << string("else	if ( j=21 ) then 	Finger3_tip[i,k] \n");
+     */
+     PostureMod << string("else	if ( j=7 ) then 	Finger1_1[i,k] \n");
+     PostureMod << string("else	if ( j=8 ) then 	Finger2_1[i,k] \n");
+     PostureMod << string("else	if ( j=9 ) then 	Finger3_1[i,k]\n");
      PostureMod << string("else	if ( j=10 ) then 	 Finger1_2[i,k] \n");
      PostureMod << string("else	if ( j=11 ) then 	 Finger2_2[i,k] \n");
      PostureMod << string("else	if ( j=12 ) then 	 Finger3_2[i,k] \n");
-     PostureMod << string("#else	if ( j=16 ) then 	(Finger1_2[i,k]+Finger1_tip[i,k])/2	 \n");
-     PostureMod << string("#else	if ( j=17 ) then 	(Finger2_2[i,k]+Finger2_tip[i,k])/2 \n");
-     PostureMod << string("#else	if ( j=18 ) then 	(Finger3_2[i,k]+Finger3_tip[i,k])/2 \n");
      PostureMod << string("else	if ( j=13 ) then 	Finger1_tip[i,k]\n");
      PostureMod << string("else	if ( j=14 ) then 	Finger2_tip[i,k] \n");
      PostureMod << string("else	if ( j=15 ) then 	Finger3_tip[i,k] \n");
@@ -3397,7 +3413,14 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,huml_params& params,int mov_t
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
 
-        PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps+1}:   \n");
+        // in pick shorts movements (movements with N_STEP_MIN steps) collisions with the target are not considered
+        string n_steps_end_str;
+        if(N_STEP_MIN>1){
+            n_steps_end_str = boost::str(boost::format("%d") % (N_STEP_MIN-1));
+        }else{
+            n_steps_end_str = boost::str(boost::format("%d") % 1);
+        }
+        PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
         PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
         PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
         PostureMod << string("(x_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xx2[l])^2) + \n");
@@ -3588,7 +3611,17 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,huml_params& params,int mov_t
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         if(place){
+            // the object to place has to be considered
              PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n");
+        }else if(move){
+            // for the first 5 steps (Number of minimum steps allowed), no obstacle is considered because the movement is very short and the planner may get stuck
+            string n_steps_init_str;
+            if(N_STEP_MIN>=1){
+                n_steps_init_str = boost::str(boost::format("%d") % (N_STEP_MIN));
+            }else{
+                n_steps_init_str = boost::str(boost::format("%d") % 1);
+            }
+            PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1}:\n");
         }else{
              PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n");
         }
@@ -4099,8 +4132,7 @@ double HUMPlanner::getTimeStep(huml_params &tols, MatrixXd &jointTraj)
         std::vector<double>::iterator res = std::max_element(diffs.begin(),diffs.end());
         int poss = std::distance(diffs.begin(),res);
         double deltaThetaMax = diffs.at(poss);
-        double tol = -3.0; // tolerance in [deg/sec]
-        double time_k = ((steps1-1)*deltaThetaMax/(w_max.at(k)+tol)) + (lambda.at(k)*log(1+deltaTheta_k));
+        double time_k = ((steps1-1)*deltaThetaMax/(w_max.at(k))) + (lambda.at(k)*log(1+deltaTheta_k));
 
         num += lambda.at(k)*deltaTheta_k*time_k;
         den += lambda.at(k)*deltaTheta_k;
@@ -4602,20 +4634,27 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                             res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                             res->velocity_stages.clear();
                             res->acceleration_stages.clear();
-                            // pre-approach stage
-                            MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1;
-                            timestep = this->getAcceleration(steps,params,initPosture,finalPosture_pre_grasp_ext,bouncePosture_pre_grasp,traj,vel,acc,mod);
-                            res->time_steps.push_back(timestep);
-                            res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
-                            res->velocity_stages.push_back(vel);
-                            res->acceleration_stages.push_back(acc);
                             // approach stage
+                            MatrixXd traj_app; MatrixXd vel_app; MatrixXd acc_app; double timestep_app;
                             mod = 2;
-                            timestep = this->getAcceleration(steps_app,params,finalPosture_pre_grasp_ext,finalPosture_ext,traj,vel,acc,mod);
-                            res->time_steps.push_back(timestep);
-                            res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
-                            res->velocity_stages.push_back(vel);
-                            res->acceleration_stages.push_back(acc);
+                            timestep_app = this->getAcceleration(steps_app,params,finalPosture_pre_grasp_ext,finalPosture_ext,traj_app,vel_app,acc_app,mod);
+                            // pre-approach stage
+                            MatrixXd traj_pre_app; MatrixXd vel_pre_app; MatrixXd acc_pre_app; double timestep_pre_app;
+                            mod = 1;
+                            timestep_pre_app = this->getAcceleration(steps,params,initPosture,finalPosture_pre_grasp_ext,bouncePosture_pre_grasp,traj_pre_app,vel_pre_app,acc_pre_app,mod);
+
+                            // pre-approach
+                            res->time_steps.push_back(timestep_pre_app);
+                            res->trajectory_stages.push_back(traj_pre_app); res->trajectory_descriptions.push_back("plan");
+                            res->velocity_stages.push_back(vel_pre_app);
+                            res->acceleration_stages.push_back(acc_pre_app);
+
+                            // approach
+                            res->time_steps.push_back(timestep_app);
+                            res->trajectory_stages.push_back(traj_app); res->trajectory_descriptions.push_back("approach");
+                            res->velocity_stages.push_back(vel_app);
+                            res->acceleration_stages.push_back(acc_app);
+
                         }else{ res->status = 20; res->status_msg = string("HUML: bounce posture pre grasp selection failed ");}
                     }else{ // no collisions
                         pre_post = 0;
