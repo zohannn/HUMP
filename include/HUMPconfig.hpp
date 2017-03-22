@@ -1,5 +1,5 @@
-#ifndef HUMLConfig_HPP
-#define HUMLConfig_HPP
+#ifndef HUMPConfig_HPP
+#define HUMPConfig_HPP
 
 #include <string>
 #include <cstring>
@@ -25,8 +25,8 @@
 
 
 /** version of the library */
-#define HUML_VERSION_MAJOR 2
-#define HUML_VERSION_MINOR 0
+#define HUMP_VERSION_MAJOR 2
+#define HUMP_VERSION_MINOR 0
 
 
 //definition of the macro ASSERT
@@ -149,7 +149,7 @@ typedef struct{
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
-} huml_params;
+} hump_params;
 
 /** This struct defines the result of the planned trajectory */
 typedef struct{
@@ -171,4 +171,4 @@ typedef struct{
 
 
 
-#endif // HUMLConfig_HPP
+#endif // HUMPConfig_HPP

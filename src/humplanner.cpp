@@ -2244,7 +2244,7 @@ void HUMPlanner::Trans_matrix(std::vector<double> xyz, std::vector<double> rpy, 
 
 }
 
-bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pre_post, std::vector<double> initArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts)
+bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pre_post, std::vector<double> initArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts)
 {
     //  --- create the "Models" directory if it does not exist ---
     struct stat st = {0};
@@ -2698,7 +2698,7 @@ bool HUMPlanner::writeFilesFinalPosture(huml_params& params,int mov_type, int pr
 
 
 
-bool HUMPlanner::writeFilesBouncePosture(int steps,huml_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
+bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
                                          std::vector<double> initialGuess, std::vector<objectPtr> objs,boundaryConditions b)
 {
     //  --- create the "Models" directory if it does not exist ---
@@ -3849,7 +3849,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
 }
 
 
-bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture)
+bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture)
 
 {
     // movement settings
@@ -3931,7 +3931,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,huml_params& pa
 }
 
 
-bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,huml_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture)
+bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture)
 {
 
 
@@ -4107,7 +4107,7 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,huml
 }
 
 
-double HUMPlanner::getTimeStep(huml_params &tols, MatrixXd &jointTraj)
+double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
 {
     int steps1 = jointTraj.rows();
     int n_joints = jointTraj.cols();
@@ -4144,7 +4144,7 @@ double HUMPlanner::getTimeStep(huml_params &tols, MatrixXd &jointTraj)
     return timestep;
 }
 
-void HUMPlanner::setBoundaryConditions(huml_params &params, int steps, std::vector<double> &initPosture, std::vector<double> &finalPosture, int mod)
+void HUMPlanner::setBoundaryConditions(hump_params &params, int steps, std::vector<double> &initPosture, std::vector<double> &finalPosture, int mod)
 {
 
     MatrixXd fakeTraj;
@@ -4180,7 +4180,7 @@ void HUMPlanner::setBoundaryConditions(huml_params &params, int steps, std::vect
 }
 
 
-void HUMPlanner::directTrajectory(int steps,huml_params &tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd &Traj, int mod)
+void HUMPlanner::directTrajectory(int steps,hump_params &tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd &Traj, int mod)
 {
     //int steps = tols.steps;
     //std::vector<double> time = std::vector<double>(steps+1); // time
@@ -4267,7 +4267,7 @@ void HUMPlanner::directTrajectoryNoBound(int steps,std::vector<double>& initPost
 
 }
 
-void HUMPlanner::directVelocity(int steps,huml_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture,double timestep, MatrixXd &Vel, int mod)
+void HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture,double timestep, MatrixXd &Vel, int mod)
 {
     //int steps = tols.steps;
     //std::vector<double> time = std::vector<double>(steps+1); // time
@@ -4330,7 +4330,7 @@ void HUMPlanner::directVelocity(int steps,huml_params &tols, std::vector<double>
 
 }
 
-void HUMPlanner::directAcceleration(int steps,huml_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, double timestep, MatrixXd &Acc, int mod)
+void HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, double timestep, MatrixXd &Acc, int mod)
 {
     //int steps = tols.steps;
     //std::vector<double> time = std::vector<double>(steps+1); // time
@@ -4416,7 +4416,7 @@ void HUMPlanner::backForthTrajectory(int steps, std::vector<double> &initPosture
     }
 }
 
-void HUMPlanner::backForthVelocity(int steps,huml_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, double timestep, MatrixXd &Vel)
+void HUMPlanner::backForthVelocity(int steps,hump_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, double timestep, MatrixXd &Vel)
 {
     //int steps = tols.steps;
     //std::vector<double> time = std::vector<double>(steps+1); // time
@@ -4441,7 +4441,7 @@ void HUMPlanner::backForthVelocity(int steps,huml_params &tols, std::vector<doub
     }
 }
 
-void HUMPlanner::backForthAcceleration(int steps,huml_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, double timestep, MatrixXd &Acc)
+void HUMPlanner::backForthAcceleration(int steps,hump_params &tols, std::vector<double> &initPosture, std::vector<double> &bouncePosture, double timestep, MatrixXd &Acc)
 {
     //int steps = tols.steps;
     //std::vector<double> time = std::vector<double>(steps+1); // time
@@ -4478,7 +4478,7 @@ void HUMPlanner::computeMovement(const MatrixXd &direct, const MatrixXd &back, M
     }
 }
 
-double HUMPlanner::getTrajectory(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod)
+double HUMPlanner::getTrajectory(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod)
 {
     double timestep; MatrixXd traj_no_bound;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,traj_no_bound);
@@ -4488,7 +4488,7 @@ double HUMPlanner::getTrajectory(int steps,huml_params &tols, std::vector<double
     return timestep;
 }
 
-double HUMPlanner::getTrajectory(int steps,huml_params &tols,std::vector<double> initPosture,
+double HUMPlanner::getTrajectory(int steps,hump_params &tols,std::vector<double> initPosture,
                                  std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj,int mod)
 {
 
@@ -4507,7 +4507,7 @@ double HUMPlanner::getTrajectory(int steps,huml_params &tols,std::vector<double>
 }
 
 
-double HUMPlanner::getVelocity(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod)
+double HUMPlanner::getVelocity(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod)
 {
 
     double timestep = this->getTrajectory(steps,tols,initPosture,finalPosture,traj,mod);
@@ -4518,7 +4518,7 @@ double HUMPlanner::getVelocity(int steps,huml_params &tols, std::vector<double> 
 
 }
 
-double HUMPlanner::getVelocity(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod)
+double HUMPlanner::getVelocity(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod)
 {
 
     double timestep = this->getTrajectory(steps,tols,initPosture,finalPosture,bouncePosture,traj,mod);
@@ -4534,7 +4534,7 @@ double HUMPlanner::getVelocity(int steps,huml_params &tols, std::vector<double> 
 
 }
 
-double HUMPlanner::getAcceleration(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod)
+double HUMPlanner::getAcceleration(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod)
 {
 
     double timestep = this->getVelocity(steps,tols,initPosture,finalPosture,traj,vel,mod);
@@ -4545,7 +4545,7 @@ double HUMPlanner::getAcceleration(int steps,huml_params &tols, std::vector<doub
 
 }
 
-double HUMPlanner::getAcceleration(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod)
+double HUMPlanner::getAcceleration(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod)
 {
     double timestep = this->getVelocity(steps,tols,initPosture,finalPosture,bouncePosture,traj,vel,mod);
 
@@ -4560,7 +4560,7 @@ double HUMPlanner::getAcceleration(int steps,huml_params &tols, std::vector<doub
 }
 
 
-planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<double> initPosture)
+planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<double> initPosture)
 {
     planning_result_ptr res;
     res.reset(new planning_result);
@@ -4629,7 +4629,7 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                         pre_post = 1;
                         BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
                         if(BPosture){
-                            res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                            res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                             res->time_steps.clear();
                             res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                             res->velocity_stages.clear();
@@ -4655,12 +4655,12 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                             res->velocity_stages.push_back(vel_app);
                             res->acceleration_stages.push_back(acc_app);
 
-                        }else{ res->status = 20; res->status_msg = string("HUML: bounce posture pre grasp selection failed ");}
+                        }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre grasp selection failed ");}
                     }else{ // no collisions
                         pre_post = 0;
                         FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
                         if(FPosture){
-                            res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                            res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                             res->time_steps.clear();
                             res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                             res->velocity_stages.clear();
@@ -4686,10 +4686,10 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                             res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
                             res->velocity_stages.push_back(vel);
                             res->acceleration_stages.push_back(acc);
-                        }else{res->status = 30; res->status_msg = string("HUML: final posture grasp selection failed ");}
+                        }else{res->status = 30; res->status_msg = string("HUMP: final posture grasp selection failed ");}
                     }
-                }else{res->status = 30; res->status_msg = string("HUML: final posture grasp selection failed ");}
-            }else{res->status = 10; res->status_msg = string("HUML: final posture pre grasp selection failed ");}
+                }else{res->status = 30; res->status_msg = string("HUMP: final posture grasp selection failed ");}
+            }else{res->status = 10; res->status_msg = string("HUMP: final posture pre grasp selection failed ");}
         }else{ // no approach
             pre_post = 0;
             FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
@@ -4703,7 +4703,7 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                 if(coll){ // collisions
                     BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
                     if(BPosture){
-                        res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                        res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                         res->time_steps.clear();
                         res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                         res->velocity_stages.clear();
@@ -4716,9 +4716,9 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
-                    }else{ res->status = 20; res->status_msg = string("HUML: bounce posture selection failed ");}
+                    }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
                 }else{ // no collisions
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     res->time_steps.clear();
                     res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                     res->velocity_stages.clear();
@@ -4732,14 +4732,14 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
                 }
-            }else{res->status = 10; res->status_msg = string("HUML: final posture selection failed ");}
+            }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
         }
         if(coll){ // collisions
             if(retreat && FPosture && BPosture){// retreat stage
                 pre_post=2;
                 FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
                 if (FPosture_post_grasp){
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
                     for(size_t i=0;i<finalHand.size();++i){
                         finalPosture_post_grasp_ext.push_back(finalHand.at(i));
@@ -4755,14 +4755,14 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
-                }else{res->status = 40; res->status_msg = string("HUML: final posture post grasp selection failed ");}
+                }else{res->status = 40; res->status_msg = string("HUMP: final posture post grasp selection failed ");}
             }
         }else{ // no collisions
             if(retreat && FPosture){// retreat stage
                 pre_post=2;
                 FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
                 if (FPosture_post_grasp){
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
                     for(size_t i=0;i<finalHand.size();++i){
                         finalPosture_post_grasp_ext.push_back(finalHand.at(i));
@@ -4778,18 +4778,18 @@ planning_result_ptr HUMPlanner::plan_pick(huml_params &params, std::vector<doubl
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
-                }else{res->status = 40; res->status_msg = string("HUML: final posture post grasp selection failed ");}
+                }else{res->status = 40; res->status_msg = string("HUMP: final posture post grasp selection failed ");}
             }
         }
     }catch (const string message){throw message;
-    }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
 
     return res;
 
 
 }
 
-planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<double> initPosture)
+planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<double> initPosture)
 {
     planning_result_ptr res;
     res.reset(new planning_result);
@@ -4852,7 +4852,7 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                     if(coll){ // collisions
                         BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
                         if(BPosture){
-                                res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                                res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                                 res->time_steps.clear();
                                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                                 res->velocity_stages.clear();
@@ -4871,7 +4871,7 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
                                 res->velocity_stages.push_back(vel);
                                 res->acceleration_stages.push_back(acc);
-                        }else{ res->status = 20; res->status_msg = string("HUML: bounce posture pre place selection failed ");}
+                        }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
                     }else{ // no collisions
                         pre_post = 0;
                         FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
@@ -4881,7 +4881,7 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                             for(size_t i=0;i<finalHand.size();++i){
                                 finalPosture_ext.push_back(finalHand.at(i));
                             }
-                            res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                            res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                             res->time_steps.clear();
                             res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                             res->velocity_stages.clear();
@@ -4901,10 +4901,10 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                             res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
                             res->velocity_stages.push_back(vel);
                             res->acceleration_stages.push_back(acc);
-                        }else{res->status = 30; res->status_msg = string("HUML: final posture place selection failed ");}
+                        }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
                     }
-                }else{res->status = 30; res->status_msg = string("HUML: final posture place selection failed ");}
-            }else{res->status = 10; res->status_msg = string("HUML: final posture pre place selection failed ");}
+                }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
+            }else{res->status = 10; res->status_msg = string("HUMP: final posture pre place selection failed ");}
         }else{
             pre_post = 0;
             FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture);
@@ -4918,7 +4918,7 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                 if(coll){ // collisions
                     BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
                     if(BPosture){
-                        res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                        res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                         res->time_steps.clear();
                         res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                         res->velocity_stages.clear();
@@ -4931,9 +4931,9 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
-                    }else{ res->status = 20; res->status_msg = string("HUML: bounce posture selection failed ");}
+                    }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
                 }else{ // no collisions
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     res->time_steps.clear();
                     res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                     res->velocity_stages.clear();
@@ -4947,14 +4947,14 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
                 }
-            }else{res->status = 10; res->status_msg = string("HUML: final posture selection failed ");}
+            }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
         }
         if(coll){// collisions
             if(retreat && FPosture && BPosture){
                 pre_post=2;
                 FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
                 if (FPosture_post_place){
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
                     std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
                     finalPosture_ext = finalPosture;
@@ -4979,14 +4979,14 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
-                }else{res->status = 40; res->status_msg = string("HUML: final posture post place selection failed ");}
+                }else{res->status = 40; res->status_msg = string("HUMP: final posture post place selection failed ");}
             }
         }else{// no collisions
             if(retreat && FPosture){
                 pre_post=2;
                 FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
                 if (FPosture_post_place){
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
                     std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
                     finalPosture_ext = finalPosture;
@@ -5011,17 +5011,17 @@ planning_result_ptr HUMPlanner::plan_place(huml_params &params, std::vector<doub
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
-                }else{res->status = 40; res->status_msg = string("HUML: final posture post place selection failed ");}
+                }else{res->status = 40; res->status_msg = string("HUMP: final posture post place selection failed ");}
             }
 
         }
     }catch (const string message){throw message;
-    }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
 
     return res;
 }
 
-planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<double> initPosture)
+planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<double> initPosture)
 {
     planning_result_ptr res;
     res.reset(new planning_result);
@@ -5063,7 +5063,7 @@ planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<doubl
             if(coll){ // collisions enabled
                 BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
                 if(BPosture){
-                    res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     res->time_steps.clear();
                     res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                     res->velocity_stages.clear();
@@ -5075,9 +5075,9 @@ planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<doubl
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
-                }else{ res->status = 20; res->status_msg = string("HUML: bounce posture selection failed ");}
+                }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
             }else{// collisions disabled
-                res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                 res->time_steps.clear();
                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                 res->velocity_stages.clear();
@@ -5090,16 +5090,16 @@ planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<doubl
                 res->velocity_stages.push_back(vel);
                 res->acceleration_stages.push_back(acc);
             }
-        }else{res->status = 10; res->status_msg = string("HUML: final posture selection failed ");}
+        }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
 
     }catch (const string message){throw message;
-    }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
 
     return res;
 
 }
 
-planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<double> initPosture, std::vector<double> finalPosture)
+planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<double> initPosture, std::vector<double> finalPosture)
 {
     planning_result_ptr res;
     res.reset(new planning_result);
@@ -5137,7 +5137,7 @@ planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<doubl
         if(coll){
             BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
             if(BPosture){
-                res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+                res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                 res->time_steps.clear();
                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                 res->velocity_stages.clear();
@@ -5149,9 +5149,9 @@ planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<doubl
                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                 res->velocity_stages.push_back(vel);
                 res->acceleration_stages.push_back(acc);
-            }else{ res->status = 20; res->status_msg = string("HUML: bounce posture selection failed ");}
+            }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
         }else{
-            res->status = 0; res->status_msg = string("HUML: trajectory planned successfully ");
+            res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
             res->time_steps.clear();
             res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
             res->velocity_stages.clear();
@@ -5166,7 +5166,7 @@ planning_result_ptr HUMPlanner::plan_move(huml_params &params, std::vector<doubl
         }
 
     }catch (const string message){throw message;
-    }catch( ... ){throw string ("HUML: error in optimizing the trajecory");}
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
 
     return res;
 }

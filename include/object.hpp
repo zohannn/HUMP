@@ -1,5 +1,5 @@
-#ifndef HUML_OBJECT_HPP
-#define HUML_OBJECT_HPP
+#ifndef HUMP_OBJECT_HPP
+#define HUMP_OBJECT_HPP
 #include <string>
 #include <vector>
 
@@ -120,4 +120,4 @@ private:
 
 }// namespace HUMotion
 
-#endif // HUML_OBJECT_HPP
+#endif // HUMP_OBJECT_HPP

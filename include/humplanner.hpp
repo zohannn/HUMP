@@ -1,7 +1,7 @@
 #ifndef HUMPLANNER_H
 #define HUMPLANNER_H
 
-#include "HUMLconfig.hpp"
+#include "HUMPconfig.hpp"
 #include "amplinterface.hpp"
 #include "IpIpoptApplication.hpp"
 
@@ -279,7 +279,7 @@ public:
      * @param initPosture
      * @return
      */
-    planning_result_ptr plan_pick(huml_params& params, std::vector<double> initPosture);
+    planning_result_ptr plan_pick(hump_params& params, std::vector<double> initPosture);
 
     /**
      * @brief plan_place
@@ -287,7 +287,7 @@ public:
      * @param initPosture
      * @return
      */
-    planning_result_ptr plan_place(huml_params& params, std::vector<double> initPosture);
+    planning_result_ptr plan_place(hump_params& params, std::vector<double> initPosture);
 
     /**
      * @brief plan_move
@@ -295,7 +295,7 @@ public:
      * @param initPosture
      * @return
      */
-    planning_result_ptr plan_move(huml_params& params, std::vector<double> initPosture);
+    planning_result_ptr plan_move(hump_params& params, std::vector<double> initPosture);
 
     /**
      * @brief plan_move
@@ -304,7 +304,7 @@ public:
      * @param finalPosture
      * @return
      */
-    planning_result_ptr plan_move(huml_params& params, std::vector<double> initPosture, std::vector<double> finalPosture);
+    planning_result_ptr plan_move(hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture);
 
 
 
@@ -336,7 +336,7 @@ private:
      * @param jointTraj
      * @return
      */
-    double getTimeStep(huml_params& tols,MatrixXd& jointTraj);
+    double getTimeStep(hump_params& tols,MatrixXd& jointTraj);
 
     /**
      * @brief setBoundaryConditions
@@ -346,7 +346,7 @@ private:
      * @param finalPosture
      * @param mod
      */
-    void setBoundaryConditions(huml_params& params,int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
+    void setBoundaryConditions(hump_params& params,int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
 
 
     //void getDelta(VectorXd& jointTraj, std::vector<double> &delta);
@@ -361,7 +361,7 @@ private:
      * @param Traj
      * @param mod
      */
-    void directTrajectory(int steps, huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, int mod);
+    void directTrajectory(int steps, hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, int mod);
 
     /**
      * @brief directTrajectoryNoBound
@@ -382,7 +382,7 @@ private:
      * @param Vel
      * @param mod
      */
-    void directVelocity(int steps,huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep,MatrixXd& Vel, int mod);
+    void directVelocity(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep,MatrixXd& Vel, int mod);
 
     /**
      * @brief directAcceleration
@@ -394,7 +394,7 @@ private:
      * @param Acc
      * @param mod
      */
-    void directAcceleration(int steps,huml_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,int mod);
+    void directAcceleration(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,int mod);
 
     /**
      * @brief backForthTrajectory
@@ -414,7 +414,7 @@ private:
      * @param timestep
      * @param Vel
      */
-    void backForthVelocity(int steps,huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Vel);
+    void backForthVelocity(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Vel);
 
     /**
      * @brief backForthAcceleration
@@ -425,7 +425,7 @@ private:
      * @param timestep
      * @param Acc
      */
-    void backForthAcceleration(int steps,huml_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Acc);
+    void backForthAcceleration(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Acc);
 
     /**
      * @brief computeMovement
@@ -446,7 +446,7 @@ private:
      * @param mod
      * @return
      */
-    double getTrajectory(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj,int mod);
+    double getTrajectory(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj,int mod);
 
     /**
      * @brief getTrajectory
@@ -458,7 +458,7 @@ private:
      * @param mod
      * @return
      */
-    double getTrajectory(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod);
+    double getTrajectory(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod);
 
     /**
      * @brief getVelocity
@@ -472,7 +472,7 @@ private:
      * @param mod
      * @return
      */
-    double getVelocity(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod);
+    double getVelocity(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod);
 
     /**
      * @brief getVelocity
@@ -485,7 +485,7 @@ private:
      * @param mod
      * @return
      */
-    double getVelocity(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod);
+    double getVelocity(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod);
 
     /**
      * @brief getAcceleration
@@ -500,7 +500,7 @@ private:
      * @param mod
      * @return
      */
-    double getAcceleration(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod);
+    double getAcceleration(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod);
 
     /**
      * @brief getAcceleration
@@ -514,7 +514,7 @@ private:
      * @param mod
      * @return
      */
-    double getAcceleration(int steps,huml_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod);
+    double getAcceleration(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod);
 
     /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
@@ -793,7 +793,7 @@ private:
      * @param finalPosture
      * @return
      */
-    bool singleArmFinalPosture(int mov_type,int pre_post,huml_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture);
+    bool singleArmFinalPosture(int mov_type,int pre_post,hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture);
 
     /**
      * @brief writeFilesFinalPosture
@@ -805,7 +805,7 @@ private:
      * @param pre_post
      * @return
      */
-    bool writeFilesFinalPosture(huml_params& params,int mov_type, int pre_post,std::vector<double> initArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts);
+    bool writeFilesFinalPosture(hump_params& params,int mov_type, int pre_post,std::vector<double> initArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts);
 
 
     /**
@@ -819,7 +819,7 @@ private:
      * @param bouncePosture
      * @return
      */
-    bool singleArmBouncePosture(int steps,int mov_type,int pre_post,huml_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture);
+    bool singleArmBouncePosture(int steps,int mov_type,int pre_post,hump_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture);
 
 
     /**
@@ -837,7 +837,7 @@ private:
      * @param bAux
      * @return
      */
-    bool writeFilesBouncePosture(int steps,huml_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
+    bool writeFilesBouncePosture(int steps,hump_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
                                              std::vector<double> initialGuess, std::vector<objectPtr> objs,boundaryConditions bAux);
 
 
