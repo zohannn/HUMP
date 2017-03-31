@@ -2598,7 +2598,8 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
                     PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + v_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -v_t \n");
                 }else{
                     //x_H is the approach direction
-                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = v_t and z_H = -y_t \n");
+                    //PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = v_t and z_H = -y_t \n");
+                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2)<= ")+taror+string("; #  x_H = v_t \n");
                 }
             }else if(pre_post==2){
                 // use retreat options
@@ -2607,7 +2608,8 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
                     PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + v_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -v_t \n");
                 }else{
                     //x_H is the retreat direction
-                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = v_t and z_H = -y_t \n");
+                    //PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = v_t and z_H = -y_t \n");
+                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2)<= ")+taror+string("; #  x_H = v_t \n");
                 }
             }else{
                 // error
