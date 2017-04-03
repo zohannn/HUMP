@@ -4206,11 +4206,11 @@ void HUMPlanner::setBoundaryConditions(hump_params &params, int steps, std::vect
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
     double timestep = this->getTimeStep(params,fakeTraj);
     double T = timestep*steps;
-    VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),7); double w_min = w_max_vec.minCoeff();
+    VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),7); double w_max = w_max_vec.maxCoeff();
     VectorXd init = VectorXd::Map(initPosture.data(),7);
     VectorXd final = VectorXd::Map(finalPosture.data(),7);
     double num = (final-init).norm();
-    double w_red = W_RED_MIN + (W_RED_MAX-W_RED_MIN)*((num/T)/w_min);
+    double w_red = W_RED_MIN + (W_RED_MAX-W_RED_MIN)*((num/T)/w_max);
 
     acc = std::vector<double>(finalPosture.size(),0.0);
     for (std::size_t i = 0; i<finalPosture.size(); ++i){
