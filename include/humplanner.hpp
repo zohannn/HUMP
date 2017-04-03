@@ -336,7 +336,7 @@ private:
      * @param jointTraj
      * @return
      */
-    double getTimeStep(hump_params& tols,MatrixXd& jointTraj);
+    double getTimeStep(hump_params& tols, MatrixXd& jointTraj);
 
     /**
      * @brief setBoundaryConditions
@@ -346,7 +346,7 @@ private:
      * @param finalPosture
      * @param mod
      */
-    void setBoundaryConditions(hump_params& params,int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
+    void setBoundaryConditions(hump_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
 
 
     //void getDelta(VectorXd& jointTraj, std::vector<double> &delta);

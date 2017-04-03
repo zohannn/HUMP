@@ -4115,7 +4115,7 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
 
 double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
 {
-    int steps1 = jointTraj.rows();
+    int steps = jointTraj.rows();
     int n_joints = jointTraj.cols();
     double timestep;
 
@@ -4130,7 +4130,7 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
 
         double deltaTheta_k = 0.0;
         std::vector<double> diffs;
-        for (int i = 1; i < steps1; ++i){
+        for (int i = 1; i < steps; ++i){
             double diff = abs(jointTraj(i,k) - jointTraj(i-1,k))*180/M_PI;
             diffs.push_back(diff);
             deltaTheta_k += diff;
@@ -4138,7 +4138,8 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
         std::vector<double>::iterator res = std::max_element(diffs.begin(),diffs.end());
         int poss = std::distance(diffs.begin(),res);
         double deltaThetaMax = diffs.at(poss);
-        double time_k = ((steps1-1)*deltaThetaMax/(w_max.at(k))) + (lambda.at(k)*log(1+deltaTheta_k));
+        double w_max_degree = w_max.at(k)*180/M_PI;
+        double time_k = ((steps-1)*deltaThetaMax/w_max_degree) + (lambda.at(k)*log(1+deltaTheta_k));
 
         num += lambda.at(k)*deltaTheta_k*time_k;
         den += lambda.at(k)*deltaTheta_k;
@@ -4146,7 +4147,7 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
     }
 
     double totalTime = num/den;
-    timestep = (totalTime/(steps1-1));
+    timestep = (totalTime/(steps-1));
     return timestep;
 }
 
@@ -4158,10 +4159,15 @@ void HUMPlanner::setBoundaryConditions(hump_params &params, int steps, std::vect
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
     double timestep = this->getTimeStep(params,fakeTraj);
     double T = timestep*steps;
+    VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),7); double w_min = w_max_vec.minCoeff();
+    VectorXd init = VectorXd::Map(initPosture.data(),7);
+    VectorXd final = VectorXd::Map(finalPosture.data(),7);
+    double num = (final-init).norm();
+    double w_red = W_RED_MIN + (W_RED_MAX-W_RED_MIN)*((num/T)/w_min);
 
     acc = std::vector<double>(finalPosture.size(),0.0);
     for (std::size_t i = 0; i<finalPosture.size(); ++i){
-        double peak =((double)15*(finalPosture.at(i)-initPosture.at(i)))/(8*T);
+        double peak =((double)15*(finalPosture.at(i)-initPosture.at(i)))/(8*T*w_red);
         vel.push_back(peak);
     }
 
@@ -4282,6 +4288,7 @@ void HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
     std::vector<double> vel_f;
     std::vector<double> acc_0;
     std::vector<double> acc_f;
+    double app = 0; double ret = 0;
 
     switch(mod){
     case 0: // move
@@ -4301,12 +4308,14 @@ void HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
         vel_f = std::vector<double>(tols.vel_approach.size(),0.0);
         acc_0 = tols.acc_approach;
         acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
+        app=1;
         break;
     case 3:// retreat
         vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
         vel_f = tols.bounds.vel_f;
         acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         acc_f = tols.bounds.acc_f;
+        ret=1;
         break;
     }
 
@@ -4323,10 +4332,10 @@ void HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
 
     for (int i = 0; i <= steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-            Vel(i,j) = (30/T)*(finalPosture.at(j) - initPosture.at(j))*
+            Vel(i,j) = (1-app)*(1-ret)*(30/T)*(finalPosture.at(j) - initPosture.at(j))*
                     (pow(tau.at(i),2)-2*pow(tau.at(i),3)+pow(tau.at(i),4))+
-                    vel_0.at(j)*(1-18*pow(tau.at(i),2)+32*pow(tau.at(i),3)-15*pow(tau.at(i),4))+
-                    vel_f.at(j)*(-12*pow(tau.at(i),2)+28*pow(tau.at(i),3)-15*pow(tau.at(i),4))+
+                    (1-app)*vel_0.at(j)*(1-18*pow(tau.at(i),2)+32*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + app*vel_0.at(j)*(1-pow(tau.at(i),4)) +
+                    (1-ret)*vel_f.at(j)*(-12*pow(tau.at(i),2)+28*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + ret*vel_f.at(j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4)) +
                     0.5*acc_0.at(j)*T*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
                     0.5*acc_f.at(j)*T*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
 

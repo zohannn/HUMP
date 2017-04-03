@@ -57,6 +57,9 @@ const double AP = 15.0*static_cast<double>(M_PI)/180; /**< aperture of the finge
 const int N_STEP_MIN = 5; /**< minimum number of steps */
 const int N_STEP_MAX = 50; /**< maximum number of steps */
 
+const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching */
+const double W_RED_MAX = 15; /**< maximum value of angular velocity reduction when approaching */
+
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
     vector<double> d; /**< distances between consecutive frames along the y axes in [mm] */
@@ -114,10 +117,10 @@ typedef struct{
     objectPtr obj; /**< object involved in the movement. The info of the object have to be updated according to the selected movement */
     bool approach;/**< true to use the approach options, false otherwise  */
     bool retreat;/**< true to use the retreat options, false otherwise */
-    std::vector<double> pre_grasp_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
-    std::vector<double> post_grasp_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
-    std::vector<double> pre_place_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
-    std::vector<double> post_place_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance form the target*/
+    std::vector<double> pre_grasp_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance from the target*/
+    std::vector<double> post_grasp_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance from the target*/
+    std::vector<double> pre_place_approach; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance from the target*/
+    std::vector<double> post_place_retreat; /**< (0)= x component, (1)= y component, (2)= z component, (3)= distance from the target*/
     bool rand_init; /**< true to select randon initialization in "plan" stages */
     bool coll; /**< true to enable collisions with the environment (body of the robot included) */
     bool use_move_plane; /**< true to constrain the end-effector to move on a plane in move movements, false otherwise*/

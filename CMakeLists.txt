@@ -5,7 +5,7 @@
 #   File:        CMakeLists.txt
 #
 #   Maintainer:  Gianpaolo Gulletta
-#   Email:       gianpaologulletta@gmail.com; d6468@dei.uminho.pt
+#   Email:       gianpaologulletta@gmail.com;
 #   Date:        2016 01 12
 #
 #   Description: Human-like Upper-limbs Motion Planner (HUMP)
