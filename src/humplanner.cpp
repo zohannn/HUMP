@@ -2532,11 +2532,32 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     switch (mov_type){
     case 0: // pick
         if(pre_post == 0){
+            // do not use approach/retreat options
             PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
             PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }else if(pre_post==1){
+            // use approach options
+            if(pre_grasp_approach.at(2)==0){
+                // z_H is the approach direction
+                PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i] = 0; \n");
+                PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+               // x_H is the approach direction
+               PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*x_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
+        }else if(pre_post==2){
+            // use retreat options
+            if(post_grasp_retreat.at(2)==0){
+                // z_H is the retreat direction
+                PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i] = 0; \n");
+                PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+               // x_H is the retreat direction
+               PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*x_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }else{
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + (dFH+dist)*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            // error
+            //TO DO
         }
         break;
     case 1: // place
@@ -2570,9 +2591,29 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
             if(pre_post==0){
                 // do not use approach/retreat options
                 PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = z_t \n");
+            }else if(pre_post==1){
+                // use approach options
+                if(pre_grasp_approach.at(2)==0){
+                    // z_H is the approach direction
+                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + v_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -v_t \n");
+                }else{
+                    //x_H is the approach direction
+                    //PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = v_t and z_H = -y_t \n");
+                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2)<= ")+taror+string("; #  x_H = v_t \n");
+                }
+            }else if(pre_post==2){
+                // use retreat options
+                if(post_grasp_retreat.at(2)==0){
+                    // z_H is the retreat direction
+                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + v_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -v_t \n");
+                }else{
+                    //x_H is the retreat direction
+                    //PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = v_t and z_H = -y_t \n");
+                    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - v_t[i])^2)<= ")+taror+string("; #  x_H = v_t \n");
+                }
             }else{
-                // use approach/retreat options
-                PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + v_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -v_t \n");
+                // error
+                // TO DO
             }
             break;
         case 1:// place
@@ -3180,10 +3221,16 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      case 111: case 211: // side thumb left
          switch (mov_type) {
          case 0: // pick
-             // hand constraints for approaching and retreating direction settings
-             if(approach && pre_post!=0){
+             // hand constraints for approaching direction settings
+             if(approach && pre_post==1){
                  PostureMod << string("# Hand approach orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
+                 if(pre_grasp_approach.at(2)==0){
+                     //z_H is the approaching direction
+                    PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (z_H[i,k] + v_t[i])^2 )<= 0.010; #  z_H = -v_t  \n\n");
+                 }else{
+                     //x_H is the approaching direction
+                     PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - v_t[i])^2 )<= 0.010; #  x_H = v_t  \n\n");
+                 }
              }
              break;
          case 1: // place
