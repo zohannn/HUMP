@@ -349,8 +349,6 @@ private:
     void setBoundaryConditions(hump_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
 
 
-    //void getDelta(VectorXd& jointTraj, std::vector<double> &delta);
-
     /**
      * @brief directTrajectory
      * @param steps
