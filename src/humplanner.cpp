@@ -3412,14 +3412,15 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
 
+
         // in pick shorts movements (movements with N_STEP_MIN steps) collisions with the target are not considered
-        string n_steps_end_str;
-        if(N_STEP_MIN>1){
-            n_steps_end_str = boost::str(boost::format("%d") % (N_STEP_MIN-1));
+        if(pre_post!=0){
+            PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps+1}:   \n");
         }else{
-            n_steps_end_str = boost::str(boost::format("%d") % 1);
+            int diff_steps = (int) (steps*BLANK_PERCENTAGE);
+            string n_steps_end_str = boost::str(boost::format("%d") % (diff_steps));
+            PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
         }
-        PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
         PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
         PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
         PostureMod << string("(x_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xx2[l])^2) + \n");
@@ -3611,18 +3612,14 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("# \n");
         if(place){
             // the object to place has to be considered
-             PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n");
+             PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
         }else if(move){
             // for the first 5 steps (Number of minimum steps allowed), no obstacle is considered because the movement is very short and the planner may get stuck
-            string n_steps_init_str;
-            if(N_STEP_MIN>=1){
-                n_steps_init_str = boost::str(boost::format("%d") % (N_STEP_MIN));
-            }else{
-                n_steps_init_str = boost::str(boost::format("%d") % 1);
-            }
+            int diff_steps = (int)(steps*BLANK_PERCENTAGE);
+            string n_steps_init_str = boost::str(boost::format("%d") % (diff_steps));
             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1}:\n");
         }else{
-             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n");
+             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n"); // pick movements
         }
         PostureMod << string("((Points_Arm[j,1,l]-Obstacles[i,1])^2)*(\n");
         PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_xx1[l])^2) +\n");

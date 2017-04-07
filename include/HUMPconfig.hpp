@@ -54,8 +54,10 @@ typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in 
 const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce posture is reached */
 const double AP = 30.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick [rad] */
 
+const double BLANK_PERCENTAGE = 0.15; /**< percentage of steps to eliminate when either reaching to grasp an object OR move at the beginning of a move movement [0,1]*/
+
 const int N_STEP_MIN = 5; /**< minimum number of steps */
-const int N_STEP_MAX = 50; /**< maximum number of steps */
+const int N_STEP_MAX = 100; /**< maximum number of steps */
 
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching */
 const double W_RED_MAX = 15; /**< maximum value of angular velocity reduction when approaching */
