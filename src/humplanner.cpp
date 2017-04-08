@@ -3415,11 +3415,11 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
         // in pick shorts movements (movements with N_STEP_MIN steps) collisions with the target are not considered
         if(pre_post!=0){
-            PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps+1}:   \n");
+            PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps+1}:   \n");
         }else{
             int diff_steps = (int) (steps*BLANK_PERCENTAGE);
             string n_steps_end_str = boost::str(boost::format("%d") % (diff_steps));
-            PostureMod << string("subject to target_Arm{j in 1..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
+            PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
         }
         PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
         PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
