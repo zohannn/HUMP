@@ -3615,7 +3615,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
              PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
         }else if(move){
             // for the first 5 steps (Number of minimum steps allowed), no obstacle is considered because the movement is very short and the planner may get stuck
-            int diff_steps = (int)(steps*BLANK_PERCENTAGE);
+            int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE));
             string n_steps_init_str = boost::str(boost::format("%d") % (diff_steps));
             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1}:\n");
         }else{
