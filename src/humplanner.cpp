@@ -4145,7 +4145,8 @@ void HUMPlanner::setBoundaryConditions(hump_params &params, int steps, std::vect
 {
 
     MatrixXd fakeTraj;
-    std::vector<double> acc; std::vector<double> vel;
+    std::vector<double> acc_0; std::vector<double> acc_f;
+    std::vector<double> vel;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
     double timestep = this->getTimeStep(params,fakeTraj);
     double T = timestep*steps;
@@ -4155,27 +4156,34 @@ void HUMPlanner::setBoundaryConditions(hump_params &params, int steps, std::vect
     double num = (final-init).norm();
     double w_red = W_RED_MIN + (W_RED_MAX-W_RED_MIN)*((num/T)/w_max);
 
-    acc = std::vector<double>(finalPosture.size(),0.0);
     for (std::size_t i = 0; i<finalPosture.size(); ++i){
-        double peak =((double)15*(finalPosture.at(i)-initPosture.at(i)))/(8*T*w_red);
-        vel.push_back(peak);
+        //vel
+        double peak_vel =((double)15*(finalPosture.at(i)-initPosture.at(i)))/(8*T*w_red);
+        vel.push_back(peak_vel);
+        //acc_0
+        double peak_acc_0 =((double)-6.6*(finalPosture.at(i)-initPosture.at(i)))/(pow(T,2)*w_red);
+        acc_0.push_back(peak_acc_0);
+        //acc_f
+        double peak_acc_f =((double)5.5*(finalPosture.at(i)-initPosture.at(i)))/(pow(T,2)*w_red);
+        acc_f.push_back(peak_acc_f);
+
     }
 
     switch(mod)
     {
     case 0:// approach
         params.vel_approach.clear(); params.acc_approach.clear();
-        params.acc_approach = acc;
+        params.acc_approach = acc_0;
         params.vel_approach = vel;
         break;
     case 1://retreat
         params.bounds.vel_f.clear(); params.bounds.acc_f.clear();
-        params.bounds.acc_f = acc;
+        params.bounds.acc_f = acc_f;
         params.bounds.vel_f = vel;
         break;
     default: // approach
         params.vel_approach.clear(); params.acc_approach.clear();
-        params.acc_approach = acc;
+        params.acc_approach = acc_0;
         params.vel_approach = vel;
         break;
     }
@@ -4326,8 +4334,8 @@ void HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
                     (pow(tau.at(i),2)-2*pow(tau.at(i),3)+pow(tau.at(i),4))+
                     (1-app)*vel_0.at(j)*(1-18*pow(tau.at(i),2)+32*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + app*vel_0.at(j)*(1-pow(tau.at(i),4)) +
                     (1-ret)*vel_f.at(j)*(-12*pow(tau.at(i),2)+28*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + ret*vel_f.at(j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4)) +
-                    0.5*acc_0.at(j)*T*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
-                    0.5*acc_f.at(j)*T*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
+                    (1-app)*(1-ret)*0.5*acc_0.at(j)*T*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
+                    (1-app)*(1-ret)*0.5*acc_f.at(j)*T*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
 
         }
     }
@@ -4344,6 +4352,7 @@ void HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<dou
     std::vector<double> vel_f;
     std::vector<double> acc_0;
     std::vector<double> acc_f;
+    double app = 0; double ret = 0;
 
     switch(mod){
     case 0: // move
@@ -4363,12 +4372,14 @@ void HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<dou
         vel_f = std::vector<double>(tols.vel_approach.size(),0.0);
         acc_0 = tols.acc_approach;
         acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
+        app=1;
         break;
     case 3:// retreat
         vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
         vel_f = tols.bounds.vel_f;
         acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         acc_f = tols.bounds.acc_f;
+        ret=1;
         break;
     }
 
@@ -4385,12 +4396,12 @@ void HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<dou
 
     for (int i = 0; i <= steps;++i){
         for (std::size_t j = 0; j<initPosture.size(); ++j){
-            Acc(i,j) = (60/pow(T,2))*(finalPosture.at(j) - initPosture.at(j))*
+            Acc(i,j) = (1-app)*(1-ret)*(60/pow(T,2))*(finalPosture.at(j) - initPosture.at(j))*
                     (tau.at(i)-3*pow(tau.at(i),2)+2*pow(tau.at(i),3))+
-                    12*(vel_0.at(j)/T)*(-3*tau.at(i)+8*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
-                    12*(vel_f.at(j)/T)*(-2*tau.at(i)+7*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
-                    acc_0.at(j)*(1-9*tau.at(i)+18*pow(tau.at(i),2)-10*pow(tau.at(i),3))+
-                    acc_f.at(j)*(3*tau.at(i)-12*pow(tau.at(i),2)+10*pow(tau.at(i),3));
+                    (1-app)*(1-ret)*12*(vel_0.at(j)/T)*(-3*tau.at(i)+8*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
+                    (1-app)*(1-ret)*12*(vel_f.at(j)/T)*(-2*tau.at(i)+7*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
+                    (1-app)*acc_0.at(j)*(1-9*tau.at(i)+18*pow(tau.at(i),2)-10*pow(tau.at(i),3))+ app*acc_0.at(j)*(1-pow(tau.at(i),4))+
+                    (1-ret)*acc_f.at(j)*(3*tau.at(i)-12*pow(tau.at(i),2)+10*pow(tau.at(i),3))+ret*acc_f.at(j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4));
 
         }
     }
@@ -4628,6 +4639,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
 
                     // calculate the approach boundary conditions
                     // the velocity approach is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    //
                     this->setBoundaryConditions(params,steps_app,finalPosture_pre_grasp_ext,finalPosture_ext,0);
 
                     if(coll){// collisions
