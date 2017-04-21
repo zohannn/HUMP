@@ -53,13 +53,13 @@ public:
   }
 
   /** Get the value of the integer suffix */
-  const Index* GetIntegerSuffixValues(std::string suffix_string, Suffix_Source source) const;
+  const Ipopt::Index* GetIntegerSuffixValues(std::string suffix_string, Suffix_Source source) const;
   /** Get the value of the number suffix */
   const Number* GetNumberSuffixValues(std::string suffix_string, Suffix_Source source) const;
   /** Get the values of the integer suffix */
-  std::vector<Index> GetIntegerSuffixValues(Index n, std::string suffix_string, Suffix_Source source) const;
+  std::vector<Ipopt::Index> GetIntegerSuffixValues(Ipopt::Index n, std::string suffix_string, Suffix_Source source) const;
   /** Get the value of the number suffix */
-  std::vector<Number> GetNumberSuffixValues(Index n, std::string suffix_string, Suffix_Source source) const;
+  std::vector<Number> GetNumberSuffixValues(Ipopt::Index n, std::string suffix_string, Suffix_Source source) const;
 
 private:
   /**@name Default Compiler Generated Methods
@@ -235,9 +235,9 @@ public:
   }
 
   /** Number of AMPL Options */
-  Index NumberOfAmplOptions()
+  Ipopt::Index NumberOfAmplOptions()
   {
-    return (Index)ampl_options_map_.size();
+    return (Ipopt::Index)ampl_options_map_.size();
   }
 
   /** ASL keywords list for the stored options. */
@@ -287,7 +287,7 @@ private:
   void* keywds_;
 
   /** Number of entries stored in keywds_ */
-  Index nkeywds_;
+  Ipopt::Index nkeywds_;
 
 }; // class AmplOptionsList
 
@@ -324,78 +324,78 @@ public:
     * detailed documentation. */
     //@{
     /** returns dimensions of the nlp. Overloaded from TNLP */
-    virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style);
+    virtual bool get_nlp_info(Ipopt::Index& n, Ipopt::Index& m, Ipopt::Index& nnz_jac_g,
+                              Ipopt::Index& nnz_h_lag, IndexStyleEnum& index_style);
 
     /** returns names and other meta data for the variables and constraints
      *  Overloaded from TNLP */
-    virtual bool get_var_con_metadata(Index n,
+    virtual bool get_var_con_metadata(Ipopt::Index n,
                                       StringMetaDataMapType& var_string_md,
                                       IntegerMetaDataMapType& var_integer_md,
                                       NumericMetaDataMapType& var_numeric_md,
-                                      Index m,
+                                      Ipopt::Index m,
                                       StringMetaDataMapType& con_string_md,
                                       IntegerMetaDataMapType& con_integer_md,
                                       NumericMetaDataMapType& con_numeric_md);
 
     /** returns bounds of the nlp. Overloaded from TNLP */
-    virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
-                                 Index m, Number* g_l, Number* g_u);
+    virtual bool get_bounds_info(Ipopt::Index n, Number* x_l, Number* x_u,
+                                 Ipopt::Index m, Number* g_l, Number* g_u);
 
     /** Returns the constraint linearity.
      * array will be alocated with length n. (default implementation
      *  just return false and does not fill the array). */
-    virtual bool get_constraints_linearity(Index m,
+    virtual bool get_constraints_linearity(Ipopt::Index m,
                                            LinearityType* const_types);
 
     /** provides a starting point for the nlp variables. Overloaded
     from TNLP */
-    virtual bool get_starting_point(Index n, bool init_x, Number* x,
+    virtual bool get_starting_point(Ipopt::Index n, bool init_x, Number* x,
                                     bool init_z, Number* z_L, Number* z_U,
-                                    Index m, bool init_lambda, Number* lambda);
+                                    Ipopt::Index m, bool init_lambda, Number* lambda);
 
     /** evaluates the objective value for the nlp. Overloaded from TNLP */
-    virtual bool eval_f(Index n, const Number* x, bool new_x,
+    virtual bool eval_f(Ipopt::Index n, const Number* x, bool new_x,
                         Number& obj_value);
 
     /** evaluates the gradient of the objective for the
     nlp. Overloaded from TNLP */
-    virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
+    virtual bool eval_grad_f(Ipopt::Index n, const Number* x, bool new_x,
                              Number* grad_f);
 
     /** evaluates the constraint residuals for the nlp. Overloaded from TNLP */
-    virtual bool eval_g(Index n, const Number* x, bool new_x,
-                        Index m, Number* g);
+    virtual bool eval_g(Ipopt::Index n, const Number* x, bool new_x,
+                        Ipopt::Index m, Number* g);
 
     /** specifies the jacobian structure (if values is NULL) and
      *  evaluates the jacobian values (if values is not NULL) for the
      *  nlp. Overloaded from TNLP */
-    virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
-                            Index m, Index nele_jac, Index* iRow,
-                            Index *jCol, Number* values);
+    virtual bool eval_jac_g(Ipopt::Index n, const Number* x, bool new_x,
+                            Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index* iRow,
+                            Ipopt::Index *jCol, Number* values);
 
     /** specifies the structure of the hessian of the lagrangian (if
      *  values is NULL) and evaluates the values (if values is not
      *  NULL). Overloaded from TNLP */
-    virtual bool eval_h(Index n, const Number* x, bool new_x,
-                        Number obj_factor, Index m, const Number* lambda,
-                        bool new_lambda, Index nele_hess, Index* iRow,
-                        Index* jCol, Number* values);
+    virtual bool eval_h(Ipopt::Index n, const Number* x, bool new_x,
+                        Number obj_factor, Ipopt::Index m, const Number* lambda,
+                        bool new_lambda, Ipopt::Index nele_hess, Ipopt::Index* iRow,
+                        Ipopt::Index* jCol, Number* values);
 
     /** retrieve the scaling parameters for the variables, objective
      *  function, and constraints. */
     virtual bool get_scaling_parameters(Number& obj_scaling,
-                                        bool& use_x_scaling, Index n,
+                                        bool& use_x_scaling, Ipopt::Index n,
                                         Number* x_scaling,
-                                        bool& use_g_scaling, Index m,
+                                        bool& use_g_scaling, Ipopt::Index m,
                                         Number* g_scaling);
     //@}
 
     /** @name Solution Methods */
     //@{
     virtual void finalize_solution(SolverReturn status,
-                                   Index n, const Number* x, const Number* z_L, const Number* z_U,
-                                   Index m, const Number* g, const Number* lambda,
+                                   Ipopt::Index n, const Number* x, const Number* z_L, const Number* z_U,
+                                   Ipopt::Index m, const Number* g, const Number* lambda,
                                    Number obj_value,
                                    const IpoptData* ip_data,
                                    IpoptCalculatedQuantities* ip_cq);
@@ -403,9 +403,9 @@ public:
 
     /** @name Method for quasi-Newton approximation information. */
     //@{
-    virtual Index get_number_of_nonlinear_variables();
-    virtual bool get_list_of_nonlinear_variables(Index num_nonlin_vars,
-        Index* pos_nonlin_vars);
+    virtual Ipopt::Index get_number_of_nonlinear_variables();
+    virtual bool get_list_of_nonlinear_variables(Ipopt::Index num_nonlin_vars,
+        Ipopt::Index* pos_nonlin_vars);
     //@}
 
 
@@ -427,14 +427,14 @@ public:
      *  For details, see Tables 3 and 4 in "Hooking Your Solver to
      *  AMPL"
      */
-    void get_discrete_info(Index& nlvb_,
-                           Index& nlvbi_,
-                           Index& nlvc_,
-                           Index& nlvci_,
-                           Index& nlvo_,
-                           Index& nlvoi_,
-                           Index& nbv_,
-                           Index& niv_) const;
+    void get_discrete_info(Ipopt::Index& nlvb_,
+                           Ipopt::Index& nlvbi_,
+                           Ipopt::Index& nlvc_,
+                           Ipopt::Index& nlvci_,
+                           Ipopt::Index& nlvo_,
+                           Ipopt::Index& nlvoi_,
+                           Ipopt::Index& nbv_,
+                           Ipopt::Index& niv_) const;
     //@}
 
     /** A method for setting the index of the objective function to be
@@ -442,7 +442,7 @@ public:
      *  and before anything else is called.  It can only be called
      *  once, and if there is more than one objective function in the
      *  AMPL model, it MUST be called. */
-    void set_active_objective(Index obj_no);
+    void set_active_objective(Ipopt::Index obj_no);
 
     /**@name Methods to set meta data for the variables
      * and constraints. These values will be passed on
@@ -454,7 +454,7 @@ public:
       var_string_md_[tag] = meta_data;
     }
 
-    void set_integer_metadata_for_var(std::string tag, std::vector<Index> meta_data)
+    void set_integer_metadata_for_var(std::string tag, std::vector<Ipopt::Index> meta_data)
     {
       var_integer_md_[tag] = meta_data;
     }
@@ -469,7 +469,7 @@ public:
       con_string_md_[tag] = meta_data;
     }
 
-    void set_integer_metadata_for_con(std::string tag, std::vector<Index> meta_data)
+    void set_integer_metadata_for_con(std::string tag, std::vector<Ipopt::Index> meta_data)
     {
       con_integer_md_[tag] = meta_data;
     }
@@ -526,7 +526,7 @@ private:
 
   /**@name Problem Size Data*/
   //@{
-  Index nz_h_full_; // number of nonzeros in the full_x hessian
+  Ipopt::Index nz_h_full_; // number of nonzeros in the full_x hessian
   /* the rest of the problem size data is available easily through the ampl variables */
   //@}
 
@@ -542,8 +542,8 @@ private:
   //@}
   /** Status returned by the solver */
   SolverReturn status_;
-  Index num_vars; /**< Number of the variables */
-  Index num_cons; /**< Number of the constraints*/
+  Ipopt::Index num_vars; /**< Number of the variables */
+  Ipopt::Index num_cons; /**< Number of the constraints*/
 
   /**@name Flags to track internal state */
   //@{
@@ -574,11 +574,11 @@ private:
   bool internal_objval(const Number* x, Number& obj_val);
 
   /** Make the constraint call to ampl*/
-  bool internal_conval(const Number* x, Index m, Number* g=NULL);
+  bool internal_conval(const Number* x, Ipopt::Index m, Number* g=NULL);
 
   /** Internal function to update the internal and ampl state if the
    *  x value changes */
-  bool apply_new_x(bool new_x, Index n, const Number* x);
+  bool apply_new_x(bool new_x, Ipopt::Index n, const Number* x);
 
 
   /** Method for obtaining the name of the NL file and the options

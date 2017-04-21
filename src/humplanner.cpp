@@ -2594,29 +2594,29 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     if(obstacle_avoidance && coll){
         // obstacles
         //xx
-        string txx1 = boost::str(boost::format("%.2f") % tolsObstacles(0,0)); boost::replace_all(txx1,",",".");
-        string txx2 = boost::str(boost::format("%.2f") % tolsObstacles(1,0)); boost::replace_all(txx2,",",".");
-        string txx3 = boost::str(boost::format("%.2f") % tolsObstacles(2,0)); boost::replace_all(txx3,",",".");
+        string txx1 = boost::str(boost::format("%.2f") % tolsObstacles(0,0)); boost::replace_all(txx1,",","."); if(tolsObstacles(0,0) >= 0){txx1=string("+")+txx1;}
+        string txx2 = boost::str(boost::format("%.2f") % tolsObstacles(1,0)); boost::replace_all(txx2,",","."); if(tolsObstacles(1,0) >= 0){txx2=string("+")+txx2;}
+        string txx3 = boost::str(boost::format("%.2f") % tolsObstacles(2,0)); boost::replace_all(txx3,",","."); if(tolsObstacles(2,0) >= 0){txx3=string("+")+txx3;}
         //yy
-        string tyy1 = boost::str(boost::format("%.2f") % tolsObstacles(0,1)); boost::replace_all(tyy1,",",".");
-        string tyy2 = boost::str(boost::format("%.2f") % tolsObstacles(1,1)); boost::replace_all(tyy2,",",".");
-        string tyy3 = boost::str(boost::format("%.2f") % tolsObstacles(2,1)); boost::replace_all(tyy3,",",".");
+        string tyy1 = boost::str(boost::format("%.2f") % tolsObstacles(0,1)); boost::replace_all(tyy1,",","."); if(tolsObstacles(0,1) >= 0){tyy1=string("+")+tyy1;}
+        string tyy2 = boost::str(boost::format("%.2f") % tolsObstacles(1,1)); boost::replace_all(tyy2,",","."); if(tolsObstacles(1,1) >= 0){tyy2=string("+")+tyy2;}
+        string tyy3 = boost::str(boost::format("%.2f") % tolsObstacles(2,1)); boost::replace_all(tyy3,",","."); if(tolsObstacles(2,1) >= 0){tyy3=string("+")+tyy3;}
         //zz
-        string tzz1 = boost::str(boost::format("%.2f") % tolsObstacles(0,2)); boost::replace_all(tzz1,",",".");
-        string tzz2 = boost::str(boost::format("%.2f") % tolsObstacles(1,2)); boost::replace_all(tzz2,",",".");
-        string tzz3 = boost::str(boost::format("%.2f") % tolsObstacles(2,2)); boost::replace_all(tzz3,",",".");
+        string tzz1 = boost::str(boost::format("%.2f") % tolsObstacles(0,2)); boost::replace_all(tzz1,",","."); if(tolsObstacles(0,2) >= 0){tzz1=string("+")+tzz1;}
+        string tzz2 = boost::str(boost::format("%.2f") % tolsObstacles(1,2)); boost::replace_all(tzz2,",","."); if(tolsObstacles(1,2) >= 0){tzz2=string("+")+tzz2;}
+        string tzz3 = boost::str(boost::format("%.2f") % tolsObstacles(2,2)); boost::replace_all(tzz3,",","."); if(tolsObstacles(2,2) >= 0){tzz3=string("+")+tzz3;}
         //xy
-        string txy1 = boost::str(boost::format("%.2f") % tolsObstacles(0,3)); boost::replace_all(txy1,",",".");
-        string txy2 = boost::str(boost::format("%.2f") % tolsObstacles(1,3)); boost::replace_all(txy2,",",".");
-        string txy3 = boost::str(boost::format("%.2f") % tolsObstacles(2,3)); boost::replace_all(txy3,",",".");
+        string txy1 = boost::str(boost::format("%.2f") % tolsObstacles(0,3)); boost::replace_all(txy1,",","."); if(tolsObstacles(0,3) >= 0){txy1=string("+")+txy1;}
+        string txy2 = boost::str(boost::format("%.2f") % tolsObstacles(1,3)); boost::replace_all(txy2,",","."); if(tolsObstacles(1,3) >= 0){txy2=string("+")+txy2;}
+        string txy3 = boost::str(boost::format("%.2f") % tolsObstacles(2,3)); boost::replace_all(txy3,",","."); if(tolsObstacles(2,3) >= 0){txy3=string("+")+txy3;}
         //xz
-        string txz1 = boost::str(boost::format("%.2f") % tolsObstacles(0,4)); boost::replace_all(txz1,",",".");
-        string txz2 = boost::str(boost::format("%.2f") % tolsObstacles(1,4)); boost::replace_all(txz2,",",".");
-        string txz3 = boost::str(boost::format("%.2f") % tolsObstacles(2,4)); boost::replace_all(txz3,",",".");
+        string txz1 = boost::str(boost::format("%.2f") % tolsObstacles(0,4)); boost::replace_all(txz1,",","."); if(tolsObstacles(0,4) >= 0){txz1=string("+")+txz1;}
+        string txz2 = boost::str(boost::format("%.2f") % tolsObstacles(1,4)); boost::replace_all(txz2,",","."); if(tolsObstacles(1,4) >= 0){txz2=string("+")+txz2;}
+        string txz3 = boost::str(boost::format("%.2f") % tolsObstacles(2,4)); boost::replace_all(txz3,",","."); if(tolsObstacles(2,4) >= 0){txz3=string("+")+txz3;}
         //yz
-        string tyz1 = boost::str(boost::format("%.2f") % tolsObstacles(0,5)); boost::replace_all(tyz1,",",".");
-        string tyz2 = boost::str(boost::format("%.2f") % tolsObstacles(1,5)); boost::replace_all(tyz2,",",".");
-        string tyz3 = boost::str(boost::format("%.2f") % tolsObstacles(2,5)); boost::replace_all(tyz3,",",".");
+        string tyz1 = boost::str(boost::format("%.2f") % tolsObstacles(0,5)); boost::replace_all(tyz1,",","."); if(tolsObstacles(0,5) >= 0){tyz1=string("+")+tyz1;}
+        string tyz2 = boost::str(boost::format("%.2f") % tolsObstacles(1,5)); boost::replace_all(tyz2,",","."); if(tolsObstacles(1,5) >= 0){tyz2=string("+")+tyz2;}
+        string tyz3 = boost::str(boost::format("%.2f") % tolsObstacles(2,5)); boost::replace_all(tyz3,",","."); if(tolsObstacles(2,5) >= 0){tyz3=string("+")+tyz3;}
 
 
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
@@ -2624,34 +2624,34 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         //PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
         PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..n_Obstacles}:  \n");
         PostureMod << string("((Points_Arm[j,1]-Obstacles[i,1])^2)*(  \n");
-        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]+")+txx1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]+")+txx2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4]+")+txx3+string(")^2)) \n");
+        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]")+txx1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]")+txx2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4]")+txx3+string(")^2)) \n");
         PostureMod << string("+ \n");
         PostureMod << string("((Points_Arm[j,2]-Obstacles[i,2])^2)*(  \n");
-        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]+")+tyy1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]+")+tyy2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4]+")+tyy3+string(")^2)) \n");
+        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]")+tyy1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]")+tyy2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4]")+tyy3+string(")^2)) \n");
         PostureMod << string("+ \n");
         PostureMod << string("((Points_Arm[j,3]-Obstacles[i,3])^2)*( \n");
-        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]+")+tzz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]+")+tzz2+string(")^2) +  \n");
-        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4]+")+tzz3+string(")^2)) \n");
+        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]")+tzz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]")+tzz2+string(")^2) +  \n");
+        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm[j,4]")+tzz3+string(")^2)) \n");
         PostureMod << string("+ \n");
         PostureMod << string("2*(Points_Arm[j,1]-Obstacles[i,1])*(Points_Arm[j,2]-Obstacles[i,2])* ( \n");
-        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm[j,4]+")+txy1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm[j,4]+")+txy2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm[j,4]+")+txy3+string(")^2)) \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm[j,4]")+txy1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm[j,4]")+txy2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm[j,4]")+txy3+string(")^2)) \n");
         PostureMod << string("+ \n");
         PostureMod << string("2*(Points_Arm[j,1]-Obstacles[i,1])*(Points_Arm[j,3]-Obstacles[i,3])* ( \n");
-        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm[j,4]+")+txz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm[j,4]+")+txz2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm[j,4]+")+txz3+string(")^2)) \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm[j,4]")+txz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm[j,4]")+txz2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm[j,4]")+txz3+string(")^2)) \n");
         PostureMod << string("+ \n");
         PostureMod << string("2*(Points_Arm[j,2]-Obstacles[i,2])*(Points_Arm[j,3]-Obstacles[i,3])* ( \n");
-        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm[j,4]+")+tyz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm[j,4]+")+tyz2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm[j,4]+")+tyz3+string(")^2)) \n");
+        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm[j,4]")+tyz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm[j,4]")+tyz2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm[j,4]")+tyz3+string(")^2)) \n");
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
