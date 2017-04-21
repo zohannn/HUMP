@@ -268,10 +268,46 @@ public:
     void setShpos(std::vector<double>& shPos);
 
     /**
+     * @brief setElpos
+     * @param elPos
+     */
+    void setElpos(std::vector<double>& elPos);
+
+    /**
+     * @brief setWrpos
+     * @param wrPos
+     */
+    void setWrpos(std::vector<double>& wrPos);
+
+    /**
+     * @brief setHapos
+     * @param haPos
+     */
+    void setHapos(std::vector<double>& haPos);
+
+    /**
      * @brief getShpos
      * @param shPos
      */
     void getShpos(std::vector<double>& shPos);
+
+    /**
+     * @brief getElpos
+     * @param elPos
+     */
+    void getElpos(std::vector<double>& elPos);
+
+    /**
+     * @brief getWrpos
+     * @param wrPos
+     */
+    void getWrpos(std::vector<double>& wrPos);
+
+    /**
+     * @brief getHapos
+     * @param haPos
+     */
+    void getHapos(std::vector<double>& haPos);
 
     /**
      * @brief plan_pick
@@ -316,6 +352,9 @@ private:
     vector<objectPtr> obstacles; /**< obstacles in the scenario */
     // humanoid info
     std::vector<double> shPos; /**< position of the shoulder of the humanoid: shPos(0)=x, shPos(1)=y, shPos(2)=z */
+    std::vector<double> elPos; /**< position of the elbow of the humanoid: elPos(0)=x, elPos(1)=y, elPos(2)=z */
+    std::vector<double> wrPos; /**< position of the wrist of the humanoid: wrPos(0)=x, wrPos(1)=y, wrPos(2)=z */
+    std::vector<double> haPos; /**< position of the hand of the humanoid: haPos(0)=x, haPos(1)=y, haPos(2)=z */
     Matrix4d matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
     Matrix4d matRightHand;/**< trabsformation matrix from the last joint of the right arm and the palm of the right hand (positions are in [mm]) */
     std::vector<double> minRightLimits; /**< minimum right limits */
@@ -848,6 +887,23 @@ private:
      * @return
      */
     int getSteps(std::vector<double>& maxLimits,std::vector<double>& minLimits,std::vector<double>& initPosture,std::vector<double>& finalPosture);
+
+    /**
+     * @brief getAlpha
+     * @param posture
+     * @param params
+     * @return
+     */
+    double getAlpha(std::vector<double>& posture,hump_params& params);
+
+    /**
+     * @brief invKinematics
+     * @param pose
+     * @param alpha
+     * @param posture
+     * @return
+     */
+    int invKinematics(std::vector<double>& pose,double alpha,std::vector<double>& posture);
 
 
 

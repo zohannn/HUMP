@@ -319,11 +319,40 @@ void HUMPlanner::setShpos(std::vector<double> &shPos)
     this->shPos = shPos;
 }
 
+void HUMPlanner::setElpos(std::vector<double> &elPos)
+{
+    this->elPos = elPos;
+}
+
+void HUMPlanner::setWrpos(std::vector<double> &wrPos)
+{
+    this->wrPos = wrPos;
+}
+
+void HUMPlanner::setHapos(std::vector<double> &haPos)
+{
+    this->haPos = haPos;
+}
+
 void HUMPlanner::getShpos(std::vector<double> &shPos)
 {
     shPos = this->shPos;
 }
 
+void HUMPlanner::getElpos(std::vector<double> &elPos)
+{
+    elPos = this->elPos;
+}
+
+void HUMPlanner::getWrpos(std::vector<double> &wrPos)
+{
+    wrPos = this->wrPos;
+}
+
+void HUMPlanner::getHapos(std::vector<double> &haPos)
+{
+    haPos = this->haPos;
+}
 
 void HUMPlanner::writeBodyDim(double h_xsize,double h_ysize, ofstream &stream)
 {
@@ -5210,6 +5239,34 @@ int HUMPlanner::getSteps(std::vector<double> &maxLimits, std::vector<double> &mi
 
     return n_steps;
 
+}
+
+
+double HUMPlanner::getAlpha(std::vector<double> &posture, hump_params& params)
+{
+   double alpha;
+   int arm_code = params.mov_specs.arm_code;
+   double Lu; double Ll; double Lh;
+   switch(arm_code){
+   case 0: // dual arm
+       //TO DO
+       break;
+   case 1: // right arm
+       Lu = this->DH_rightArm.d.at(2);
+       Ll = this->DH_rightArm.d.at(4);
+       //Lh = this->DH_rightArm.d.at(6);
+       break;
+   case 2: // left arm
+       Lu = this->DH_leftArm.d.at(2);
+       Ll = this->DH_leftArm.d.at(4);
+       Lh = this->DH_leftArm.d.at(6);
+       break;
+   }
+
+
+    // TO DO
+
+   return alpha;
 }
 
 } // namespace HUMotion
