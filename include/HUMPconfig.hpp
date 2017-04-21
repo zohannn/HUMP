@@ -60,7 +60,7 @@ const int N_STEP_MIN = 5; /**< minimum number of steps */
 const int N_STEP_MAX = 50; /**< maximum number of steps */
 
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching */
-const double W_RED_MAX = 20; /**< maximum value of angular velocity reduction when approaching */
+const double W_RED_MAX = 15; /**< maximum value of angular velocity reduction when approaching */
 
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
