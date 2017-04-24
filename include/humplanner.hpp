@@ -265,49 +265,61 @@ public:
      * @brief setShpos
      * @param shPos
      */
-    void setShpos(std::vector<double>& shPos);
+    //void setShpos(std::vector<double>& shPos);
 
     /**
      * @brief setElpos
      * @param elPos
      */
-    void setElpos(std::vector<double>& elPos);
+    //void setElpos(std::vector<double>& elPos);
 
     /**
      * @brief setWrpos
      * @param wrPos
      */
-    void setWrpos(std::vector<double>& wrPos);
+    //void setWrpos(std::vector<double>& wrPos);
 
     /**
      * @brief setHapos
      * @param haPos
      */
-    void setHapos(std::vector<double>& haPos);
+   // void setHapos(std::vector<double>& haPos);
+
+    /**
+     * @brief setHaor
+     * @param haOr
+     */
+    //void setHaor(std::vector<double>& haOr);
 
     /**
      * @brief getShpos
      * @param shPos
      */
-    void getShpos(std::vector<double>& shPos);
+    //void getShpos(std::vector<double>& shPos);
 
     /**
      * @brief getElpos
      * @param elPos
      */
-    void getElpos(std::vector<double>& elPos);
+    //void getElpos(std::vector<double>& elPos);
 
     /**
      * @brief getWrpos
      * @param wrPos
      */
-    void getWrpos(std::vector<double>& wrPos);
+   // void getWrpos(std::vector<double>& wrPos);
 
     /**
      * @brief getHapos
      * @param haPos
      */
-    void getHapos(std::vector<double>& haPos);
+    //void getHapos(std::vector<double>& haPos);
+
+    /**
+     * @brief getHaor
+     * @param haOr
+     */
+    //void getHaor(std::vector<double>& haOr);
 
     /**
      * @brief plan_pick
@@ -351,10 +363,10 @@ private:
     // scenario info
     vector<objectPtr> obstacles; /**< obstacles in the scenario */
     // humanoid info
-    std::vector<double> shPos; /**< position of the shoulder of the humanoid: shPos(0)=x, shPos(1)=y, shPos(2)=z */
-    std::vector<double> elPos; /**< position of the elbow of the humanoid: elPos(0)=x, elPos(1)=y, elPos(2)=z */
-    std::vector<double> wrPos; /**< position of the wrist of the humanoid: wrPos(0)=x, wrPos(1)=y, wrPos(2)=z */
-    std::vector<double> haPos; /**< position of the hand of the humanoid: haPos(0)=x, haPos(1)=y, haPos(2)=z */
+    std::vector<double> shPose; /**< pose of the shoulder of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw */
+    std::vector<double> elPose; /**< pose of the elbow of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
+    std::vector<double> wrPose; /**< pose of the wrist of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
+    std::vector<double> haPose; /**< pose of the hand of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
     Matrix4d matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
     Matrix4d matRightHand;/**< trabsformation matrix from the last joint of the right arm and the palm of the right hand (positions are in [mm]) */
     std::vector<double> minRightLimits; /**< minimum right limits */
@@ -386,7 +398,6 @@ private:
      * @param mod
      */
     void setBoundaryConditions(hump_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
-
 
     /**
      * @brief directTrajectory
@@ -890,21 +901,132 @@ private:
 
     /**
      * @brief getAlpha
+     * @param arm
      * @param posture
-     * @param params
      * @return
      */
-    double getAlpha(std::vector<double>& posture,hump_params& params);
+    double getAlpha(int arm, std::vector<double> &posture);
 
     /**
      * @brief invKinematics
+     * @param arm
      * @param pose
      * @param alpha
+     * @param init_posture
      * @param posture
      * @return
      */
-    int invKinematics(std::vector<double>& pose,double alpha,std::vector<double>& posture);
+    int invKinematics(int arm, std::vector<double>& pose, double alpha, std::vector<double> &init_posture, std::vector<double>& posture);
 
+    /**
+     * @brief RotMatrix
+     * @param theta
+     * @param alpha
+     * @param Rot
+     */
+    void RotMatrix(double theta, double alpha, Matrix3d& Rot);
+
+    /**
+     * @brief transfMatrix
+     * @param alpha
+     * @param a
+     * @param d
+     * @param theta
+     * @param T
+     */
+    void transfMatrix(double alpha, double a, double d, double theta, Matrix4d &T);
+
+    /**
+     * @brief getRPY
+     * @param rpy
+     * @param Rot
+     * @return
+     */
+    bool getRPY(std::vector<double>& rpy, Matrix3d& Rot);
+
+    /**
+     * @brief directKinematicsSingleArm
+     * @param arm
+     * @param posture
+     */
+    void directKinematicsSingleArm(int arm, std::vector<double>& posture);
+
+
+    /**
+     * @brief getShoulderPos
+     * @param arm
+     * @param posture
+     * @param pos
+     */
+    void getShoulderPos(int arm,vector<double> &posture,vector<double> &pos);
+
+    /**
+     * @brief getShoulderOr
+     * @param arm
+     * @param posture
+     * @param orient
+     */
+    void getShoulderOr(int arm, vector<double> &posture,vector<double> &orient);
+
+
+    /**
+     * @brief getElbowPos
+     * @param arm
+     * @param posture
+     * @param pos
+     */
+    void getElbowPos(int arm,vector<double> &posture,vector<double> &pos);
+
+
+    /**
+     * @brief getElbowOr
+     * @param arm
+     * @param posture
+     * @param orient
+     */
+    void getElbowOr(int arm, vector<double> &posture,vector<double> &orient);
+
+    /**
+     * @brief getWristPos
+     * @param arm
+     * @param posture
+     * @param pos
+     */
+    void getWristPos(int arm,vector<double> &posture,vector<double> &pos);
+
+    /**
+     * @brief getWristOr
+     * @param arm
+     * @param posture
+     * @param orient
+     */
+    void getWristOr(int arm, vector<double> &posture,vector<double> &orient);
+
+    /**
+     * @brief getHandPos
+     * @param arm
+     * @param posture
+     * @param pos
+     */
+    void getHandPos(int arm,vector<double> &posture,vector<double> &pos);
+
+    /**
+     * @brief getHandOr
+     * @param arm
+     * @param posture
+     * @param orient
+     */
+    void getHandOr(int arm, vector<double> &posture,vector<double> &orient);
+
+    /**
+     * @brief singleArmInvKinematics
+     * @param params
+     * @param hand_pose
+     * @param init_posture
+     * @param goal_posture
+     * @return
+     */
+    bool singleArmInvKinematics(hump_params& params,std::vector<double> &init_posture,std::vector<double>& hand_pose,std::vector<double>& goal_posture);
 
 
 
