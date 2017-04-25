@@ -314,48 +314,6 @@ HumanHand HUMPlanner::getHumanHand()
     return this->hhand;
 }
 
-/*
-void HUMPlanner::setShpos(std::vector<double> &shPos)
-{
-    this->shPos = shPos;
-}
-
-void HUMPlanner::setElpos(std::vector<double> &elPos)
-{
-    this->elPos = elPos;
-}
-
-void HUMPlanner::setWrpos(std::vector<double> &wrPos)
-{
-    this->wrPos = wrPos;
-}
-
-void HUMPlanner::setHapos(std::vector<double> &haPos)
-{
-    this->haPos = haPos;
-}
-
-void HUMPlanner::getShpos(std::vector<double> &shPos)
-{
-    shPos = this->shPos;
-}
-
-void HUMPlanner::getElpos(std::vector<double> &elPos)
-{
-    elPos = this->elPos;
-}
-
-void HUMPlanner::getWrpos(std::vector<double> &wrPos)
-{
-    wrPos = this->wrPos;
-}
-
-void HUMPlanner::getHapos(std::vector<double> &haPos)
-{
-    haPos = this->haPos;
-}
-
-*/
 void HUMPlanner::writeBodyDim(double h_xsize,double h_ysize, ofstream &stream)
 {
 
@@ -4277,7 +4235,34 @@ void HUMPlanner::directTrajectory(int steps,hump_params &tols, std::vector<doubl
     Traj = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
     if((app==1 || ret==1) && straight_line){
+        int arm = tols.mov_specs.arm_code;
+        std::vector<double> init_hand_pos; this->getHandPos(arm,initPosture,init_hand_pos);
+        std::vector<double> init_hand_or; this->getHandOr(arm,initPosture,init_hand_or);
+        std::vector<double> hand_pose = {init_hand_pos.at(0),init_hand_pos.at(1),init_hand_pos.at(2),init_hand_or.at(0),init_hand_or.at(1),init_hand_or.at(2)};
+        std::vector<double> final_hand_pos; this->getHandPos(arm,finalPosture,final_hand_pos);
+        double delta_x = (final_hand_pos.at(0)-init_hand_pos.at(0))/steps;
+        double delta_y = (final_hand_pos.at(1)-init_hand_pos.at(1))/steps;
+        double delta_z = (final_hand_pos.at(2)-init_hand_pos.at(2))/steps;
 
+        std::vector<double> new_posture;
+        for (int i = 0; i <= steps;++i){
+            this->singleArmInvKinematics(tols,initPosture,hand_pose,new_posture);
+            for (std::size_t j = 0; j<initPosture.size(); ++j){
+                if(i==0){
+                    Traj(i,j) = initPosture.at(j);
+                }else{
+                    if(j<7){//arm
+                        Traj(i,j) = new_posture.at(j);
+                    }else{//fingers
+                        Traj(i,j) = app*0.25*(finalPosture.at(j) - initPosture.at(j))*(5*tau.at(i)-pow(tau.at(i),5))+
+                                    ret*0.33*(finalPosture.at(j) - initPosture.at(j))*(5*pow(tau.at(i),4)-2*pow(tau.at(i),5));
+                    }
+                }
+            }
+            hand_pose.at(0) = hand_pose.at(0) + delta_x;
+            hand_pose.at(1) = hand_pose.at(1) + delta_y;
+            hand_pose.at(2) = hand_pose.at(2) + delta_z;
+        }
     }else{
         for (int i = 0; i <= steps;++i){
             for (std::size_t j = 0; j<initPosture.size(); ++j){
@@ -4809,8 +4794,19 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
         }
         if(coll){ // collisions
             if(retreat && FPosture && BPosture){// retreat stage
-                pre_post=2;
-                FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                if(straight_line){
+                    std::vector<double> hand_pose;
+                    // position (the position of the target)
+                    std::vector<double> tar = params.mov_specs.target;
+                    hand_pose.push_back(tar.at(0)); hand_pose.push_back(tar.at(1)); hand_pose.push_back(tar.at(2));
+                    // orientation (the same orientation of the initial posture)
+                    int arm = params.mov_specs.arm_code; std::vector<double> hand_or; this->getHandOr(arm,finalPosture_pre_grasp,hand_or);
+                    hand_pose.push_back(hand_or.at(0)); hand_pose.push_back(hand_or.at(1)); hand_pose.push_back(hand_or.at(2));
+                    FPosture_post_grasp = this->singleArmInvKinematics(params,finalPosture,hand_pose,finalPosture_post_grasp);
+                }else{
+                    pre_post=2;
+                    FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                }
                 if (FPosture_post_grasp){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
@@ -5264,29 +5260,31 @@ int HUMPlanner::getSteps(std::vector<double> &maxLimits, std::vector<double> &mi
 
 
 double HUMPlanner::getAlpha(int arm,std::vector<double>& posture)
-{
+{    
    double alpha;
    std::vector<double> shPos; this->getShoulderPos(arm,posture,shPos); Vector3d shoulder(shPos.data());
    std::vector<double> elPos; this->getElbowPos(arm,posture,elPos); Vector3d elbow(elPos.data());
    std::vector<double> wrPos; this->getWristPos(arm,posture,wrPos); Vector3d wrist(wrPos.data());
+   std::vector<double> haPos; this->getHandPos(arm,posture,haPos); Vector3d hand(haPos.data());
 
-   double L2 = (shoulder-elbow).norm();
-   Vector3d v2 = (shoulder-elbow)/L2;
-   Vector3d d = (shoulder-wrist)/(shoulder-wrist).norm();
-   Vector3d u; u << d(2), -d(1), 0; u = u/u.norm(); //u _|_ d
-   Vector3d v = u.cross(d);
-   Vector3d C = shoulder + L2*(d.dot(v2.transpose()))*d;
-   Vector3d k = elbow - C;
+   double Lu = (elbow-shoulder).norm();
+   Vector3d v_se = (elbow-shoulder)/Lu;
+   Vector3d v_sw = (wrist-shoulder)/((wrist-shoulder).norm());
+   Vector3d u(v_sw(1), -v_sw(0), 0); u = u/u.norm(); //u _|_ v_sw
+   Vector3d v = u.cross(v_sw);
+   Vector3d C = shoulder + Lu*(v_sw.dot(v_se))*v_sw;
+   Vector3d v_ce = (elbow-C)/((elbow-C).norm());
 
-   if(k.norm()<0.001){ // [mm]
+   if((elbow-C).norm()<0.001){ // [mm]
        // When the arm is completely stretched, the triangle SEW does not exsist.
        // Then, I consider as alpha the angle that the arm creates with the floor
        // floor_v = [1 -1 0]; floor_v = floor_v/ norm(floor_v);
        // alph = sign(d(3))*acos(d*floor_v');
-       Vector3d floor_v_prep(0,0,1);
-       alpha = std::asin(d.dot(floor_v_prep.transpose())); // it is negative if the arm is stretched down
+       //Vector3d floor_v_prep(0,0,1);
+       //alpha = std::asin(d.dot(floor_v_prep.transpose())); // it is negative if the arm is stretched down
+       alpha = 0;
    }else{
-      alpha=std::atan2(k.dot(v.transpose()),k.dot(u.transpose()));
+      alpha=std::atan2(v_ce.dot(v),v_ce.dot(u));
    }
 
    return alpha;
@@ -5294,8 +5292,8 @@ double HUMPlanner::getAlpha(int arm,std::vector<double>& posture)
 
 int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, std::vector<double> &init_posture, std::vector<double> &posture)
 {
-    MatrixXd solutions;
-    VectorXd solution_1; VectorXd solution_2; VectorXd solution_3; VectorXd solution_4;
+    MatrixXd solutions(7,4);
+    VectorXd solution_1(7); VectorXd solution_2(7); VectorXd solution_3(7); VectorXd solution_4(7);
     double Lu; double Ll; double Lh;
     double alpha_0; double alpha_1; double alpha_2; double alpha_3;
     std::vector<double> minLimits; std::vector<double> maxLimits;
@@ -5346,59 +5344,62 @@ int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, 
     if((theta_3 > maxLimits.at(3))||(theta_3 < minLimits.at(3))){
         return -2;
     }
-    // elbow position
-    double nd = (pos_shoulder-pos_wrist).norm();
-    Vector3d d = (pos_shoulder-pos_wrist)/nd;
-    Vector3d u; u << d(2), -d(1), 0; u = u/u.norm(); //u _|_ d
-    Vector3d v = u.cross(d); v = v/v.norm();
-    double aux = (pow(nd,2)+pow(Lu,2)-pow(Ll,2))/(2*nd*Lu);
-    Vector3d C = pos_shoulder + aux*Lu*d;
-    double R = sqrt((1-pow(aux,2))*Lu);
-    Vector3d pos_elbow = C + R*(u*cos(alpha)+v*sin(alpha));
-    Vector3d el = (pos_wrist-pos_elbow)/(pos_wrist-pos_elbow).norm();
+    // elbow position and orientation
+    double L_sw = (pos_wrist-pos_shoulder).norm();
+    Vector3d v_sw = (pos_wrist-pos_shoulder)/L_sw;
+    Vector3d u(v_sw(1), -v_sw(0), 0); u = u/u.norm(); //u _|_ v_sw
+    Vector3d v = u.cross(v_sw);
+    double cos_beta = (pow(L_sw,2)+pow(Lu,2)-pow(Ll,2))/(2*L_sw*Lu);
+    Vector3d C = pos_shoulder + cos_beta*Lu*v_sw;
+    double R = Lu*sqrt(1-pow(cos_beta,2));
+    Vector3d pos_elbow = C + R*(u*std::cos(alpha)+v*std::sin(alpha));
+    Vector3d v_ew = (pos_wrist - pos_elbow)/(pos_wrist - pos_elbow).norm();
+    Vector3d v_ce = (pos_elbow - C)/(pos_elbow - C).norm();
 
-    Vector3d k = pos_elbow - C;
     Vector3d x_el; Vector3d y_el; Vector3d z_el;
-    if(k.norm()<0.001){
+    if((pos_elbow - C).norm()<0.001){
         z_el << 0, 0, -1;
     }else{
-        z_el = d.cross(k);
+        z_el = v_sw.cross(v_ce);
     }
-    z_el = z_el/z_el.norm();
-    y_el = el; x_el = y_el.cross(z_el);
-    Matrix3d Rot_el; Rot_el << x_el, y_el, z_el;
-    Matrix3d Rot_2_3; this->RotMatrix(theta_3,alpha_3,Rot_2_3);
-    Matrix3d Rot_W_2 = Rot_el*(Rot_2_3.inverse());
+    y_el = v_ew;
+    x_el = y_el.cross(z_el);
+    Matrix3d Rot_el;
+    Rot_el.block<3,1>(0,0) = x_el; Rot_el.block<3,1>(0,1) =y_el; Rot_el.block<3,1>(0,2) = z_el;
 
     // compute theta0 theta1 theta2
+    Matrix3d Rot_2_3; this->RotMatrix(theta_3,alpha_3,Rot_2_3);
+    Matrix3d Rot_W_2 = Rot_el*(Rot_2_3.transpose());
+
     double theta_0; double theta_1; double theta_2;
     theta_1 = std::atan2(sqrt(1-pow(Rot_W_2(1,2),2)),-Rot_W_2(1,2));
     if(abs(theta_1)<0.001){ // theta_1 = 0
         theta_0=0;
-        if(abs(theta_3)<0.001){
-            theta_2=0;
-        }else{
-            theta_2=std::atan2(Rot_W_2(2,0),Rot_W_2(2,1));
-        }
+        //if(abs(theta_3)<0.001){
+          //  theta_2=0;
+        //}else{
+        theta_2=std::atan2(Rot_W_2(2,0),Rot_W_2(2,1));
+        //}
+
         Matrix3d Rot_W_0; this->RotMatrix(theta_0,alpha_0,Rot_W_0);
         Matrix3d Rot_0_1; this->RotMatrix(theta_1,alpha_1,Rot_0_1);
         Matrix3d Rot_1_2; this->RotMatrix(theta_2,alpha_2,Rot_1_2);
-        Matrix3d Rot_W_3; Rot_W_3 = Rot_W_0*Rot_0_1*Rot_1_2*Rot_2_3;
+        Matrix3d Rot_W_3 = Rot_W_0*Rot_0_1*Rot_1_2*Rot_2_3;
         // compute theta4 theta5 theta6
         double theta_4; double theta_5; double theta_6;
-        Matrix3d Rot_3_6 = Rot_hand*(Rot_W_3.inverse());
+        Matrix3d Rot_3_6 = (Rot_W_3.transpose())*Rot_hand;
         // 1st solution
-        theta_5 = -std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
+        theta_5 = std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
         if(abs(theta_5)<0.001){
             theta_4 = 0;
             theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
 
-            if(abs(theta_6)>M_PI/2){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            //if(abs(theta_6)>M_PI/2){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),Rot_3_6(0,2)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
             theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_1 << theta_0,theta_1,theta_2,theta_3,theta_4,theta_5,theta_6;
@@ -5407,13 +5408,13 @@ int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, 
         if (abs(theta_5) < 0.001){
             theta_4 = 0;
             theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
-            if (abs(theta_6) > M_PI/2){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            //if (abs(theta_6) > M_PI/2){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 =  std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 =  std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_2 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
     }else{ // theta_1 != 0
@@ -5425,33 +5426,33 @@ int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, 
         Matrix3d Rot_W_3; Rot_W_3 = Rot_W_0*Rot_0_1*Rot_1_2*Rot_2_3;
         // compute theta4 theta5 theta6
         double theta_4; double theta_5; double theta_6;
-        Matrix3d Rot_3_6 = Rot_hand*(Rot_W_3.inverse());
+        Matrix3d Rot_3_6 = (Rot_W_3.transpose())*Rot_hand;
         // 1st solution
-        theta_5 = - std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
+        theta_5 = std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
         if (abs(theta_5) < 0.001){
             theta_4 = 0;
-            theta_6 = std::atan2(-Rot_3_6(2,0),Rot_3_6(0,0));
-            if (abs(theta_6) >M_PI/2){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
+            //if (abs(theta_6) >M_PI/2){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 =  std::atan2( Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 =  std::atan2(-Rot_3_6(1,1)/sin(theta_5), Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_1 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
         // 2nd solution
         theta_5 =  -theta_5;
         if (abs(theta_5) < 0.001){
             theta_4 = 0;
-            theta_6 = std::atan2(-Rot_3_6(2,0),Rot_3_6(0,0));
-            if (abs(theta_6) >M_PI/2){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
+            //if (abs(theta_6) >M_PI/2){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 =  std::atan2( Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 =  std::atan2(-Rot_3_6(1,1)/sin(theta_5), Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_2 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
     }// theta_1
@@ -5459,44 +5460,44 @@ int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, 
     theta_1 = -theta_1;
     if(abs(theta_1)<0.001){ // theta_1 =0
         theta_0 = 0;
-        if(abs(theta_3)<0.001){
-            theta_2 = 0;
-        }else{
-            theta_2 = std::atan2(Rot_W_2(2,0),Rot_W_2(2,1));
-        }
+        //if(abs(theta_3)<0.001){
+           // theta_2 = 0;
+        //}else{
+        theta_2 = std::atan2(Rot_W_2(2,0),Rot_W_2(2,1));
+        //}
         Matrix3d Rot_W_0; this->RotMatrix(theta_0,alpha_0,Rot_W_0);
         Matrix3d Rot_0_1; this->RotMatrix(theta_1,alpha_1,Rot_0_1);
         Matrix3d Rot_1_2; this->RotMatrix(theta_2,alpha_2,Rot_1_2);
         Matrix3d Rot_W_3; Rot_W_3 = Rot_W_0*Rot_0_1*Rot_1_2*Rot_2_3;
         // compute theta4 theta5 theta6
         double theta_4; double theta_5; double theta_6;
-        Matrix3d Rot_3_6 = Rot_hand*(Rot_W_3.inverse());
+        Matrix3d Rot_3_6 = (Rot_W_3.transpose())*Rot_hand;
         // 3rd solution
-        theta_5 = -std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
+        theta_5 = std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
         if(abs(theta_5)<0.001){
             theta_4 = 0;
-            theta_6 = std::atan2(-Rot_3_6(2,0),Rot_3_6(0,0));
-            if(abs(theta_6)>abs(M_PI/2)){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
+            //if(abs(theta_6)>abs(M_PI/2)){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 = std::atan2( Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5), Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_3 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
         // 4th solution
         theta_5 = -theta_5;
         if(abs(theta_5)<0.001){
             theta_4 = 0;
-            theta_6 = std::atan2(-Rot_3_6(2,0),Rot_3_6(0,0));
-            if(abs(theta_6)>abs(M_PI/2)){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
+            //if(abs(theta_6)>abs(M_PI/2)){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 = std::atan2( Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5), Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_4 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
     }else{// theta_1 !=0
@@ -5508,39 +5509,42 @@ int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, 
         Matrix3d Rot_W_3; Rot_W_3 = Rot_W_0*Rot_0_1*Rot_1_2*Rot_2_3;
         // compute theta4 theta5 theta6
         double theta_4; double theta_5; double theta_6;
-        Matrix3d Rot_3_6 = Rot_hand*(Rot_W_3.inverse());
+        Matrix3d Rot_3_6 = (Rot_W_3.transpose())*Rot_hand;
         // 3rd solution
-        theta_5 = -std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
+        theta_5 = std::atan2(sqrt(1-pow(Rot_3_6(1,2),2)),Rot_3_6(1,2));
         if(abs(theta_5)<0.001){
             theta_4 = 0;
-            theta_6 = std::atan2(-Rot_3_6(2,0),Rot_3_6(0,0));
-            if(abs(theta_6)>abs(M_PI/2)){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            theta_6 = std::atan2(Rot_3_6(0,1),Rot_3_6(2,1));
+            //if(abs(theta_6)>abs(M_PI/2)){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 = std::atan2( Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5), Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_3 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
         // 4th solution
         theta_5 = -theta_5;
         if(abs(theta_5)<0.001){
             theta_4 = 0;
-            theta_6 = std::atan2(-Rot_3_6(2,0),Rot_3_6(0,0));
-            if(abs(theta_6)>abs(M_PI/2)){
-                theta_4 = theta_6/2;
-                theta_6 = theta_4;
-            }
+            theta_6 = std::atan2(Rot_3_6(1,1),Rot_3_6(1,0));
+            //if(abs(theta_6)>abs(M_PI/2)){
+            //    theta_4 = theta_6/2;
+            //    theta_6 = theta_4;
+            //}
         }else{
-            theta_4 = std::atan2( Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
-            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5), Rot_3_6(1,0)/sin(theta_5));
+            theta_4 = std::atan2(Rot_3_6(2,2)/sin(theta_5),-Rot_3_6(0,2)/sin(theta_5));
+            theta_6 = std::atan2(-Rot_3_6(1,1)/sin(theta_5),Rot_3_6(1,0)/sin(theta_5));
         }
         solution_4 << theta_0, theta_1, theta_2, theta_3, theta_4, theta_5, theta_6;
     }// theta_1
 
     // check the solutions
-    solutions << solution_1, solution_2, solution_3, solution_4;
+    solutions.block<7,1>(0,0) = solution_1;
+    solutions.block<7,1>(0,1) = solution_2;
+    solutions.block<7,1>(0,2) = solution_3;
+    solutions.block<7,1>(0,3) = solution_4;
     std::vector<double> costs;
     for(int i=0; i < solutions.cols();++i){
         VectorXd sol = solutions.block<7,1>(0,i);
@@ -5632,6 +5636,7 @@ void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture
     Matrix4d mat_world;
     Matrix4d mat_hand;
     DHparameters m_DH_arm;
+    this->shPose.clear(); this->elPose.clear(); this->wrPose.clear(); this->haPose.clear();
 
     vector<double> shoulderPos = vector<double>(3);
     Matrix3d shoulderOr;

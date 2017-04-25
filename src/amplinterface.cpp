@@ -1584,7 +1584,7 @@
   }
 
   std::vector<Index>
-  AmplSuffixHandler::GetIntegerSuffixValues(Index n, std::string suffix_string,
+  AmplSuffixHandler::GetIntegerSuffixValues(Ipopt::Index n, std::string suffix_string,
       Suffix_Source source) const
   {
     std::vector<Index> ret;
@@ -1627,7 +1627,7 @@
   }
 
   std::vector<Number>
-  AmplSuffixHandler::GetNumberSuffixValues(Index n, std::string suffix_string,
+  AmplSuffixHandler::GetNumberSuffixValues(Ipopt::Index n, std::string suffix_string,
       Suffix_Source source) const
   {
     std::vector<Number> ret;

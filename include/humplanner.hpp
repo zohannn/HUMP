@@ -261,65 +261,6 @@ public:
      */
     HumanHand getHumanHand();
 
-    /**
-     * @brief setShpos
-     * @param shPos
-     */
-    //void setShpos(std::vector<double>& shPos);
-
-    /**
-     * @brief setElpos
-     * @param elPos
-     */
-    //void setElpos(std::vector<double>& elPos);
-
-    /**
-     * @brief setWrpos
-     * @param wrPos
-     */
-    //void setWrpos(std::vector<double>& wrPos);
-
-    /**
-     * @brief setHapos
-     * @param haPos
-     */
-   // void setHapos(std::vector<double>& haPos);
-
-    /**
-     * @brief setHaor
-     * @param haOr
-     */
-    //void setHaor(std::vector<double>& haOr);
-
-    /**
-     * @brief getShpos
-     * @param shPos
-     */
-    //void getShpos(std::vector<double>& shPos);
-
-    /**
-     * @brief getElpos
-     * @param elPos
-     */
-    //void getElpos(std::vector<double>& elPos);
-
-    /**
-     * @brief getWrpos
-     * @param wrPos
-     */
-   // void getWrpos(std::vector<double>& wrPos);
-
-    /**
-     * @brief getHapos
-     * @param haPos
-     */
-    //void getHapos(std::vector<double>& haPos);
-
-    /**
-     * @brief getHaor
-     * @param haOr
-     */
-    //void getHaor(std::vector<double>& haOr);
 
     /**
      * @brief plan_pick
