@@ -4193,7 +4193,7 @@ void HUMPlanner::directTrajectory(int steps,hump_params &tols, std::vector<doubl
     std::vector<double> acc_0;
     std::vector<double> acc_f;
     double app = 0; double ret = 0;
-    bool straight_line = tols.mov_specs.straight_line;
+    //bool straight_line = tols.mov_specs.straight_line;
 
     switch(mod){
     case 0: // move
@@ -4234,6 +4234,7 @@ void HUMPlanner::directTrajectory(int steps,hump_params &tols, std::vector<doubl
     }
     Traj = MatrixXd::Constant(steps+1,initPosture.size(),0);
 
+    /*
     if((app==1 || ret==1) && straight_line){
         int arm = tols.mov_specs.arm_code;
         std::vector<double> init_hand_pos; this->getHandPos(arm,initPosture,init_hand_pos);
@@ -4276,6 +4277,21 @@ void HUMPlanner::directTrajectory(int steps,hump_params &tols, std::vector<doubl
                         (1-app)*(1-ret)*0.5*acc_f.at(j)*pow(T,2)*(pow(tau.at(i),3)-2*pow(tau.at(i),4)+pow(tau.at(i),5));
 
             }
+        }
+    }
+    */
+
+    for (int i = 0; i <= steps;++i){
+        for (std::size_t j = 0; j<initPosture.size(); ++j){
+            Traj(i,j) = initPosture.at(j) +
+                    (1-app)*(1-ret)*(finalPosture.at(j) - initPosture.at(j))*(10*pow(tau.at(i),3)-15*pow(tau.at(i),4)+6*pow(tau.at(i),5))+
+                    app*0.25*(finalPosture.at(j) - initPosture.at(j))*(5*tau.at(i)-pow(tau.at(i),5))+
+                    ret*0.33*(finalPosture.at(j) - initPosture.at(j))*(5*pow(tau.at(i),4)-2*pow(tau.at(i),5))+
+                    (1-app)*(1-ret)*vel_0.at(j)*T*(tau.at(i)-6*pow(tau.at(i),3)+8*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
+                    (1-app)*(1-ret)*vel_f.at(j)*T*(-4*pow(tau.at(i),3)+7*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
+                    (1-app)*(1-ret)*0.5*acc_0.at(j)*pow(T,2)*(pow(tau.at(i),2)-3*pow(tau.at(i),3)+3*pow(tau.at(i),4)-pow(tau.at(i),5))+
+                    (1-app)*(1-ret)*0.5*acc_f.at(j)*pow(T,2)*(pow(tau.at(i),3)-2*pow(tau.at(i),4)+pow(tau.at(i),5));
+
         }
     }
 
@@ -5266,7 +5282,7 @@ int HUMPlanner::getSteps(std::vector<double> &maxLimits, std::vector<double> &mi
 
 }
 
-
+/*
 double HUMPlanner::getAlpha(int arm,std::vector<double>& posture)
 {    
    double alpha;
@@ -5299,7 +5315,9 @@ double HUMPlanner::getAlpha(int arm,std::vector<double>& posture)
 
    return alpha;
 }
+*/
 
+/*
 int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, std::vector<double> &init_posture, std::vector<double> &posture)
 {
     MatrixXd solutions(7,4);
@@ -5573,6 +5591,7 @@ int HUMPlanner::invKinematics(int arm, std::vector<double> &pose, double alpha, 
 
     return 0;
 }
+*/
 
 void HUMPlanner::RotMatrix(double theta, double alpha, Matrix3d &Rot)
 {
@@ -5792,6 +5811,7 @@ void HUMPlanner::getHandOr(int arm, vector<double> &posture, vector<double> &ori
     orient = { this->haPose.at(3), this->haPose.at(4), this->haPose.at(5)};
 }
 
+/*
 bool HUMPlanner::singleArmInvKinematics(hump_params &params, std::vector<double> &init_posture, std::vector<double>& hand_pose, std::vector<double> &goal_posture)
 {
     int arm = params.mov_specs.arm_code;
@@ -5801,5 +5821,6 @@ bool HUMPlanner::singleArmInvKinematics(hump_params &params, std::vector<double>
     return (success==0);
 
 }
+*/
 
 } // namespace HUMotion

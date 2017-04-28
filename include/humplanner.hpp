@@ -840,24 +840,11 @@ private:
      */
     int getSteps(std::vector<double>& maxLimits,std::vector<double>& minLimits,std::vector<double>& initPosture,std::vector<double>& finalPosture);
 
-    /**
-     * @brief getAlpha
-     * @param arm
-     * @param posture
-     * @return
-     */
-    double getAlpha(int arm, std::vector<double> &posture);
 
-    /**
-     * @brief invKinematics
-     * @param arm
-     * @param pose
-     * @param alpha
-     * @param init_posture
-     * @param posture
-     * @return
-     */
-    int invKinematics(int arm, std::vector<double>& pose, double alpha, std::vector<double> &init_posture, std::vector<double>& posture);
+    //double getAlpha(int arm, std::vector<double> &posture);
+
+
+    //int invKinematics(int arm, std::vector<double>& pose, double alpha, std::vector<double> &init_posture, std::vector<double>& posture);
 
     /**
      * @brief RotMatrix
@@ -959,15 +946,8 @@ private:
      */
     void getHandOr(int arm, vector<double> &posture,vector<double> &orient);
 
-    /**
-     * @brief singleArmInvKinematics
-     * @param params
-     * @param hand_pose
-     * @param init_posture
-     * @param goal_posture
-     * @return
-     */
-    bool singleArmInvKinematics(hump_params& params,std::vector<double> &init_posture,std::vector<double>& hand_pose,std::vector<double>& goal_posture);
+
+    //bool singleArmInvKinematics(hump_params& params,std::vector<double> &init_posture,std::vector<double>& hand_pose,std::vector<double>& goal_posture);
 
 
 
