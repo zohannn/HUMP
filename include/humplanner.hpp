@@ -332,25 +332,30 @@ private:
 
     /**
      * @brief setBoundaryConditions
+     * @param mov_type
      * @param params
      * @param steps
      * @param initPosture
      * @param finalPosture
      * @param mod
+     * @return
      */
-    void setBoundaryConditions(hump_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
+    bool setBoundaryConditions(int mov_type, hump_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
 
     /**
      * @brief directTrajectory
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
      * @param finalPosture
      * @param timestep
      * @param Traj
+     * @param vel_app_ret
      * @param mod
+     * @return
      */
-    void directTrajectory(int steps, hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, int mod);
+    bool directTrajectory(int mov_type, int steps, hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, MatrixXd &vel_app_ret, int mod);
 
     /**
      * @brief directTrajectoryNoBound
@@ -369,9 +374,11 @@ private:
      * @param finalPosture
      * @param timestep
      * @param Vel
+     * @param vel_app_ret
      * @param mod
+     * @return
      */
-    void directVelocity(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep,MatrixXd& Vel, int mod);
+    bool directVelocity(int steps, hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Vel, MatrixXd &vel_app_ret, int mod);
 
     /**
      * @brief directAcceleration
@@ -381,9 +388,11 @@ private:
      * @param finalPosture
      * @param timestep
      * @param Acc
+     * @param vel_app_ret
      * @param mod
+     * @return
      */
-    void directAcceleration(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,int mod);
+    bool directAcceleration(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,MatrixXd &vel_app_ret,int mod);
 
     /**
      * @brief backForthTrajectory
@@ -426,31 +435,40 @@ private:
 
     /**
      * @brief getTrajectory
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
      * @param finalPosture
      * @param bouncePosture
      * @param traj
+     * @param vel_app_ret
+     * @param success
      * @param mod
      * @return
      */
-    double getTrajectory(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj,int mod);
+    double getTrajectory(int mov_type,int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture,
+                         MatrixXd &traj,MatrixXd &vel_app_ret,bool &success,int mod);
 
     /**
      * @brief getTrajectory
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
      * @param finalPosture
      * @param traj
+     * @param vel_app_ret
+     * @param success
      * @param mod
      * @return
      */
-    double getTrajectory(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj,int mod);
+    double getTrajectory(int mov_type,int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture,
+                         MatrixXd &traj, MatrixXd &vel_app_ret,bool &success, int mod);
 
     /**
      * @brief getVelocity
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
@@ -458,26 +476,32 @@ private:
      * @param bouncePosture
      * @param traj
      * @param vel
+     * @param vel_app_ret
+     * @param success
      * @param mod
      * @return
      */
-    double getVelocity(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel,int mod);
-
+    double getVelocity(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture,
+                       MatrixXd &traj, MatrixXd &vel, MatrixXd &vel_app_ret, bool &success, int mod);
     /**
      * @brief getVelocity
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
      * @param finalPosture
      * @param traj
      * @param vel
+     * @param vel_app_ret
+     * @param success
      * @param mod
      * @return
      */
-    double getVelocity(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, int mod);
+    double getVelocity(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &vel_app_ret,bool &success, int mod);
 
     /**
      * @brief getAcceleration
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
@@ -486,13 +510,15 @@ private:
      * @param traj
      * @param vel
      * @param acc
+     * @param success
      * @param mod
      * @return
      */
-    double getAcceleration(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, int mod);
+    double getAcceleration(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, bool &success, int mod);
 
     /**
      * @brief getAcceleration
+     * @param mov_type
      * @param steps
      * @param tols
      * @param initPosture
@@ -500,10 +526,11 @@ private:
      * @param traj
      * @param vel
      * @param acc
+     * @param success
      * @param mod
      * @return
      */
-    double getAcceleration(int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc,int mod);
+    double getAcceleration(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, bool &success, int mod);
 
     /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
