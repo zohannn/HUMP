@@ -4140,13 +4140,33 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
     std::vector<double> vel_0; std::vector<double> vel_f;
     bool straight_line = params.mov_specs.straight_line;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
+
     double timestep = this->getTimeStep(params,fakeTraj);
     double T = timestep*steps;
-    VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),7); double w_max = w_max_vec.maxCoeff();
+
+    VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),7);
+    double w_max = w_max_vec.maxCoeff();
     VectorXd init = VectorXd::Map(initPosture.data(),7);
     VectorXd final = VectorXd::Map(finalPosture.data(),7);
     double num = (final-init).norm();
-    double w_red = W_RED_MIN + (W_RED_MAX-W_RED_MIN)*((num/T)/w_max);
+    double w_red_app = W_RED_MIN + (W_RED_APP_MAX-W_RED_MIN)*((num/T)/w_max);
+    double w_red_ret = W_RED_MIN + (W_RED_RET_MAX-W_RED_MIN)*((num/T)/w_max);
+
+    switch(mod)
+    {
+    case 0:// approach
+        timestep = timestep*w_red_app;
+        break;
+    case 1://retreat
+        timestep = timestep*w_red_ret;
+        break;
+    default: // approach
+        timestep = timestep*w_red_app;
+        break;
+    }
+    T = timestep*steps;
+
+
 
     int arm = params.mov_specs.arm_code;
     std::vector<double> init_target = params.mov_specs.target;
@@ -4194,19 +4214,15 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
         for (std::size_t i = 0; i<finalPosture.size(); ++i){
             //vel_0
             double vel_0_value =((double)5*(finalPosture.at(i)-initPosture.at(i)))/(4*T);
-            //vel_0.push_back(((double)vel_0_value)/w_red);
             vel_0.push_back(vel_0_value);
             //vel_f
             double vel_f_value =((double)10*(finalPosture.at(i)-initPosture.at(i)))/(3*T);
-            //vel_f.push_back(((double)vel_f_value)/w_red);
             vel_f.push_back(vel_f_value);
             //acc_0
             double acc_0_value =(double)4*vel_0_value/T;
-            //acc_0.push_back(((double)acc_0_value)/w_red);
             acc_0.push_back(acc_0_value);
             //acc_f
             double acc_f_value =(double)2*vel_f_value/T;
-            //acc_f.push_back(((double)acc_f_value)/w_red);
             acc_f.push_back(acc_f_value);
         }
     }
@@ -4556,7 +4572,7 @@ bool HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<dou
                         (tau.at(i)-3*pow(tau.at(i),2)+2*pow(tau.at(i),3))+
                         (1-app)*(1-ret)*12*(vel_0.at(j)/T)*(-3*tau.at(i)+8*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
                         (1-app)*(1-ret)*12*(vel_f.at(j)/T)*(-2*tau.at(i)+7*pow(tau.at(i),2)-5*pow(tau.at(i),3))+
-                        (1-app)*acc_0.at(j)*(1-9*tau.at(i)+18*pow(tau.at(i),2)-10*pow(tau.at(i),3))+ app*acc_0.at(j)*(1-pow(tau.at(i),3))+
+                        (1-app)*acc_0.at(j)*(1-9*tau.at(i)+18*pow(tau.at(i),2)-10*pow(tau.at(i),3))+ app*acc_0.at(j)*(-pow(tau.at(i),3))+
                         (1-ret)*acc_f.at(j)*(3*tau.at(i)-12*pow(tau.at(i),2)+10*pow(tau.at(i),3))+ret*acc_f.at(j)*(3*pow(tau.at(i),2)-2*pow(tau.at(i),3));
 
             }
@@ -4658,6 +4674,18 @@ double HUMPlanner::getTrajectory(int mov_type,int steps,hump_params &tols, std::
     double timestep; MatrixXd traj_no_bound;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,traj_no_bound);
     timestep = this->getTimeStep(tols,traj_no_bound);
+    if((mod==2)||(mod==3)){ // approach or retreat
+        VectorXd w_max_vec = VectorXd::Map(tols.w_max.data(),7);
+        double w_max = w_max_vec.maxCoeff();
+        VectorXd init = VectorXd::Map(initPosture.data(),7);
+        VectorXd final = VectorXd::Map(finalPosture.data(),7);
+        double num = (final-init).norm();
+        double T = timestep*steps;
+        double w_red_app = W_RED_MIN + (W_RED_APP_MAX-W_RED_MIN)*((num/T)/w_max);
+        double w_red_ret = W_RED_MIN + (W_RED_RET_MAX-W_RED_MIN)*((num/T)/w_max);
+        if(mod==2){timestep = timestep*w_red_app;}
+        if(mod==3){timestep = timestep*w_red_ret;}
+    }
     success = this->directTrajectory(mov_type,steps,tols,initPosture,finalPosture,timestep,traj,vel_app_ret,mod);
 
     return timestep;
@@ -5031,7 +5059,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
     res->object_id = params.mov_specs.obj->getName();
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
-    bool straight_line = params.mov_specs.straight_line;
+    //bool straight_line = params.mov_specs.straight_line;
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
     int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
 
