@@ -4288,8 +4288,6 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
 
 bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd &Traj, MatrixXd &vel_app_ret, int mod)
 {
-    //int steps = tols.steps;
-    //std::vector<double> time = std::vector<double>(steps+1); // time
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
     std::vector<double> vel_0;
     std::vector<double> vel_f;
@@ -4310,7 +4308,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         vel_0 = tols.bounds.vel_0;
         vel_f = tols.vel_approach;
         acc_0 = tols.bounds.acc_0;
-        acc_f = tols.acc_approach;
+        acc_f = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         break;
     case 2: // approach
         vel_0 = tols.vel_approach;
@@ -4412,21 +4410,6 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         }
     }
 
-    /*
-    for (int i = 0; i <= steps;++i){
-        for (std::size_t j = 0; j<initPosture.size(); ++j){
-            Traj(i,j) = initPosture.at(j) +
-                    (1-app)*(1-ret)*(finalPosture.at(j) - initPosture.at(j))*(10*pow(tau.at(i),3)-15*pow(tau.at(i),4)+6*pow(tau.at(i),5))+
-                    app*0.25*(finalPosture.at(j) - initPosture.at(j))*(5*tau.at(i)-pow(tau.at(i),5))+
-                    ret*0.33*(finalPosture.at(j) - initPosture.at(j))*(5*pow(tau.at(i),4)-2*pow(tau.at(i),5))+
-                    (1-app)*(1-ret)*vel_0.at(j)*T*(tau.at(i)-6*pow(tau.at(i),3)+8*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
-                    (1-app)*(1-ret)*vel_f.at(j)*T*(-4*pow(tau.at(i),3)+7*pow(tau.at(i),4)-3*pow(tau.at(i),5))+
-                    (1-app)*(1-ret)*0.5*acc_0.at(j)*pow(T,2)*(pow(tau.at(i),2)-3*pow(tau.at(i),3)+3*pow(tau.at(i),4)-pow(tau.at(i),5))+
-                    (1-app)*(1-ret)*0.5*acc_f.at(j)*pow(T,2)*(pow(tau.at(i),3)-2*pow(tau.at(i),4)+pow(tau.at(i),5));
-
-        }
-    }
-    */
 
     return success;
 
@@ -4434,8 +4417,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
 
 void HUMPlanner::directTrajectoryNoBound(int steps,std::vector<double>& initPosture, std::vector<double>& finalPosture, MatrixXd &Traj)
 {
-    //int steps = tols.steps;
-    //std::vector<double> time = std::vector<double>(steps+1); // time
+
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
 
     double delta = ((double)1)/steps;
@@ -4459,8 +4441,7 @@ void HUMPlanner::directTrajectoryNoBound(int steps,std::vector<double>& initPost
 
 bool HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture,double timestep, MatrixXd &Vel, MatrixXd &vel_app_ret,int mod)
 {
-    //int steps = tols.steps;
-    //std::vector<double> time = std::vector<double>(steps+1); // time
+
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
     std::vector<double> vel_0;
     std::vector<double> vel_f;
@@ -4481,7 +4462,7 @@ bool HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
         vel_0 = tols.bounds.vel_0;
         vel_f = tols.vel_approach;
         acc_0 = tols.bounds.acc_0;
-        acc_f = tols.acc_approach;
+        acc_f = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         break;
     case 2: // approach
         vel_0 = tols.vel_approach;
@@ -4543,8 +4524,7 @@ bool HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
 
 bool HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<double> &initPosture, std::vector<double> &finalPosture, double timestep, MatrixXd &Acc, MatrixXd &vel_app_ret, int mod)
 {
-    //int steps = tols.steps;
-    //std::vector<double> time = std::vector<double>(steps+1); // time
+
     std::vector<double> tau = std::vector<double>(steps+1); // normalized time
     std::vector<double> vel_0;
     std::vector<double> vel_f;
@@ -4565,7 +4545,7 @@ bool HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<dou
         vel_0 = tols.bounds.vel_0;
         vel_f = tols.vel_approach;
         acc_0 = tols.bounds.acc_0;
-        acc_f = tols.acc_approach;
+        acc_f = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         break;
     case 2: // approach
         vel_0 = tols.vel_approach;
