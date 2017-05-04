@@ -3162,7 +3162,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
              // hand constraints for approaching direction settings
              if(approach && pre_post==1){
                  PostureMod << string("# Hand approach orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 + sum{i in 1..3} (z_H[i,k] + y_t[i])^2)<= 0.010; #  x_H = z_t and z_H = -y_t \n\n");
+                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2)<= 0.01; #  x_H = z_t \n\n");
              }
              break;
          case 1: // place
@@ -3403,6 +3403,10 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
 
         // in pick shorts movements (movements with N_STEP_MIN steps) collisions with the target are not considered
+        int diff_steps = (int) (steps*BLANK_PERCENTAGE_TAR);
+        string n_steps_end_str = boost::str(boost::format("%d") % (diff_steps));
+        PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
+        /*
         if(pre_post!=0){
             PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps+1}:   \n");
         }else{
@@ -3410,6 +3414,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
             string n_steps_end_str = boost::str(boost::format("%d") % (diff_steps));
             PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
         }
+        */
         PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
         PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
         PostureMod << string("(x_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xx2[l])^2) + \n");
@@ -3603,8 +3608,8 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
             // the object to place has to be considered
              PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
         }else if(move){
-            // for the first 5 steps (Number of minimum steps allowed), no obstacle is considered because the movement is very short and the planner may get stuck
-            int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE));
+            // for the first number of diff_steps, no obstacle is considered because the movement is very short and the planner may get stuck
+            int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE_OBS));
             string n_steps_init_str = boost::str(boost::format("%d") % (diff_steps));
             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1}:\n");
         }else{
@@ -3814,7 +3819,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
     std::vector<Number> lambda_sol;
     Number obj_sol;
 
-    if (ampl_tnlp->get_status() == SolverReturn::SUCCESS){
+    if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) || (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT)){
         ampl_tnlp->get_solutions(x_sol,
                                  z_L_sol,
                                  z_U_sol,
@@ -3844,6 +3849,19 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     std::vector<double> target = params.mov_specs.target;
     std::vector<double> minLimits;
     std::vector<double> maxLimits;
+    bool approach = params.mov_specs.approach;
+    bool retreat = params.mov_specs.retreat;
+    std::vector<double> approach_retreat;
+    switch(mov_type){
+    case 0: // pick
+        if(approach){approach_retreat = params.mov_specs.pre_grasp_approach;}
+        if(retreat){approach_retreat = params.mov_specs.post_grasp_retreat;}
+        break;
+    case 1: // place
+        if(approach){approach_retreat = params.mov_specs.pre_place_approach;}
+        if(retreat){approach_retreat = params.mov_specs.post_place_retreat;}
+        break;
+    }
 
     std::vector<double> initArmPosture(initPosture.begin(),initPosture.begin()+joints_arm);
 
@@ -3870,10 +3888,19 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     }
     double max_ext = Lh+Ll+Lu;
     std::vector<double> shPos; this->getShoulderPos(arm_code,initPosture,shPos);
-    if(sqrt(pow(target.at(0) - shPos.at(0),2)+
-            pow(target.at(1) - shPos.at(1),2)+
-            pow(target.at(2) - shPos.at(2),2))>= max_ext){
-        throw string("The movement to be planned goes out of the reacheble workspace");
+    Vector3d tar_pos(target.at(0),target.at(1),target.at(2));
+    if(approach || retreat){
+        std::vector<double> rpy = {target.at(3),target.at(4),target.at(5)};
+        Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+        double dist = approach_retreat.at(3);
+        Vector3d v(approach_retreat.at(0),approach_retreat.at(1),approach_retreat.at(2));
+        Vector3d vv = Rot_tar*v;
+        tar_pos = tar_pos + dist*vv;
+    }
+    if(sqrt(pow(tar_pos(0) - shPos.at(0),2)+
+            pow(tar_pos(1) - shPos.at(1),2)+
+            pow(tar_pos(2) - shPos.at(2),2))>= max_ext){
+        throw string("The movement to be planned goes out of the reachable workspace");
     }
     // initial guess
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
@@ -4149,19 +4176,25 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
     VectorXd init = VectorXd::Map(initPosture.data(),7);
     VectorXd final = VectorXd::Map(finalPosture.data(),7);
     double num = (final-init).norm();
-    double w_red_app = W_RED_MIN + (W_RED_APP_MAX-W_RED_MIN)*((num/T)/w_max);
-    double w_red_ret = W_RED_MIN + (W_RED_RET_MAX-W_RED_MIN)*((num/T)/w_max);
+    double w_red_app_max = params.mov_specs.w_red_app_max;
+    double w_red_ret_max = params.mov_specs.w_red_ret_max;
+    double w_red_app = W_RED_MIN + (w_red_app_max-W_RED_MIN)*((num/T)/w_max);
+    double w_red_ret = W_RED_MIN + (w_red_ret_max-W_RED_MIN)*((num/T)/w_max);
 
+    int pre_post = 0;
     switch(mod)
     {
     case 0:// approach
         timestep = timestep*w_red_app;
+        pre_post=1;
         break;
     case 1://retreat
         timestep = timestep*w_red_ret;
+        pre_post=0;
         break;
     default: // approach
         timestep = timestep*w_red_app;
+        pre_post=1;
         break;
     }
     T = timestep*steps;
@@ -4170,13 +4203,14 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
 
     int arm = params.mov_specs.arm_code;
     std::vector<double> init_target = params.mov_specs.target;
+    bool init_coll = params.mov_specs.coll;
     std::vector<double> init_hand_pos; this->getHandPos(arm,initPosture,init_hand_pos);
     //std::vector<double> init_hand_or; this->getHandOr(arm,initPosture,init_hand_or);
     std::vector<double> hand_tar = init_target;
     std::vector<double> final_hand_pos; this->getHandPos(arm,finalPosture,final_hand_pos);
-    double delta_x = (final_hand_pos.at(0)-init_hand_pos.at(0))/steps;
-    double delta_y = (final_hand_pos.at(1)-init_hand_pos.at(1))/steps;
-    double delta_z = (final_hand_pos.at(2)-init_hand_pos.at(2))/steps;
+    double delta_x = (final_hand_pos.at(0)-init_hand_pos.at(0))/(steps+1);
+    double delta_y = (final_hand_pos.at(1)-init_hand_pos.at(1))/(steps+1);
+    double delta_z = (final_hand_pos.at(2)-init_hand_pos.at(2))/(steps+1);
 
 
     std::vector<double> new_posture;
@@ -4186,13 +4220,15 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
         hand_tar.at(1) = hand_tar.at(1) + delta_y;
         hand_tar.at(2) = hand_tar.at(2) + delta_z;
         params.mov_specs.target = hand_tar;
-        success = this->singleArmFinalPosture(mov_type,1,params,initPosture, new_posture);
+        params.mov_specs.coll = false;
+        success = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture, new_posture);
         params.mov_specs.target = init_target;
+        params.mov_specs.coll = init_coll;
 
         if(success){
             std::vector<double> new_posture_ext = new_posture;
             for(size_t i=new_posture.size();i<finalPosture.size();++i){
-                new_posture_ext.push_back(initPosture.at(i)+((finalPosture.at(i)-initPosture.at(i))/steps));
+                new_posture_ext.push_back(initPosture.at(i)+((finalPosture.at(i)-initPosture.at(i))/(steps+1)));
             }
             for (std::size_t i = 0; i<new_posture_ext.size(); ++i){
                 //vel_0
@@ -4202,10 +4238,10 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
                 double vel_f_value =((double)10*(new_posture_ext.at(i)-initPosture.at(i)))/(11*timestep);
                 vel_f.push_back(vel_f_value);
                 //acc_0
-                double acc_0_value =(double)4*vel_0_value/timestep;
+                double acc_0_value =(double)2*vel_0_value/timestep;
                 acc_0.push_back(acc_0_value);
                 //acc_f
-                double acc_f_value =(double)4*vel_f_value/timestep;
+                double acc_f_value =(double)2*vel_f_value/timestep;
                 acc_f.push_back(acc_f_value);
             }
         }
@@ -4259,7 +4295,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
     std::vector<double> vel_f;
     std::vector<double> acc_0;
     std::vector<double> acc_f;
-    double app = 0; double ret = 0;
+    double app = 0; double ret = 0; int pre_post = 0;
     bool straight_line = tols.mov_specs.straight_line;
     bool success = true;
 
@@ -4282,6 +4318,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         acc_0 = tols.acc_approach;
         acc_f = std::vector<double>(tols.acc_approach.size(),0.0);
         app=1;
+        pre_post=1;
         break;
     case 3:// retreat
         vel_0 = std::vector<double>(tols.bounds.vel_0.size(),0.0);
@@ -4289,6 +4326,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         acc_0 = std::vector<double>(tols.bounds.acc_0.size(),0.0);
         acc_f = tols.bounds.acc_f;
         ret=1;
+        pre_post=0;
         break;
     }
 
@@ -4305,7 +4343,6 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
 
 
     if((app==1 || ret==1) && straight_line){
-        int pre_post=app+ret*(ret+1);
         hump_params params = tols;
         int arm = params.mov_specs.arm_code;
         std::vector<double> init_target = params.mov_specs.target;
@@ -4313,37 +4350,40 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         //std::vector<double> init_hand_or; this->getHandOr(arm,initPosture,init_hand_or);
         std::vector<double> hand_tar = init_target;
         std::vector<double> final_hand_pos; this->getHandPos(arm,finalPosture,final_hand_pos);
-        double delta_x = (final_hand_pos.at(0)-init_hand_pos.at(0))/steps;
-        double delta_y = (final_hand_pos.at(1)-init_hand_pos.at(1))/steps;
-        double delta_z = (final_hand_pos.at(2)-init_hand_pos.at(2))/steps;
+        double delta_x = (final_hand_pos.at(0)-init_hand_pos.at(0))/(steps+1);
+        double delta_y = (final_hand_pos.at(1)-init_hand_pos.at(1))/(steps+1);
+        double delta_z = (final_hand_pos.at(2)-init_hand_pos.at(2))/(steps+1);
 
         hand_tar.at(0) = hand_tar.at(0) + delta_x;
         hand_tar.at(1) = hand_tar.at(1) + delta_y;
         hand_tar.at(2) = hand_tar.at(2) + delta_z;
         params.mov_specs.target = hand_tar;
+        bool init_coll = params.mov_specs.coll;
+        params.mov_specs.coll = false;
 
         std::vector<double> new_posture;
+        std::vector<double> new_posture_ext;
+        std::vector<double> init_posture_0;
         for (int i = 0; i <= steps;++i){
-            std::vector<double> init_posture_0;
             if(i==0){
                 init_posture_0 = initPosture;
             }else{
-               init_posture_0 = new_posture;
+               init_posture_0 = new_posture_ext;
             }
-            //this->singleArmInvKinematics(params,initPosture,hand_pose,new_posture);
             success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0, new_posture);
             if(success){
-                for (std::size_t j = 0; j<initPosture.size(); ++j){
+                new_posture_ext = new_posture;
+                for(size_t k=new_posture.size();k<finalPosture.size();++k){
+                    double delta_theta_fing = (finalPosture.at(k)-initPosture.at(k))/(steps+1);
+                    new_posture_ext.push_back(init_posture_0.at(k)+delta_theta_fing);
+                }
+                for (std::size_t j = 0; j<new_posture_ext.size(); ++j){
                     if(i==0){
                         Traj(i,j) = init_posture_0.at(j);
+                        vel_app_ret(i,j) = vel_0.at(j);
                     }else{
-                        if(j<7){//arm
-                            Traj(i,j) = new_posture.at(j);
-                            vel_app_ret(i,j) = 1.1*(new_posture.at(j) - init_posture_0.at(j))/timestep;
-                        }else{//fingers
-                            Traj(i,j) = app*0.25*(finalPosture.at(j) - initPosture.at(j))*(5*tau.at(i)-pow(tau.at(i),5))+
-                                        ret*0.33*(finalPosture.at(j) - initPosture.at(j))*(5*pow(tau.at(i),4)-2*pow(tau.at(i),5));
-                        }
+                        Traj(i,j) = new_posture_ext.at(j);
+                        vel_app_ret(i,j) = 1.1*(new_posture_ext.at(j) - init_posture_0.at(j))/timestep;
                     }
                 }
                 hand_tar.at(0) = hand_tar.at(0) + delta_x;
@@ -4355,6 +4395,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
             }
         }
         params.mov_specs.target = init_target;
+        params.mov_specs.coll = init_coll;
     }else{
         for (int i = 0; i <= steps;++i){
             for (std::size_t j = 0; j<initPosture.size(); ++j){
@@ -4477,7 +4518,7 @@ bool HUMPlanner::directVelocity(int steps,hump_params &tols, std::vector<double>
                 }else if((i==0) && (ret==1)){
                     Vel(i,j) =  vel_app_ret(i,j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4));
                 }else{
-                    Vel(i,j) =  vel_app_ret(i,j)*(1-pow(tau.at(i),4)) + vel_app_ret(i,j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4));
+                    Vel(i,j) =  vel_app_ret(i,j)*(1+2*pow(tau.at(i),3)-2*pow(tau.at(i),4));
                 }
             }
         }
@@ -4557,11 +4598,11 @@ bool HUMPlanner::directAcceleration(int steps,hump_params &tols, std::vector<dou
         for (int i = 0; i <= steps;++i){
             for (std::size_t j = 0; j<initPosture.size(); ++j){
                 if((i==steps) && (app==1)){
-                    Acc(i,j) =  ((4/timestep)*vel_app_ret(i,j))*(1-pow(tau.at(i),3));
+                    Acc(i,j) =  ((2/timestep)*vel_app_ret(i,j))*(1-pow(tau.at(i),3));
                 }else if((i==0) && (ret==1)){
-                    Acc(i,j) =  ((4/timestep)*vel_app_ret(i,j))*(2*pow(tau.at(i),2)-pow(tau.at(i),3));
+                    Acc(i,j) =  ((2/timestep)*vel_app_ret(i,j))*(2*pow(tau.at(i),2)-pow(tau.at(i),3));
                 }else{
-                    Acc(i,j) =  ((4/timestep)*vel_app_ret(i,j))*(1-pow(tau.at(i),3)) + ((4/timestep)*vel_app_ret(i,j))*(2*pow(tau.at(i),2)-pow(tau.at(i),3));
+                    Acc(i,j) =  ((2/timestep)*vel_app_ret(i,j))*(2*pow(tau.at(i),2)-4*pow(tau.at(i),3));
                 }
             }
         }
@@ -4681,8 +4722,10 @@ double HUMPlanner::getTrajectory(int mov_type,int steps,hump_params &tols, std::
         VectorXd final = VectorXd::Map(finalPosture.data(),7);
         double num = (final-init).norm();
         double T = timestep*steps;
-        double w_red_app = W_RED_MIN + (W_RED_APP_MAX-W_RED_MIN)*((num/T)/w_max);
-        double w_red_ret = W_RED_MIN + (W_RED_RET_MAX-W_RED_MIN)*((num/T)/w_max);
+        double w_red_app_max = tols.mov_specs.w_red_app_max;
+        double w_red_ret_max = tols.mov_specs.w_red_ret_max;
+        double w_red_app = W_RED_MIN + (w_red_app_max-W_RED_MIN)*((num/T)/w_max);
+        double w_red_ret = W_RED_MIN + (w_red_ret_max-W_RED_MIN)*((num/T)/w_max);
         if(mod==2){timestep = timestep*w_red_app;}
         if(mod==3){timestep = timestep*w_red_ret;}
     }
@@ -4791,7 +4834,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
     res->object_id = params.mov_specs.obj->getName();
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
-    //bool straight_line = params.mov_specs.straight_line;
+    bool straight_line = params.mov_specs.straight_line;
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
     int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
 
@@ -4817,23 +4860,17 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     }
                 }
                 int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_grasp_ext);
-                /*
+
                 if(straight_line){
-                    std::vector<double> hand_pose;
-                    // position (the position of the target)
-                    std::vector<double> tar = params.mov_specs.target;
-                    hand_pose.push_back(tar.at(0)); hand_pose.push_back(tar.at(1)); hand_pose.push_back(tar.at(2));
-                    // orientation (the same orientation of the initial posture)
-                    int arm = params.mov_specs.arm_code; std::vector<double> hand_or; this->getHandOr(arm,finalPosture_pre_grasp,hand_or);
-                    hand_pose.push_back(hand_or.at(0)); hand_pose.push_back(hand_or.at(1)); hand_pose.push_back(hand_or.at(2));
-                    FPosture = this->singleArmInvKinematics(params,finalPosture_pre_grasp,hand_pose,finalPosture);
+                    bool init_coll = params.mov_specs.coll;
+                    params.mov_specs.coll = false;
+                    pre_post = 0;
+                    FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
+                    params.mov_specs.coll = init_coll;
                 }else{
                     pre_post = 0;
                     FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
                 }
-                */
-                pre_post = 0;
-                FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
 
                 if(FPosture){
                     // extend the final postures
@@ -4962,23 +4999,16 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
         }
         if(coll){ // collisions
             if(retreat && FPosture && BPosture){// retreat stage
-                /*
                 if(straight_line){
-                    std::vector<double> hand_pose;
-                    // position (the position of the target)
-                    std::vector<double> tar = params.mov_specs.target;
-                    hand_pose.push_back(tar.at(0)); hand_pose.push_back(tar.at(1)); hand_pose.push_back(tar.at(2));
-                    // orientation (the same orientation of the initial posture)
-                    int arm = params.mov_specs.arm_code; std::vector<double> hand_or; this->getHandOr(arm,finalPosture_pre_grasp,hand_or);
-                    hand_pose.push_back(hand_or.at(0)); hand_pose.push_back(hand_or.at(1)); hand_pose.push_back(hand_or.at(2));
-                    FPosture_post_grasp = this->singleArmInvKinematics(params,finalPosture,hand_pose,finalPosture_post_grasp);
+                    bool init_coll = params.mov_specs.coll;
+                    params.mov_specs.coll = false;
+                    pre_post=2;
+                    FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                    params.mov_specs.coll = init_coll;
                 }else{
                     pre_post=2;
                     FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
                 }
-                */
-                pre_post=2;
-                FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
                 if (FPosture_post_grasp){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
