@@ -5069,7 +5069,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
     res->object_id = params.mov_specs.obj->getName();
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
-    //bool straight_line = params.mov_specs.straight_line;
+    bool straight_line = params.mov_specs.straight_line;
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
     int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
 
@@ -5091,8 +5091,18 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     finalPosture_pre_place_ext.push_back(finalHand.at(i));
                 }
                 int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_place_ext);
-                pre_post = 0;
-                FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
+
+                if(straight_line){
+                    bool init_coll = params.mov_specs.coll;
+                    params.mov_specs.coll = false;
+                    pre_post = 0;
+                    FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
+                    params.mov_specs.coll = init_coll;
+                }else{
+                    pre_post = 0;
+                    FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
+                }
+
                 if(FPosture){
                     // extend the final postures
                     finalPosture_ext = finalPosture;
@@ -5102,11 +5112,42 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
                     // calculate the approach boundary conditions
                     // the velocity approach is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
-                    this->setBoundaryConditions(mov_type,params,steps_app,finalPosture_pre_place_ext,finalPosture_ext,0);
-                    if(coll){ // collisions
-                        pre_post = 1;
-                        BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
-                        if(BPosture){
+                    if(this->setBoundaryConditions(mov_type,params,steps_app,finalPosture_pre_place_ext,finalPosture_ext,0)){
+                        if(coll){ // collisions
+                            pre_post = 1;
+                            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
+                            if(BPosture){
+                                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                                    res->time_steps.clear();
+                                    res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+                                    res->velocity_stages.clear();
+                                    res->acceleration_stages.clear();
+                                    // pre-approach stage
+                                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1; bool success = true;
+                                    timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_pre_place_ext,bouncePosture_pre_place,traj,vel,acc,success,mod);
+                                    res->time_steps.push_back(timestep);
+                                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
+                                    res->velocity_stages.push_back(vel);
+                                    res->acceleration_stages.push_back(acc);
+                                    // approach stage
+                                    mod = 2;
+                                    timestep = this->getAcceleration(mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj,vel,acc,success,mod);
+                                    if(success){
+                                        res->time_steps.push_back(timestep);
+                                        res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
+                                        res->velocity_stages.push_back(vel);
+                                        res->acceleration_stages.push_back(acc);
+                                    }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
+                            }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
+                        }else{ // no collisions
+                            pre_post = 0;
+                            FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
+                            if(FPosture){
+                                // extend the final postures
+                                finalPosture_ext = finalPosture;
+                                for(size_t i=0;i<finalHand.size();++i){
+                                    finalPosture_ext.push_back(finalHand.at(i));
+                                }
                                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                                 res->time_steps.clear();
                                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
@@ -5114,13 +5155,14 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                 res->acceleration_stages.clear();
                                 // pre-approach stage
                                 MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1; bool success = true;
-                                timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_pre_place_ext,bouncePosture_pre_place,traj,vel,acc,success,mod);
+                                timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_pre_place_ext,traj,vel,acc,success,mod);
                                 res->time_steps.push_back(timestep);
                                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                                 res->velocity_stages.push_back(vel);
                                 res->acceleration_stages.push_back(acc);
                                 // approach stage
                                 mod = 2;
+                                int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
                                 timestep = this->getAcceleration(mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj,vel,acc,success,mod);
                                 if(success){
                                     res->time_steps.push_back(timestep);
@@ -5128,40 +5170,9 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                     res->velocity_stages.push_back(vel);
                                     res->acceleration_stages.push_back(acc);
                                 }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
-                        }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
-                    }else{ // no collisions
-                        pre_post = 0;
-                        FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
-                        if(FPosture){
-                            // extend the final postures
-                            finalPosture_ext = finalPosture;
-                            for(size_t i=0;i<finalHand.size();++i){
-                                finalPosture_ext.push_back(finalHand.at(i));
-                            }
-                            res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
-                            res->time_steps.clear();
-                            res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
-                            res->velocity_stages.clear();
-                            res->acceleration_stages.clear();
-                            // pre-approach stage
-                            MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1; bool success = true;
-                            timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_pre_place_ext,traj,vel,acc,success,mod);
-                            res->time_steps.push_back(timestep);
-                            res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
-                            res->velocity_stages.push_back(vel);
-                            res->acceleration_stages.push_back(acc);
-                            // approach stage
-                            mod = 2;
-                            int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
-                            timestep = this->getAcceleration(mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj,vel,acc,success,mod);
-                            if(success){
-                                res->time_steps.push_back(timestep);
-                                res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
-                                res->velocity_stages.push_back(vel);
-                                res->acceleration_stages.push_back(acc);
-                            }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
-                        }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
-                    }
+                            }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
+                        }
+                    }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
                 }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
             }else{res->status = 10; res->status_msg = string("HUMP: final posture pre place selection failed ");}
         }else{
@@ -5210,8 +5221,16 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
         }
         if(coll){// collisions
             if(retreat && FPosture && BPosture){
-                pre_post=2;
-                FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
+                if(straight_line){
+                    bool init_coll = params.mov_specs.coll;
+                    params.mov_specs.coll = false;
+                    pre_post=2;
+                    FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
+                    params.mov_specs.coll = init_coll;
+                }else{
+                    pre_post=2;
+                    FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place);
+                }
                 if (FPosture_post_place){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
