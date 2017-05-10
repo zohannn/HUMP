@@ -3891,6 +3891,8 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
         maxLimits = this->maxLeftLimits;
         break;
     }
+
+    // check if the target is in the workspace of the robotic arm
     double max_ext = Lh+Ll+Lu;
     std::vector<double> shPos; this->getShoulderPos(arm_code,initPosture,shPos);
     Vector3d tar_pos(target.at(0),target.at(1),target.at(2));
@@ -3907,6 +3909,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
             pow(tar_pos(2) - shPos.at(2),2))>= max_ext){
         throw string("The movement to be planned goes out of the reachable workspace");
     }
+
     // initial guess
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
     std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
