@@ -64,6 +64,11 @@ const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction whe
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
 //const double W_RED_RET_MAX = 5; /**< maximum value of angular velocity reduction when retreating */
 
+static bool abs_compare(double a, double b)
+{
+    return (std::abs(a) < std::abs(b));
+}
+
 /** this struct defines the Denavit-Hartenberg kinematic parameters */
 typedef struct{
     vector<double> d; /**< distances between consecutive frames along the y axes in [mm] */
@@ -157,6 +162,7 @@ typedef struct{
     vector<double> lambda_final; /**< weights for the final posture optimization */
     vector<double> lambda_bounce; /**< weights for the bounce posture optimization */
     vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
+    vector<double> alpha_max; /**< maximum angular acceleration for each joint [rad/s²] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
 }hump_params;

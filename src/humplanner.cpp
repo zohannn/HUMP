@@ -1,6 +1,7 @@
 #include "../include/humplanner.hpp"
 
 
+
 namespace HUMotion {
 
 unsigned HUMPlanner::joints_arm = 7;
@@ -4129,6 +4130,82 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
 }
 
 
+void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double> &derFunction)
+{
+    // Formula of the numarical differentiation with 5 points
+       // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
+       // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
+       // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
+       // f'3 = ( -1*f0 +  6*f1 - 18*f2 + 10*f3 +  3*f4)/(12*h) - h^4/20*f^(5)(c_3)
+       // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
+
+
+       int h = 1;
+       int tnsample;
+       double f0;
+       double f1;
+       double f2;
+       double f3;
+       double f4;
+
+       // 1st point
+       // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
+       tnsample = 0;
+       f0 = function.at(tnsample);
+       f1 = function.at(tnsample+1);
+       f2 = function.at(tnsample+2);
+       f3 = function.at(tnsample+3);
+       f4 = function.at(tnsample+4);
+       derFunction.push_back((double)(-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h));
+
+       // 2nd point
+       // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
+       tnsample = 1;
+       f0 = function.at(tnsample-1);
+       f1 = function.at(tnsample);
+       f2 = function.at(tnsample+1);
+       f3 = function.at(tnsample+2);
+       f4 = function.at(tnsample+3);
+       derFunction.push_back((double)( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h));
+
+
+       // 3rd point
+       // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
+       for (int i=2; i< function.size() -2;++i){     // centered
+           f0 = function.at(i-2);
+           f1 = function.at(i-1);
+           f2 = function.at(i);
+           f3 = function.at(i+1);
+           f4 = function.at(i+2);
+           derFunction.push_back((double)(  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h));
+
+       }
+
+       // 4th point
+       // f'3 = ( -1*f0 +  6*f1 - 18*f2 + 10*f3 +  3*f4)/(12*h) - h^4/20*f^(5)(c_3)
+       tnsample = function.size()-2;
+       f0 = function.at(tnsample-3);
+       f1 = function.at(tnsample-2);
+       f2 = function.at(tnsample-1);
+       f3 = function.at(tnsample);
+       f4 = function.at(tnsample+1);
+       derFunction.push_back((double)( -f0+6*f1-18*f2+10*f3+3*f4)/(12*h));
+
+
+       // 5th point
+       // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
+       tnsample = function.size()-1;
+       f0 = function.at(tnsample-4);
+       f1 = function.at(tnsample-3);
+       f2 = function.at(tnsample-2);
+       f3 = function.at(tnsample-1);
+       f4 = function.at(tnsample);
+       derFunction.push_back((double)(  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h));
+
+}
+
+
+
 double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
 {
     int steps = jointTraj.rows();
@@ -4136,6 +4213,7 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
     double timestep;
 
     std::vector<double> w_max = tols.w_max;
+    std::vector<double> alpha_max = tols.alpha_max;
     std::vector<double> lambda = tols.lambda_bounce;
 
 
@@ -4143,6 +4221,12 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
     double den = 0.0;
 
     for (int k =0; k < n_joints; ++k){
+        // get the max velocity of the joint in the trajectory
+        VectorXd jointTraj_k = jointTraj.col(k); std::vector<double> std_jointTraj_k; std::vector<double> der_jointTraj_k;
+        std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
+        this->getDerivative(std_jointTraj_k,der_jointTraj_k);
+        std::vector<double>::iterator max_vel_it = std::max_element(der_jointTraj_k.begin(), der_jointTraj_k.end(), abs_compare);
+        double max_vel_traj_k = (*max_vel_it)*180/M_PI;
 
         double deltaTheta_k = 0.0;
         std::vector<double> diffs;
@@ -4155,7 +4239,8 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
         int poss = std::distance(diffs.begin(),res);
         double deltaThetaMax = diffs.at(poss);
         double w_max_degree = w_max.at(k)*180/M_PI;
-        double time_k = ((steps-1)*deltaThetaMax/w_max_degree) + (lambda.at(k)*log(1+deltaTheta_k));
+        double alpha_max_degree = alpha_max.at(k)*180/M_PI;
+        double time_k = ((steps-1)*deltaThetaMax/w_max_degree) + ((steps-1)*max_vel_traj_k/alpha_max_degree) + (lambda.at(k)*log(1+deltaTheta_k));
 
         num += lambda.at(k)*deltaTheta_k*time_k;
         den += lambda.at(k)*deltaTheta_k;

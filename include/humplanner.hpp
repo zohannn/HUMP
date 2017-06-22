@@ -323,6 +323,13 @@ private:
     HumanHand hhand; /**< parameters of the human hand */
 
     /**
+     * @brief getDerivative
+     * @param function
+     * @param derFunction
+     */
+    void getDerivative(std::vector<double> &function, std::vector<double> &derFunction);
+
+    /**
      * @brief getTimeStep
      * @param tols
      * @param jointTraj
