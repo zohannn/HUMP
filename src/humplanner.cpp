@@ -2731,7 +2731,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
     // tolerances
     double timestep; MatrixXd traj_no_bound;
     this->directTrajectoryNoBound(steps,initAuxPosture,finalAuxPosture,traj_no_bound);
-    timestep = this->getTimeStep(params,traj_no_bound);
+    timestep = this->getTimeStep(params,traj_no_bound,2);
     double totalTime = timestep*steps;
     std::vector<double> lambda = params.lambda_bounce;
     std::vector<double> tolsArm = params.tolsArm;
@@ -4237,7 +4237,7 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
 
 
 
-double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
+double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj,int mod)
 {
     int steps = jointTraj.rows();
     int n_joints = jointTraj.cols();
@@ -4276,6 +4276,59 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
     double totalTime = num/den;
     timestep = (totalTime/(steps-1));
 
+    // check the joint maximum velocity and acceleration
+    if(mod!=2 && mod!=3){ //  move or pre_approach
+        std::vector<double> vel_0 = tols.bounds.vel_0;
+        std::vector<double> acc_0 = tols.bounds.acc_0;
+        //std::vector<double> vel_f;
+        //std::vector<double> acc_f;
+        //if(mod==0){
+        //  vel_f = tols.bounds.vel_f;
+        //  acc_f = tols.bounds.acc_f;
+        //}else if(mod==1){
+        //  vel_f = tols.vel_approach;
+        //  acc_f = std::vector<double>(tols.bounds.acc_0.size(),0.0);
+        //}
+        for (int k =0; k < n_joints; ++k){
+            bool check = false;
+            //double w_max_degree = w_max.at(k)*180/M_PI;
+            double alpha_max_degree = alpha_max.at(k)*180/M_PI;
+            double vel_0_k = vel_0.at(k); //double vel_f_k = vel_f.at(k);
+            double acc_0_k = acc_0.at(k); //double acc_f_k = acc_f.at(k);
+            double deltat = 0.02; // value to increase the timestep when it does not respect the joint velocity and acceleration limits [sec]
+            do
+            {
+                VectorXd jointTraj_k = jointTraj.col(k);
+                //VectorXd jointTraj_k_deg = jointTraj_k*180/M_PI;
+                std::vector<double> std_jointTraj_k;
+                std::vector<double> jointVel_k; std::vector<double> jointAcc_k;
+                std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
+                std::vector<double> timestep_vec(std_jointTraj_k.size(),timestep);
+                this->getDerivative(std_jointTraj_k,timestep_vec,jointVel_k);
+                jointVel_k.at(0) = vel_0_k; //jointVel_k.at(jointVel_k.size()-1) = vel_f_k;
+                this->getDerivative(jointVel_k,timestep_vec,jointAcc_k);
+                jointAcc_k.at(0) = acc_0_k; //jointAcc_k.at(jointAcc_k.size()-1) = acc_f_k;
+                //double* ptr_vel = &jointVel_k[0];
+                //Eigen::Map<Eigen::VectorXd> jointVel_k_vec(ptr_vel, jointVel_k.size());
+                //VectorXd jointVel_k_deg = jointVel_k_vec*180/M_PI;
+                //double* ptr_acc = &jointAcc_k[0];
+                //Eigen::Map<Eigen::VectorXd> jointAcc_k_vec(ptr_acc, jointAcc_k.size());
+                //VectorXd jointAcc_k_deg = jointAcc_k_vec*180/M_PI;
+                //std::vector<double>::iterator max_vel_it = std::max_element(jointVel_k.begin(), jointVel_k.end(), abs_compare);
+                //double max_vel_traj_k = std::abs((*max_vel_it))*180/M_PI;
+                std::vector<double>::iterator max_acc_it = std::max_element(jointAcc_k.begin(), jointAcc_k.end(), abs_compare);
+                double max_acc_traj_k = std::abs((*max_acc_it))*180/M_PI;
+                //if((max_acc_traj_k > alpha_max_degree - std::abs(acc_0_k*180/M_PI)) || (max_vel_traj_k > w_max_degree - std::abs(vel_0_k*180/M_PI))){
+                if((max_acc_traj_k > alpha_max_degree - std::abs(acc_0_k*180/M_PI))){
+                    timestep += deltat;
+                    check=true;
+                }else{check=false;}
+            }while(check || timestep > 1.5);
+        }
+    }
+
+
+
     return timestep;
 }
 
@@ -4288,7 +4341,7 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
     bool straight_line = params.mov_specs.straight_line;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
 
-    double timestep = this->getTimeStep(params,fakeTraj);
+    double timestep = this->getTimeStep(params,fakeTraj,2);
 
 
     double T = timestep*steps;
@@ -4402,74 +4455,6 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
         params.vel_approach = vel_0;
         break;
     }
-
-
-
-
-    if(straight_line){
-        for (int i = 0; i <= steps;++i){
-            for (std::size_t j = 0; j<initPosture.size(); ++j){
-                if((i==steps) && (mod==0)){
-                    Vel(i,j) =  vel_app_ret(i,j)*(1-pow(tau.at(i),4));
-                }else if((i==0) && (mod==1)){
-                    Vel(i,j) =  vel_app_ret(i,j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4));
-                }else{
-                    Vel(i,j) =  vel_app_ret(i,j)*(1+2*pow(tau.at(i),3)-2*pow(tau.at(i),4));
-                }
-            }
-        }
-    }else{
-        for (int i = 0; i <= steps;++i){
-            for (std::size_t j = 0; j<initPosture.size(); ++j){
-                Vel(i,j) = (1-app)*(1-ret)*(30/T)*(finalPosture.at(j) - initPosture.at(j))*
-                        (pow(tau.at(i),2)-2*pow(tau.at(i),3)+pow(tau.at(i),4))+
-                        (1-app)*vel_0.at(j)*(1-18*pow(tau.at(i),2)+32*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + app*vel_0.at(j)*(1-pow(tau.at(i),4)) +
-                        (1-ret)*vel_f.at(j)*(-12*pow(tau.at(i),2)+28*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + ret*vel_f.at(j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4)) +
-                        (1-app)*(1-ret)*0.5*acc_0.at(j)*T*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
-                        (1-app)*(1-ret)*0.5*acc_f.at(j)*T*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
-
-            }
-        }
-    }
-
-    // check the joint maximum velocity and acceleration
-    for (int k =0; k < n_joints; ++k){
-        bool check = false;
-        double w_max_degree = w_max.at(k)*180/M_PI;
-        double alpha_max_degree = alpha_max.at(k)*180/M_PI;
-        do{
-            VectorXd jointTraj_k = jointTraj.col(k);
-            VectorXd jointTraj_k_deg = jointTraj_k*180/M_PI;
-            std::vector<double> std_jointTraj_k;
-            std::vector<double> jointVel_k; std::vector<double> jointAcc_k;
-            std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
-
-            Vel = MatrixXd::Constant(steps+1,initPosture.size(),0);
-
-            std::vector<double> timestep_vec(std_jointTraj_k.size(),timestep);
-            this->getDerivative(std_jointTraj_k,timestep_vec,jointVel_k);
-            this->getDerivative(jointVel_k,timestep_vec,jointAcc_k);
-
-
-
-
-            double* ptr_vel = &jointVel_k[0];
-            Eigen::Map<Eigen::VectorXd> jointVel_k_vec(ptr_vel, jointVel_k.size());
-            VectorXd jointVel_k_deg = jointVel_k_vec*180/M_PI;
-            double* ptr_acc = &jointAcc_k[0];
-            Eigen::Map<Eigen::VectorXd> jointAcc_k_vec(ptr_acc, jointAcc_k.size());
-            VectorXd jointAcc_k_deg = jointAcc_k_vec*180/M_PI;
-            std::vector<double>::iterator max_vel_it = std::max_element(jointVel_k.begin(), jointVel_k.end(), abs_compare);
-            double max_vel_traj_k = std::abs((*max_vel_it))*180/M_PI;
-            std::vector<double>::iterator max_acc_it = std::max_element(jointAcc_k.begin(), jointAcc_k.end(), abs_compare);
-            double max_acc_traj_k = std::abs((*max_acc_it))*180/M_PI;
-            if((max_acc_traj_k > alpha_max_degree) || (max_vel_traj_k > w_max_degree)){
-                timestep += DELTAT;
-                check=true;
-            }else{check=false;}
-        }while(check);
-    }
-
 
 
     return success;
@@ -4884,7 +4869,7 @@ double HUMPlanner::getTrajectory(int mov_type,int steps,hump_params &tols, std::
 {
     double timestep; MatrixXd traj_no_bound;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,traj_no_bound);
-    timestep = this->getTimeStep(tols,traj_no_bound);
+    timestep = this->getTimeStep(tols,traj_no_bound,mod);
     if((mod==2)||(mod==3)){ // approach or retreat
         VectorXd w_max_vec = VectorXd::Map(tols.w_max.data(),7);
         double w_max = w_max_vec.maxCoeff();
@@ -4911,7 +4896,7 @@ double HUMPlanner::getTrajectory(int mov_type,int steps,hump_params &tols,std::v
     double timestep;
     MatrixXd d_traj_no_bound;
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,d_traj_no_bound);
-    timestep = this->getTimeStep(tols,d_traj_no_bound);
+    timestep = this->getTimeStep(tols,d_traj_no_bound,mod);
 
     MatrixXd dTraj;
     MatrixXd bTraj;

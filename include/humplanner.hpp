@@ -334,9 +334,10 @@ private:
      * @brief getTimeStep
      * @param tols
      * @param jointTraj
+     * @param mod
      * @return
      */
-    double getTimeStep(hump_params& tols, MatrixXd& jointTraj);
+    double getTimeStep(hump_params& tols, MatrixXd& jointTraj, int mod);
 
     /**
      * @brief setBoundaryConditions
