@@ -64,6 +64,7 @@ const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction whe
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
 //const double W_RED_RET_MAX = 5; /**< maximum value of angular velocity reduction when retreating */
 
+const double DELTAT = 0.02; // value to increase the timestep when it does not respect the joint velocity and acceleration limits [sec]
 static bool abs_compare(double a, double b)
 {
     return (std::abs(a) < std::abs(b));

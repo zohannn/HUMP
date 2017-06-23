@@ -4130,7 +4130,7 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
 }
 
 
-void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double> &derFunction)
+void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double> &step_values, std::vector<double> &derFunction)
 {
     // Formula of the numarical differentiation with 5 points
        // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
@@ -4140,6 +4140,9 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
        // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
 
 
+       const double MIN_STEP_VALUE = 0.1;
+       const double MIN_DER_VALUE = 0.001;
+
        int h = 1;
        int tnsample;
        double f0;
@@ -4147,6 +4150,7 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
        double f2;
        double f3;
        double f4;
+       double step_value;
 
        // 1st point
        // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
@@ -4156,7 +4160,13 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
        f2 = function.at(tnsample+2);
        f3 = function.at(tnsample+3);
        f4 = function.at(tnsample+4);
-       derFunction.push_back((double)(-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h));
+       step_value = step_values.at(tnsample);
+       if(step_value==0){
+           //step_value=MIN_STEP_VALUE;
+           derFunction.push_back(MIN_DER_VALUE);
+       }else{
+            derFunction.push_back((double)(-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h*step_value));
+       }
 
        // 2nd point
        // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
@@ -4166,8 +4176,13 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
        f2 = function.at(tnsample+1);
        f3 = function.at(tnsample+2);
        f4 = function.at(tnsample+3);
-       derFunction.push_back((double)( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h));
-
+       step_value = step_values.at(tnsample);
+       if(step_value==0){
+           //step_value=MIN_STEP_VALUE;
+           derFunction.push_back(MIN_DER_VALUE);
+       }else{
+           derFunction.push_back((double)( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h*step_value));
+       }
 
        // 3rd point
        // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
@@ -4177,8 +4192,13 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
            f2 = function.at(i);
            f3 = function.at(i+1);
            f4 = function.at(i+2);
-           derFunction.push_back((double)(  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h));
-
+           step_value = step_values.at(i);
+           if(step_value==0){
+               //step_value=MIN_STEP_VALUE;
+               derFunction.push_back(MIN_DER_VALUE);
+           }else{
+               derFunction.push_back((double)(  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h*step_value));
+           }
        }
 
        // 4th point
@@ -4189,8 +4209,13 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
        f2 = function.at(tnsample-1);
        f3 = function.at(tnsample);
        f4 = function.at(tnsample+1);
-       derFunction.push_back((double)( -f0+6*f1-18*f2+10*f3+3*f4)/(12*h));
-
+       step_value = step_values.at(tnsample);
+       if(step_value==0){
+           //step_value=MIN_STEP_VALUE;
+           derFunction.push_back(MIN_DER_VALUE);
+       }else{
+           derFunction.push_back((double)( -f0+6*f1-18*f2+10*f3+3*f4)/(12*h*step_value));
+       }
 
        // 5th point
        // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
@@ -4200,7 +4225,13 @@ void HUMPlanner::getDerivative(std::vector<double> &function, std::vector<double
        f2 = function.at(tnsample-2);
        f3 = function.at(tnsample-1);
        f4 = function.at(tnsample);
-       derFunction.push_back((double)(  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h));
+       step_value = step_values.at(tnsample);
+       if(step_value==0){
+           //step_value=MIN_STEP_VALUE;
+           derFunction.push_back(MIN_DER_VALUE);
+       }else{
+           derFunction.push_back((double)(  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h*step_value));
+       }
 
 }
 
@@ -4221,13 +4252,6 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
     double den = 0.0;
 
     for (int k =0; k < n_joints; ++k){
-        // get the max velocity of the joint in the trajectory
-        VectorXd jointTraj_k = jointTraj.col(k); std::vector<double> std_jointTraj_k; std::vector<double> der_jointTraj_k;
-        std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
-        this->getDerivative(std_jointTraj_k,der_jointTraj_k);
-        std::vector<double>::iterator max_vel_it = std::max_element(der_jointTraj_k.begin(), der_jointTraj_k.end(), abs_compare);
-        double max_vel_traj_k = (*max_vel_it)*180/M_PI;
-
         double deltaTheta_k = 0.0;
         std::vector<double> diffs;
         for (int i = 1; i < steps; ++i){
@@ -4239,9 +4263,11 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
         int poss = std::distance(diffs.begin(),res);
         double deltaThetaMax = diffs.at(poss);
         double w_max_degree = w_max.at(k)*180/M_PI;
-        double alpha_max_degree = alpha_max.at(k)*180/M_PI;
-        double time_k = ((steps-1)*deltaThetaMax/w_max_degree) + ((steps-1)*max_vel_traj_k/alpha_max_degree) + (lambda.at(k)*log(1+deltaTheta_k));
 
+        double timestep_k_h = (lambda.at(k)/(steps-1))*log(1+deltaTheta_k); // human-like timestep
+        double timestep_k_w = deltaThetaMax/w_max_degree; // max velocity timestep
+        double timestep_k = timestep_k_h + timestep_k_w;
+        double time_k = (steps-1)*timestep_k;
         num += lambda.at(k)*deltaTheta_k*time_k;
         den += lambda.at(k)*deltaTheta_k;
 
@@ -4249,6 +4275,7 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj)
 
     double totalTime = num/den;
     timestep = (totalTime/(steps-1));
+
     return timestep;
 }
 
@@ -4262,8 +4289,9 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
     this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
 
     double timestep = this->getTimeStep(params,fakeTraj);
-    double T = timestep*steps;
 
+
+    double T = timestep*steps;
     VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),7);
     double w_max = w_max_vec.maxCoeff();
     VectorXd init = VectorXd::Map(initPosture.data(),7);
@@ -4374,6 +4402,75 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
         params.vel_approach = vel_0;
         break;
     }
+
+
+
+
+    if(straight_line){
+        for (int i = 0; i <= steps;++i){
+            for (std::size_t j = 0; j<initPosture.size(); ++j){
+                if((i==steps) && (mod==0)){
+                    Vel(i,j) =  vel_app_ret(i,j)*(1-pow(tau.at(i),4));
+                }else if((i==0) && (mod==1)){
+                    Vel(i,j) =  vel_app_ret(i,j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4));
+                }else{
+                    Vel(i,j) =  vel_app_ret(i,j)*(1+2*pow(tau.at(i),3)-2*pow(tau.at(i),4));
+                }
+            }
+        }
+    }else{
+        for (int i = 0; i <= steps;++i){
+            for (std::size_t j = 0; j<initPosture.size(); ++j){
+                Vel(i,j) = (1-app)*(1-ret)*(30/T)*(finalPosture.at(j) - initPosture.at(j))*
+                        (pow(tau.at(i),2)-2*pow(tau.at(i),3)+pow(tau.at(i),4))+
+                        (1-app)*vel_0.at(j)*(1-18*pow(tau.at(i),2)+32*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + app*vel_0.at(j)*(1-pow(tau.at(i),4)) +
+                        (1-ret)*vel_f.at(j)*(-12*pow(tau.at(i),2)+28*pow(tau.at(i),3)-15*pow(tau.at(i),4)) + ret*vel_f.at(j)*(2*pow(tau.at(i),3)-pow(tau.at(i),4)) +
+                        (1-app)*(1-ret)*0.5*acc_0.at(j)*T*(2*tau.at(i)-9*pow(tau.at(i),2)+12*pow(tau.at(i),3)-5*pow(tau.at(i),4))+
+                        (1-app)*(1-ret)*0.5*acc_f.at(j)*T*(3*pow(tau.at(i),2)-8*pow(tau.at(i),3)+5*pow(tau.at(i),4));
+
+            }
+        }
+    }
+
+    // check the joint maximum velocity and acceleration
+    for (int k =0; k < n_joints; ++k){
+        bool check = false;
+        double w_max_degree = w_max.at(k)*180/M_PI;
+        double alpha_max_degree = alpha_max.at(k)*180/M_PI;
+        do{
+            VectorXd jointTraj_k = jointTraj.col(k);
+            VectorXd jointTraj_k_deg = jointTraj_k*180/M_PI;
+            std::vector<double> std_jointTraj_k;
+            std::vector<double> jointVel_k; std::vector<double> jointAcc_k;
+            std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
+
+            Vel = MatrixXd::Constant(steps+1,initPosture.size(),0);
+
+            std::vector<double> timestep_vec(std_jointTraj_k.size(),timestep);
+            this->getDerivative(std_jointTraj_k,timestep_vec,jointVel_k);
+            this->getDerivative(jointVel_k,timestep_vec,jointAcc_k);
+
+
+
+
+            double* ptr_vel = &jointVel_k[0];
+            Eigen::Map<Eigen::VectorXd> jointVel_k_vec(ptr_vel, jointVel_k.size());
+            VectorXd jointVel_k_deg = jointVel_k_vec*180/M_PI;
+            double* ptr_acc = &jointAcc_k[0];
+            Eigen::Map<Eigen::VectorXd> jointAcc_k_vec(ptr_acc, jointAcc_k.size());
+            VectorXd jointAcc_k_deg = jointAcc_k_vec*180/M_PI;
+            std::vector<double>::iterator max_vel_it = std::max_element(jointVel_k.begin(), jointVel_k.end(), abs_compare);
+            double max_vel_traj_k = std::abs((*max_vel_it))*180/M_PI;
+            std::vector<double>::iterator max_acc_it = std::max_element(jointAcc_k.begin(), jointAcc_k.end(), abs_compare);
+            double max_acc_traj_k = std::abs((*max_acc_it))*180/M_PI;
+            if((max_acc_traj_k > alpha_max_degree) || (max_vel_traj_k > w_max_degree)){
+                timestep += DELTAT;
+                check=true;
+            }else{check=false;}
+        }while(check);
+    }
+
+
 
     return success;
 }
@@ -5557,7 +5654,7 @@ int HUMPlanner::getSteps(std::vector<double> &maxLimits, std::vector<double> &mi
     VectorXd final = VectorXd::Map(finalPosture.data(), finalPosture.size());
     double num = (final-init).norm();
 
-    n_steps = (int) (N_STEP_MIN+(N_STEP_MAX-N_STEP_MIN)*(num/den));
+    n_steps = static_cast<int>(0.5 + (N_STEP_MIN+(N_STEP_MAX-N_STEP_MIN)*(num/den)));
 
     return n_steps;
 

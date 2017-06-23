@@ -325,9 +325,10 @@ private:
     /**
      * @brief getDerivative
      * @param function
+     * @param step_values
      * @param derFunction
      */
-    void getDerivative(std::vector<double> &function, std::vector<double> &derFunction);
+    void getDerivative(std::vector<double> &function, std::vector<double> &step_values, std::vector<double> &derFunction);
 
     /**
      * @brief getTimeStep
