@@ -4276,58 +4276,57 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj,int mod)
     double totalTime = num/den;
     timestep = (totalTime/(steps-1));
 
-    // check the joint maximum velocity and acceleration
-    if(mod!=2 && mod!=3){ //  move or pre_approach
-        std::vector<double> vel_0 = tols.bounds.vel_0;
-        std::vector<double> acc_0 = tols.bounds.acc_0;
-        //std::vector<double> vel_f;
-        //std::vector<double> acc_f;
-        //if(mod==0){
-        //  vel_f = tols.bounds.vel_f;
-        //  acc_f = tols.bounds.acc_f;
-        //}else if(mod==1){
-        //  vel_f = tols.vel_approach;
-        //  acc_f = std::vector<double>(tols.bounds.acc_0.size(),0.0);
-        //}
-        for (int k =0; k < n_joints; ++k){
-            bool check = false;
-            //double w_max_degree = w_max.at(k)*180/M_PI;
-            double alpha_max_degree = alpha_max.at(k)*180/M_PI;
-            double vel_0_k = vel_0.at(k); //double vel_f_k = vel_f.at(k);
-            double acc_0_k = acc_0.at(k); //double acc_f_k = acc_f.at(k);
-            double deltat = 0.02; // value to increase the timestep when it does not respect the joint velocity and acceleration limits [sec]
-            do
-            {
-                VectorXd jointTraj_k = jointTraj.col(k);
-                //VectorXd jointTraj_k_deg = jointTraj_k*180/M_PI;
-                std::vector<double> std_jointTraj_k;
-                std::vector<double> jointVel_k; std::vector<double> jointAcc_k;
-                std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
-                std::vector<double> timestep_vec(std_jointTraj_k.size(),timestep);
-                this->getDerivative(std_jointTraj_k,timestep_vec,jointVel_k);
-                jointVel_k.at(0) = vel_0_k; //jointVel_k.at(jointVel_k.size()-1) = vel_f_k;
-                this->getDerivative(jointVel_k,timestep_vec,jointAcc_k);
-                jointAcc_k.at(0) = acc_0_k; //jointAcc_k.at(jointAcc_k.size()-1) = acc_f_k;
-                //double* ptr_vel = &jointVel_k[0];
-                //Eigen::Map<Eigen::VectorXd> jointVel_k_vec(ptr_vel, jointVel_k.size());
-                //VectorXd jointVel_k_deg = jointVel_k_vec*180/M_PI;
-                //double* ptr_acc = &jointAcc_k[0];
-                //Eigen::Map<Eigen::VectorXd> jointAcc_k_vec(ptr_acc, jointAcc_k.size());
-                //VectorXd jointAcc_k_deg = jointAcc_k_vec*180/M_PI;
-                //std::vector<double>::iterator max_vel_it = std::max_element(jointVel_k.begin(), jointVel_k.end(), abs_compare);
-                //double max_vel_traj_k = std::abs((*max_vel_it))*180/M_PI;
-                std::vector<double>::iterator max_acc_it = std::max_element(jointAcc_k.begin(), jointAcc_k.end(), abs_compare);
-                double max_acc_traj_k = std::abs((*max_acc_it))*180/M_PI;
-                //if((max_acc_traj_k > alpha_max_degree - std::abs(acc_0_k*180/M_PI)) || (max_vel_traj_k > w_max_degree - std::abs(vel_0_k*180/M_PI))){
-                if((max_acc_traj_k > alpha_max_degree - std::abs(acc_0_k*180/M_PI))){
-                    timestep += deltat;
-                    check=true;
-                }else{check=false;}
-            }while(check || timestep > 1.5);
+    if(HAS_JOINT_ACCELEARATION_MAX_LIMIT){
+        // check the joint maximum velocity and acceleration
+        if(mod!=2 && mod!=3){ //  move or pre_approach
+            std::vector<double> vel_0 = tols.bounds.vel_0;
+            std::vector<double> acc_0 = tols.bounds.acc_0;
+            std::vector<double> vel_f;
+            std::vector<double> acc_f;
+            if(mod==0){
+              vel_f = tols.bounds.vel_f;
+              acc_f = tols.bounds.acc_f;
+            }else if(mod==1){
+              vel_f = tols.vel_approach;
+              acc_f = std::vector<double>(tols.bounds.acc_0.size(),0.0);
+            }
+            for (int k =0; k < n_joints; ++k){
+                bool check = false;
+                double alpha_max_degree = alpha_max.at(k)*180/M_PI;
+                double vel_0_k = vel_0.at(k); double vel_f_k = vel_f.at(k);
+                double acc_0_k = acc_0.at(k); double acc_f_k = acc_f.at(k);
+                double deltat = 0.02; // value to increase the timestep when it does not respect the joint velocity and acceleration limits [sec]
+                do
+                {
+                    VectorXd jointTraj_k = jointTraj.col(k);
+                    //VectorXd jointTraj_k_deg = jointTraj_k*180/M_PI;
+                    std::vector<double> std_jointTraj_k;
+                    std::vector<double> jointVel_k; std::vector<double> jointAcc_k;
+                    std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
+                    std::vector<double> timestep_vec(std_jointTraj_k.size(),timestep);
+                    this->getDerivative(std_jointTraj_k,timestep_vec,jointVel_k);
+                    jointVel_k.at(0) = vel_0_k; jointVel_k.at(jointVel_k.size()-1) = vel_f_k;
+                    this->getDerivative(jointVel_k,timestep_vec,jointAcc_k);
+                    jointAcc_k.at(0) = acc_0_k; jointAcc_k.at(jointAcc_k.size()-1) = acc_f_k;
+                    //double* ptr_vel = &jointVel_k[0];
+                    //Eigen::Map<Eigen::VectorXd> jointVel_k_vec(ptr_vel, jointVel_k.size());
+                    //VectorXd jointVel_k_deg = jointVel_k_vec*180/M_PI;
+                    //double* ptr_acc = &jointAcc_k[0];
+                    //Eigen::Map<Eigen::VectorXd> jointAcc_k_vec(ptr_acc, jointAcc_k.size());
+                    //VectorXd jointAcc_k_deg = jointAcc_k_vec*180/M_PI;
+                    //std::vector<double>::iterator max_vel_it = std::max_element(jointVel_k.begin(), jointVel_k.end(), abs_compare);
+                    //double max_vel_traj_k = std::abs((*max_vel_it))*180/M_PI;
+                    std::vector<double>::iterator max_acc_it = std::max_element(jointAcc_k.begin(), jointAcc_k.end(), abs_compare);
+                    double max_acc_traj_k = std::abs((*max_acc_it))*180/M_PI;
+                    double acc_th = alpha_max_degree - std::max(std::abs(acc_0_k),std::abs(acc_f_k))*180/M_PI;
+                    if(max_acc_traj_k > acc_th){
+                        timestep += deltat;
+                        check=true;
+                    }else{check=false;}
+                }while(check || timestep > 1.5);
+            }
         }
     }
-
-
 
     return timestep;
 }
