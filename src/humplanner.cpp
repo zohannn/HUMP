@@ -4323,7 +4323,7 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj,int mod)
                         timestep += deltat;
                         check=true;
                     }else{check=false;}
-                }while(check || timestep > 1.5);
+                }while(check && (timestep < 1.5));
             }
         }
     }
