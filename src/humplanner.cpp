@@ -4405,10 +4405,10 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
             }
             for (std::size_t i = 0; i<new_posture_ext.size(); ++i){
                 //vel_0
-                double vel_0_value =((double)10*(new_posture_ext.at(i)-initPosture.at(i)))/(11*timestep);
+                double vel_0_value =((double)(new_posture_ext.at(i)-initPosture.at(i)))/timestep;
                 vel_0.push_back(vel_0_value);
                 //vel_f
-                double vel_f_value =((double)10*(new_posture_ext.at(i)-initPosture.at(i)))/(11*timestep);
+                double vel_f_value =((double)(new_posture_ext.at(i)-initPosture.at(i)))/timestep;
                 vel_f.push_back(vel_f_value);
                 //acc_0
                 //double acc_0_value =(double)2*vel_0_value/timestep;
@@ -4430,12 +4430,10 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
             double vel_f_value =((double)10*(finalPosture.at(i)-initPosture.at(i)))/(3*T);
             vel_f.push_back(vel_f_value);
             //acc_0
-            //double acc_0_value =(double)4*vel_0_value/T;
-            double acc_0_value = 0.0;
+            double acc_0_value =(double)4*vel_0_value/T;
             acc_0.push_back(acc_0_value);
             //acc_f
-            //double acc_f_value =(double)2*vel_f_value/T;
-            double acc_f_value = 0.0;
+            double acc_f_value =(double)2*vel_f_value/T;
             acc_f.push_back(acc_f_value);
         }
     }
@@ -4559,7 +4557,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
                         vel_app_ret(i,j) = vel_0.at(j);
                     }else{
                         Traj(i,j) = new_posture_ext.at(j);
-                        vel_app_ret(i,j) = 1.1*(new_posture_ext.at(j) - init_posture_0.at(j))/timestep;
+                        vel_app_ret(i,j) = (new_posture_ext.at(j) - init_posture_0.at(j))/timestep;
                     }
                 }
                 hand_tar.at(0) = hand_tar.at(0) + delta_x;
