@@ -64,7 +64,7 @@ const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction whe
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
 //const double W_RED_RET_MAX = 5; /**< maximum value of angular velocity reduction when retreating */
 
-const bool HAS_JOINT_ACCELEARATION_MAX_LIMIT = true; // true to check acceleration maximum limit, false otherwise
+const bool HAS_JOINT_ACCELEARATION_MAX_LIMIT = true; /**< true to check acceleration maximum limit, false otherwise */
 
 static bool abs_compare(double a, double b)
 {
