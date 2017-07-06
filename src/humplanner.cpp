@@ -4544,17 +4544,26 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
             }else{
                init_posture_0 = new_posture_ext;
             }
-            success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0, new_posture);
+            if(i==steps){
+                success=true;
+            }else{
+                success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0, new_posture);
+            }
             if(success){
-                new_posture_ext = new_posture;
-                for(size_t k=new_posture.size();k<finalPosture.size();++k){
-                    double delta_theta_fing = (finalPosture.at(k)-initPosture.at(k))/(steps+1);
-                    new_posture_ext.push_back(init_posture_0.at(k)+delta_theta_fing);
+                if(i!=steps){
+                    new_posture_ext = new_posture;
+                    for(size_t k=new_posture.size();k<finalPosture.size();++k){
+                        double delta_theta_fing = (finalPosture.at(k)-initPosture.at(k))/(steps+1);
+                        new_posture_ext.push_back(init_posture_0.at(k)+delta_theta_fing);
+                    }
                 }
-                for (std::size_t j = 0; j<new_posture_ext.size(); ++j){
+                for (std::size_t j = 0; j<finalPosture.size(); ++j){
                     if(i==0){
                         Traj(i,j) = init_posture_0.at(j);
                         vel_app_ret(i,j) = vel_0.at(j);
+                    }else if(i==steps){
+                        Traj(i,j) = finalPosture.at(j);
+                        vel_app_ret(i,j) = (finalPosture.at(j) - init_posture_0.at(j))/timestep;
                     }else{
                         Traj(i,j) = new_posture_ext.at(j);
                         vel_app_ret(i,j) = (new_posture_ext.at(j) - init_posture_0.at(j))/timestep;
@@ -4567,7 +4576,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
             }else{
                 break;
             }
-        }
+        }// for loop
         params.mov_specs.target = init_target;
         params.mov_specs.coll = init_coll;
     }else{
