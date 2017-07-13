@@ -51,6 +51,10 @@ namespace HUMotion{
 
 typedef boost::shared_ptr<Object> objectPtr;/**< shared pointer to an object in the scenario */
 
+const double SPACER = 5.0*static_cast<double>(M_PI)/180; /**< degree used to space the joint limits [deg]: IPOPT sometimes does not fully respect all the constraints,
+                                                              but the joint limits has to be respected
+                                                              This parameter helps to stay within the joint range */
+
 const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce posture is reached */
 const double AP = 20.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick [rad] */
 

@@ -385,7 +385,7 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     stream << string("param llim := \n");
 
     for (std::size_t i=0; i < minArmLimits.size(); ++i){
-        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)));
+        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+SPACER));
         boost::replace_all(minLim,",",".");
         if (i == minArmLimits.size()-1){
             stream << to_string(i+1)+string(" ")+minLim+string(";\n");
@@ -398,7 +398,7 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     stream << string("param ulim := \n");
 
     for (std::size_t i=0; i < maxArmLimits.size(); ++i){
-        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)));
+        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-SPACER));
         boost::replace_all(maxLim,",",".");
 
         if (i == maxArmLimits.size()-1){
@@ -2731,7 +2731,9 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
     // tolerances
     double timestep; MatrixXd traj_no_bound;
     this->directTrajectoryNoBound(steps,initAuxPosture,finalAuxPosture,traj_no_bound);
-    timestep = this->getTimeStep(params,traj_no_bound,2);
+    int mod;
+    if(pre_post==0){mod=0;}else{mod=1;}
+    timestep = this->getTimeStep(params,traj_no_bound,mod);
     double totalTime = timestep*steps;
     std::vector<double> lambda = params.lambda_bounce;
     std::vector<double> tolsArm = params.tolsArm;
@@ -3916,7 +3918,6 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
     std::vector<double> initialGuess(minArmLimits.size(),0.0);
     if ((pre_post==1) && rand_init){ // pre_posture for approaching
-        const double SPACER = 10.0*M_PI/180;
         for(size_t i=0; i < minArmLimits.size();++i){
             initialGuess.at(i)=getRand(minArmLimits.at(i)+SPACER,maxArmLimits.at(i)-SPACER);
         }
