@@ -3769,7 +3769,7 @@ bool HUMPlanner::amplRead(string &datFile, string &modFile, string &nlFile)
 //#endif
 }
 
-bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, double acc_tol)
+bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, double acc_tol, double constr_viol_tol)
 {
     // Create a new instance of IpoptApplication
     //  (use a SmartPtr, not raw)
@@ -3780,6 +3780,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
 
     app->Options()->SetNumericValue("tol", tol);
     app->Options()->SetNumericValue("acceptable_tol", acc_tol);
+    app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
     app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
@@ -3939,8 +3940,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
             std::vector<Number> x_sol;
             try
             {
-                double tol_stop = 1e-2;
-                if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
+                if (this->optimize(nlfile,x_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL)){
                     finalPosture = std::vector<double>(x_sol.size());
                     for (std::size_t i=0; i < x_sol.size(); ++i){
                         finalPosture.at(i)=x_sol[i];
@@ -4077,8 +4077,7 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
             std::vector<Number> x_sol;
             try
             {
-                double tol_stop = 1e-6;
-                if (this->optimize(nlfile,x_sol,tol_stop,tol_stop)){
+                if (this->optimize(nlfile,x_sol,BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL)){
                     size_t size;
                     bouncePosture = std::vector<double>(joints_arm+joints_hand);
                     if(place){
