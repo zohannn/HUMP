@@ -782,7 +782,7 @@ private:
      * @param constr_viol_tol
      * @return
      */
-    bool optimize(string &nlfile, std::vector<Number>& x,double tol, double acc_tol, double constr_viol_tol);
+    bool optimize(string &nlfile, std::vector<Number>& x, double tol, double acc_tol, double constr_viol_tol);
 
     /**
      * @brief getObstaclesSingleArm
