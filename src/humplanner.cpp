@@ -2163,16 +2163,16 @@ void HUMPlanner::writeBodyConstraints(ofstream &stream, bool final)
     if (final){
         //stream << string("subject to BodyArm_constr{j in 1..15}: (Points_Arm[j,1]/body[1])^2 + (Points_Arm[j,2]/body[2])^2 >= 1; \n");
 
-        stream << string("subject to BodyArm_Elbow: (Elbow[1]/body[1])^2 + (Elbow[2]/body[2])^2 >= 1; \n");
-        stream << string("subject to BodyArm_Wrist: (Wrist[1]/body[1])^2 + (Wrist[2]/body[2])^2 >= 1; \n");
-        stream << string("subject to BodyArm_Hand:  (Hand[1]/body[1])^2  + (Hand[2]/body[2])^2  >= 1; \n\n");
+        stream << string("subject to BodyArm_Elbow: (Elbow[1]/body[1])^2 + (Elbow[2])/body[2])^2 >= Elbow[4]; \n");
+        stream << string("subject to BodyArm_Wrist: (Wrist[1])/body[1])^2 + (Wrist[2])/body[2])^2 >= Wrist[4]; \n");
+        stream << string("subject to BodyArm_Hand:  (Hand[1])/body[1])^2  + (Hand[2])/body[2])^2  >= Hand[4]; \n\n");
 
     }else{
         //stream << string("subject to BodyArm_constr{j in 1..15,l in Iterations}: (Points_Arm[j,1,l]/body[1])^2 + (Points_Arm[j,2,l]/body[2])^2 >= 1; \n");
 
-        stream << string("subject to BodyArm_Elbow{l in Iterations}: (Elbow[1,l]/body[1])^2 + (Elbow[2,l]/body[2])^2 >= 1; \n");
-        stream << string("subject to BodyArm_Wrist{l in Iterations}: (Wrist[1,l]/body[1])^2 + (Wrist[2,l]/body[2])^2 >= 1; \n");
-        stream << string("subject to BodyArm_Hand{l in Iterations}:  (Hand[1,l]/body[1])^2  + (Hand[2,l]/body[2])^2  >= 1; \n\n");
+        stream << string("subject to BodyArm_Elbow{l in Iterations}: (Elbow[1,l]/body[1])^2 + (Elbow[2,l]/body[2])^2 >= Elbow[4,l]; \n");
+        stream << string("subject to BodyArm_Wrist{l in Iterations}: (Wrist[1,l]/body[1])^2 + (Wrist[2,l]/body[2])^2 >= Wrist[4,l]; \n");
+        stream << string("subject to BodyArm_Hand{l in Iterations}:  (Hand[1,l]/body[1])^2  + (Hand[2,l]/body[2])^2  >= Hand[4,l]; \n\n");
 
 
     }
