@@ -878,6 +878,14 @@ private:
     int getSteps(std::vector<double>& maxLimits,std::vector<double>& minLimits,std::vector<double>& initPosture,std::vector<double>& finalPosture);
 
 
+    /**
+     * @brief compare_sizes
+     * @param pair_1
+     * @param pair_2
+     * @return
+     */
+    bool static compare_sizes (std::pair<std::string,double> pair_1, std::pair<std::string,double> pair_2);
+
     //double getAlpha(int arm, std::vector<double> &posture);
 
 
