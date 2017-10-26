@@ -3747,7 +3747,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
         stream_model << string("# Modelization of the object to place \n");
         stream_dat << string("# Data of the modelization of the object to place \n");
 
-        stream_model << string("var Obj2Transp_center {j in 1..3} = Hand[j] + dFH * z_H[j]; \n"); // center of the object
+        stream_model << string("var Obj2Transp_center {j in 1..3} = Hand[j] + dFH * z_H[j] + (ObjTar[1,j]-Tar_pos[j]); \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -3869,7 +3869,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
         stream_model << string("# Modelization of the object to place \n");
         stream_dat << string("# Data of the modelization of the object to place \n");
 
-        stream_model << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand[j,i] + dFH * z_H[j,i]; \n"); // center of the object
+        stream_model << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand[j,i] + dFH * z_H[j,i] + (ObjTar[1,j]-Tar_pos[j]); \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
