@@ -140,6 +140,7 @@ typedef struct{
     std::vector<double> finalHand;/**< final posture of the hand */
     std::vector<double> target;/**< target / location to reach: target(0)=x, target(1)=y, target(2)=z, target(3)=roll, target(4)=pitch, target(6)=yaw,*/
     objectPtr obj; /**< object involved in the movement. The info of the object have to be updated according to the selected movement */
+    std::string support_obj; /**< name of the object that is a support surface in place movements */
     bool approach;/**< true to use the approach options, false otherwise  */
     bool retreat;/**< true to use the retreat options, false otherwise */
     bool straight_line; /**< true to use the straight line option of the approach/retreat stage */

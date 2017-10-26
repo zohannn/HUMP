@@ -1094,6 +1094,34 @@ void HUMPlanner::writeRotMatObsts(ofstream &stream)
     stream << string("   ; \n");
 }
 
+void HUMPlanner::writeRotMatObjTar(ofstream &stream)
+{
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("# Rotation matrix of the object to place \n");
+    stream << string("param c_roll_obj {i in 1..n_ObjTar} := cos(ObjTar[i,7]); \n");
+    stream << string("param s_roll_obj {i in 1..n_ObjTar} := sin(ObjTar[i,7]); \n");
+    stream << string("param c_pitch_obj {i in 1..n_ObjTar} := cos(ObjTar[i,8]); \n");
+    stream << string("param s_pitch_obj {i in 1..n_ObjTar} := sin(ObjTar[i,8]); \n");
+    stream << string("param c_yaw_obj {i in 1..n_ObjTar} := cos(ObjTar[i,9]); \n");
+    stream << string("param s_yaw_obj {i in 1..n_ObjTar} := sin(ObjTar[i,9]); \n");
+
+    stream << string("param Rot_obj {i1 in 1..4, i2 in 1..4,i in 1..n_ObjTar} :=  \n");
+    stream << string("# 1st row \n");
+    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_obj[i]*c_pitch_obj[i] \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_obj[i]*c_yaw_obj[i]+c_roll_obj[i]*s_pitch_obj[i]*s_yaw_obj[i] \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_obj[i]*s_yaw_obj[i]+c_roll_obj[i]*s_pitch_obj[i]*c_yaw_obj[i] \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_obj[i]*c_pitch_obj[i] \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_obj[i]*c_yaw_obj[i]+s_roll_obj[i]*s_pitch_obj[i]*s_yaw_obj[i] \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_obj[i]*s_yaw_obj[i]+s_roll_obj[i]*s_pitch_obj[i]*c_yaw_obj[i] \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_obj[i] \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_obj[i]*s_yaw_obj[i] \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_obj[i]*c_yaw_obj[i] \n");
+    stream << string("   ; \n");
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+}
+
 void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matrix4d &matHand, std::vector<double> &tolsArm, bool final)
 {
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
@@ -1285,6 +1313,7 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("var x_H {j in 1..3} = T_W_H [j,1]; \n");
         stream << string("var y_H {j in 1..3} = T_W_H [j,2]; \n");
         stream << string("var z_H {j in 1..3} = T_W_H [j,3]; \n");
+        stream << string("var Rot_H {j in 1..3,k in 1..3} = T_W_H [j,k]; \n");
 
     }else{
         stream << string("var Shoulder {i in 1..4,j in Iterations} = #xyz+radius \n");
@@ -1311,6 +1340,7 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("var x_H {j in 1..3,i in Iterations} = T_W_H [j,1,i]; \n");
         stream << string("var y_H {j in 1..3,i in Iterations} = T_W_H [j,2,i]; \n");
         stream << string("var z_H {j in 1..3,i in Iterations} = T_W_H [j,3,i]; \n");
+        stream << string("var Rot_H {j in 1..3,k in 1..3,i in Iterations} = T_W_H [j,k,i]; \n");
     }
 }
 
@@ -2394,13 +2424,13 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         this->writeInfoObstacles(PostureDat,obsts);
         // object that has the target
         switch(mov_type){
-        case 0: //pick
+        case 0: case 1: //pick or place
             this->writeInfoObjectTarget(PostureDat,obj_tar);
             break;
         }
     }
     //close the file
-    PostureDat.close();
+    //PostureDat.close();
 
     // ------------- Write the mod file ------------------------- //
 
@@ -2461,6 +2491,16 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     // Direct Kinematics of the arm
     this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,true);
 
+    bool obj_place = false;
+    // object to transport (place movements in the plan and approach target posture selection or
+    //                        pick movement in the retreat target posture selection)
+    int n_s = 0; // number of spheres
+    if((mov_type==1 && (pre_post==0 || pre_post==1)) || (mov_type==0 && pre_post==2)){
+        obj_place = true;
+        std::vector<double> obj_tar_size; obj_tar->getSize(obj_tar_size);
+        n_s = this->model_spheres(PostureDat,PostureMod,obj_tar_size,true);
+    }
+
     switch(hand_code){
     case 0: // human hand
         this->writeHumanHandDirKin(PostureMod,tolsHand,true,false);
@@ -2502,6 +2542,14 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     PostureMod << string("else	if ( j=13 ) then 	Finger1_tip[i]\n");
     PostureMod << string("else	if ( j=14 ) then 	Finger2_tip[i] \n");
     PostureMod << string("else	if ( j=15 ) then 	Finger3_tip[i] \n");
+    if (obj_place){
+        int j_init = 15;
+        for(int i=1;i<=n_s;++i){
+            std::string i_str = to_string(i);
+            int j = j_init+i; std::string j_str = to_string(j);
+            PostureMod << string("else    if ( j=")+j_str+string(" ) then 	Obj2Transp_")+i_str+string("[i] \n");
+        }
+    }
     PostureMod << string("; \n\n");
 
     // objective function
@@ -2660,8 +2708,9 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
 
-    // close the file
+    // close the files
     PostureMod.close();
+    PostureDat.close();
 
     // ----- write run file for options --------
 
@@ -2958,12 +3007,12 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      this->writeInfoObstacles(PostureDat,objs);
      // object that has the target
      switch(mov_type){
-     case 0: // pick
+     case 0: case 1: // pick or place
          this->writeInfoObjectTarget(PostureDat,obj_tar);
          break;
      }
      //close the file
-     PostureDat.close();
+     //PostureDat.close();
 
      // ------------- Write the mod file ------------------------- //
 
@@ -3056,131 +3105,15 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // Direct Kinematics of the arm
      this->writeArmDirKin(PostureMod,matWorldToArm,matHand,tolsArm,false);
 
-     std::vector<double> obj_tar_size;
-     string sphere_radius_str; string sphere_diam_str;
-     //string obj_size_z;
-
      bool place = false; // true for place movements
      bool move = false; // true for move movements
 
      // object to transport (place movements)
+     int n_s = 0; // number of spheres
      if(mov_type==1){ // place
-         // Modellization of the object in spheres
-         PostureMod << string("# Modelization of the object to place \n");
          place = true;
-         obj_tar->getSize(obj_tar_size);
-         std::map< std::string, double > axis_map;
-         axis_map["x"] = obj_tar_size.at(0);
-         axis_map["y"] = obj_tar_size.at(1);
-         axis_map["z"] = obj_tar_size.at(2);
-         std::vector<std::pair<std::string,double> > obj_sizes(axis_map.begin(), axis_map.end());
-         std::sort(obj_sizes.begin(),obj_sizes.end(),&compare_sizes);
-         std::string axis_min = (obj_sizes.at(0)).first; std::string axis_middle = (obj_sizes.at(1)).first; std::string axis_max = (obj_sizes.at(2)).first;
-         double obj_min = (obj_sizes.at(0)).second; double obj_middle = (obj_sizes.at(1)).second; double obj_max = (obj_sizes.at(2)).second;
-         double sphere_diam = obj_min; sphere_diam_str = boost::str(boost::format("%.2f") % (sphere_diam)); boost::replace_all(sphere_diam_str,",",".");
-         sphere_radius_str = boost::str(boost::format("%.2f") % (sphere_diam/2)); boost::replace_all(sphere_radius_str,",",".");
-         int n_sphere_1 = round(obj_middle/sphere_diam+0.5); int ns1 = round(n_sphere_1/2-0.5);
-         int n_sphere_2 = round(obj_max/sphere_diam+0.5); int ns2 = round(n_sphere_2/2-0.5);
-         PostureMod << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand[j,i] + dFH * z_H[j,i]; \n"); // center of the object
-         int n_s =0; // number of spheres
-         int x=0; int y=0; int z=0; int k=0;
-         if(axis_min.compare("x")){ // the object minimum size is x
-             y=1; z=1;
-         }else if(axis_min.compare("y")){ // the object minimum size is y
-             x=1;z=1;
-         }else{ // the object minimum size is z
-             x=1; y=1;
-         }
-         for(int j=0;j<ns2;++j){// max size axis: positive direction
-             if(x==1 && y==1){
-                 k=j;
-             }else{k=0;}
-             n_s++; std::string n_s_str = to_string(n_s);
-             //PostureMod << string("param ext_")+n_s_str+string("{i in 1..3};\n");
-             //PostureDat.open(path+filenamedat);
-             PostureMod << string("param ext_")+n_s_str+string(" {i in 1..3} = \n");
-             string ext_1 =  boost::str(boost::format("%.2f") % ((double)x*k)); boost::replace_all(ext_1,",","."); PostureMod << to_string(1)+string(" ")+ext_1+string("\n");
-             string ext_2 =  boost::str(boost::format("%.2f") % (0.0)); boost::replace_all(ext_2,",","."); PostureMod << to_string(2)+string(" ")+ext_2+string("\n");
-             string ext_3 =  boost::str(boost::format("%.2f") % ((double)z*j)); boost::replace_all(ext_3,",","."); PostureMod << to_string(3)+string(" ")+ext_3+string(";\n");
-             //PostureDat.close();
-             PostureMod << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-             PostureMod << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
-             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
-                 if(x==1 && z==1){
-                     k=i;
-                 }else{k=j;}
-                 n_s++; std::string n_s_str = to_string(n_s);
-                 //PostureMod << string("param ext_")+n_s_str+string("{i in 1..3};\n");
-                 //PostureDat.open(path+filenamedat);
-                 PostureMod << string("param ext_")+n_s_str+string(" {i in 1..3} = \n");
-                 string ext_1 =  to_string(x*k); PostureMod << to_string(1)+string(" ")+ext_1+string("\n");
-                 string ext_2 =  to_string(y*i); PostureMod << to_string(2)+string(" ")+ext_2+string("\n");
-                 string ext_3 =  to_string(z*j); PostureMod << to_string(3)+string(" ")+ext_3+string(";\n");
-                 //PostureDat.close();
-                 PostureMod << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                 PostureMod << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
-             }
-             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
-                 if(x==1 && z==1){
-                     k=-i;
-                 }else{k=j;}
-                 n_s++; std::string n_s_str = to_string(n_s);
-                 //PostureMod << string("param ext_")+n_s_str+string("{i in 1..3};\n");
-                 //PostureDat.open(path+filenamedat);
-                 PostureMod << string("param ext_")+n_s_str+string(" {i in 1..3} = \n");
-                 string ext_1 =  to_string(x*k); PostureMod << to_string(1)+string(" ")+ext_1+string("\n");
-                 string ext_2 =  to_string(-y*i); PostureMod << to_string(2)+string(" ")+ext_2+string("\n");
-                 string ext_3 =  to_string(z*j); PostureMod << to_string(3)+string(" ")+ext_3+string(";\n");
-                 //PostureDat.close();
-                 PostureMod << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                 PostureMod << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
-             }
-         }
-         for(int j=1;j<ns2;++j){// max size axis: negative direction
-             if(x==1 && y==1){
-                 k=j;
-             }else{k=0;}
-             n_s++; std::string n_s_str = to_string(n_s);
-             //PostureMod << string("param ext_")+n_s_str+string("{i in 1..3};\n");
-             //PostureDat.open(path+filenamedat);
-             PostureMod << string("param ext_")+n_s_str+string(" {i in 1..3} = \n");
-             string ext_1 =  to_string(-x*k); PostureMod << to_string(1)+string(" ")+ext_1+string("\n");
-             string ext_2 =  to_string(0); PostureMod << to_string(2)+string(" ")+ext_2+string("\n");
-             string ext_3 =  to_string(-z*j); PostureMod << to_string(3)+string(" ")+ext_3+string(";\n");
-             //PostureDat.close();
-             PostureMod << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-             PostureMod << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
-             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
-                 if(x==1 && z==1){
-                     k=-i;
-                 }else{k=j;}
-                 n_s++; std::string n_s_str = to_string(n_s);
-                 //PostureMod << string("param ext_")+n_s_str+string("{i in 1..3};\n");
-                 //PostureDat.open(path+filenamedat);
-                 PostureMod << string("param ext_")+n_s_str+string(" {i in 1..3} = \n");
-                 string ext_1 =  to_string(-x*k); PostureMod << to_string(1)+string(" ")+ext_1+string("\n");
-                 string ext_2 =  to_string(y*i); PostureMod << to_string(2)+string(" ")+ext_2+string("\n");
-                 string ext_3 =  to_string(-z*j); PostureMod << to_string(3)+string(" ")+ext_3+string(";\n");
-                 //PostureDat.close();
-                 PostureMod << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                 PostureMod << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
-             }
-             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
-                 if(x==1 && z==1){
-                     k=i;
-                 }else{k=j;}
-                 n_s++; std::string n_s_str = to_string(n_s);
-                 //PostureMod << string("param ext_")+n_s_str+string("{i in 1..3};\n");
-                 //PostureDat.open(path+filenamedat);
-                 PostureMod << string("param ext_")+n_s_str+string(" {i in 1..3} = \n");
-                 string ext_1 =  to_string(-x*k); PostureMod << to_string(1)+string(" ")+ext_1+string("\n");
-                 string ext_2 =  to_string(-y*i); PostureMod << to_string(2)+string(" ")+ext_2+string("\n");
-                 string ext_3 =  to_string(-z*j); PostureMod << to_string(3)+string(" ")+ext_3+string(";\n");
-                 //PostureDat.close();
-                 PostureMod << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                 PostureMod << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
-             }
-         }
+         std::vector<double> obj_tar_size; obj_tar->getSize(obj_tar_size);
+         n_s = this->model_spheres(PostureDat,PostureMod,obj_tar_size,false);
      }else if(mov_type==2){
          // move
          move=true;         
@@ -3234,9 +3167,12 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      PostureMod << string("else	if ( j=14 ) then 	Finger2_tip[i,k] \n");
      PostureMod << string("else	if ( j=15 ) then 	Finger3_tip[i,k] \n");
      if (place){
-         PostureMod << string("else    if ( j=16 ) then 	Obj2Transp[i,k] \n");
-         PostureMod << string("else    if ( j=17 ) then 	Obj2Transp_1[i,k] \n");
-         PostureMod << string("else    if ( j=18 ) then 	Obj2Transp_2[i,k] \n");
+         int j_init = 15;
+         for(int i=1;i<=n_s;++i){
+             std::string i_str = to_string(i);
+             int j = j_init+i; std::string j_str = to_string(j);
+             PostureMod << string("else    if ( j=")+j_str+string(" ) then 	Obj2Transp_")+i_str+string("[i,k] \n");
+         }
      }
      PostureMod << string("; \n\n");
      // objective function
@@ -3758,8 +3694,8 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
 
-     // close the file
-     PostureMod.close();
+     // close the files
+     PostureMod.close(); PostureDat.close();
 
      // ----- write run file for options --------
      string filenamerun("options.run");
@@ -3775,6 +3711,282 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
      return true;
 
+}
+
+int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std::vector<double>& obj_tar_size,bool final)
+{
+    int n_s=0;
+    string sphere_radius_str; string sphere_diam_str;
+    // Rotation matrix of the object to place
+    this->writeRotMatObjTar(stream_model);
+    std::map< std::string, double > axis_map;
+    axis_map["x"] = obj_tar_size.at(0);
+    axis_map["y"] = obj_tar_size.at(1);
+    axis_map["z"] = obj_tar_size.at(2);
+    std::vector<std::pair<std::string,double> > obj_sizes(axis_map.begin(), axis_map.end());
+    std::sort(obj_sizes.begin(),obj_sizes.end(),&compare_sizes);
+    std::string axis_min = (obj_sizes.at(0)).first; std::string axis_middle = (obj_sizes.at(1)).first; std::string axis_max = (obj_sizes.at(2)).first;
+    double obj_min = (obj_sizes.at(0)).second; double obj_middle = (obj_sizes.at(1)).second; double obj_max = (obj_sizes.at(2)).second;
+    double sphere_diam = obj_min; sphere_diam_str = boost::str(boost::format("%.2f") % (sphere_diam)); boost::replace_all(sphere_diam_str,",",".");
+    sphere_radius_str = boost::str(boost::format("%.2f") % (sphere_diam/2)); boost::replace_all(sphere_radius_str,",",".");
+    int n_sphere_1 = round(obj_middle/sphere_diam+0.5); int ns1 = round(n_sphere_1/2-0.5);
+    int n_sphere_2 = round(obj_max/sphere_diam+0.5); int ns2 = round(n_sphere_2/2-0.5);
+
+    int x=0; int y=0; int z=0; int k=0;
+    if(axis_min.compare("x")){ // the object minimum size is x
+        y=1; z=1;
+    }else if(axis_min.compare("y")){ // the object minimum size is y
+        x=1;z=1;
+    }else{ // the object minimum size is z
+        x=1; y=1;
+    }
+
+    if(final){
+        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H[i1,j]*Rot_obj[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place \n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var Obj2Transp_center {j in 1..3} = Hand[j] + dFH * z_H[j]; \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }else{
+        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H[i1,j,i]*Rot_obj[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place \n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand[j,i] + dFH * z_H[j,i]; \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }
+    return n_s;
 }
 
 bool HUMPlanner::compare_sizes (std::pair<std::string,double> pair_1, std::pair<std::string,double> pair_2)
@@ -4008,11 +4220,12 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
         Vector3d vv = Rot_tar*v;
         tar_pos = tar_pos + dist*vv;
     }
+
     if(sqrt(pow(tar_pos(0) - shPos.at(0),2)+
             pow(tar_pos(1) - shPos.at(1),2)+
             pow(tar_pos(2) - shPos.at(2),2))>= max_ext){
         throw string("The movement to be planned goes out of the reachable workspace");
-    }
+    }    
 
     // initial guess
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
@@ -4026,6 +4239,20 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     // get the obstacles of the workspace
     std::vector<objectPtr> obsts;
     this->getObstaclesSingleArm(shPos,max_ext,obsts,hand_code);
+    if(mov_type==1 && pre_post==0){
+        // place movement, plan stage
+        // remove the support object from the obstacles
+        if(params.mov_specs.support_obj.compare("")){
+            std::string support_obj_name = params.mov_specs.support_obj;
+            for(size_t i=0; i < obsts.size();++i){
+                objectPtr curr_obj = obsts.at(i);
+                std::string curr_obj_name = curr_obj->getName();
+                if(support_obj_name.compare(curr_obj_name)==0){
+                    obsts.erase (obsts.begin()+i);
+                }
+            }
+        }
+    }
 
     // write the files for the final posture selection
     bool written = this->writeFilesFinalPosture(params,mov_type,pre_post,initArmPosture,initialGuess,obsts);
