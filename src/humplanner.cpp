@@ -2272,7 +2272,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     // movement settings
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
-    int griptype = params.mov_specs.griptype;
+    //int griptype = params.mov_specs.griptype;
     bool coll = params.mov_specs.coll;
     std::vector<double> tar = params.mov_specs.target;
     int dHO = params.mov_specs.dHO;
@@ -2600,6 +2600,19 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
 
 
     PostureMod << string("# Hand orientation\n");
+    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (z_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and z_H = x_t \n");
+    /*
+    switch (mov_type){
+    case 0: //pick
+        // hand constraints for approaching and retreating direction setting
+        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (z_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and z_H = x_t \n");
+        break;
+    case 1:// place
+        //PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -y_t \n");
+        break;
+    }
+    */
+    /*
     switch(griptype){
     case 111: case 211: // side thumb left
         switch (mov_type){
@@ -2632,7 +2645,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         break;
 
     } // switch griptype
-
+    */
 
     if(obstacle_avoidance && coll){
         // obstacles
@@ -2748,7 +2761,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
     // movement setting
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
-    int griptype = params.mov_specs.griptype;    
+    //int griptype = params.mov_specs.griptype;
     double dHO = params.mov_specs.dHO;    
     std::vector<double> finalHand = params.mov_specs.finalHand;    
     std::vector<double> tar = params.mov_specs.target;    
@@ -3194,6 +3207,25 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      }else{
          n_steps_init_str = boost::str(boost::format("%d") % 1);
      }
+     switch (mov_type) {
+     case 0: // pick
+         // hand constraints for approaching direction settings
+         if(approach && pre_post==1){
+             PostureMod << string("# Hand approach orientation\n");
+             PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - x_t[i])^2)<= 0.01; #  x_H = x_t \n\n");
+         }
+         break;
+     case 1: // place
+         // hand constraints for approaching and retreating direction settings
+         /*
+         if(approach && pre_post==1){
+             PostureMod << string("# Hand approach orientation\n");
+             PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 + sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  x_H = z_t  and z_H = -y_t \n\n");
+         }
+         */
+         break;
+     }
+     /*
      switch (griptype) {
      case 111: case 211: // side thumb left
 
@@ -3207,12 +3239,12 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
              break;
          case 1: // place
              // hand constraints for approaching and retreating direction settings
-             /*
-             if(approach && pre_post==1){
-                 PostureMod << string("# Hand approach orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 + sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  x_H = z_t  and z_H = -y_t \n\n");
-             }
-             */
+
+             //if(approach && pre_post==1){
+             //    PostureMod << string("# Hand approach orientation\n");
+             //    PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 + sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  x_H = z_t  and z_H = -y_t \n\n");
+             //}
+
              break;
          }
 
@@ -3230,6 +3262,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      default:// move movements (there is no griptype)
          break;
      }
+    */
 
      // move plane constraints
      if(move && use_plane && !plane_params.empty()){
@@ -4167,20 +4200,22 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
     bool rand_init = params.mov_specs.rand_init;
+    bool straight = params.mov_specs.straight_line;
     std::vector<double> target = params.mov_specs.target;
     std::vector<double> minLimits;
     std::vector<double> maxLimits;
     bool approach = params.mov_specs.approach;
     bool retreat = params.mov_specs.retreat;
-    std::vector<double> approach_retreat;
+    std::vector<double> approach_vec;
+    std::vector<double> retreat_vec;
     switch(mov_type){
     case 0: // pick
-        if(approach){approach_retreat = params.mov_specs.pre_grasp_approach;}
-        if(retreat){approach_retreat = params.mov_specs.post_grasp_retreat;}
+        if(approach){approach_vec = params.mov_specs.pre_grasp_approach;}
+        if(retreat){retreat_vec = params.mov_specs.post_grasp_retreat;}
         break;
     case 1: // place
-        if(approach){approach_retreat = params.mov_specs.pre_place_approach;}
-        if(retreat){approach_retreat = params.mov_specs.post_place_retreat;}
+        if(approach){approach_vec = params.mov_specs.pre_place_approach;}
+        if(retreat){retreat_vec = params.mov_specs.post_place_retreat;}
         break;
     }
 
@@ -4208,24 +4243,40 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
         break;
     }
 
-    // check if the target is in the workspace of the robotic arm
-    double max_ext = Lh+Ll+Lu;
     std::vector<double> shPos; this->getShoulderPos(arm_code,initPosture,shPos);
-    Vector3d tar_pos(target.at(0),target.at(1),target.at(2));
-    if(approach || retreat){
-        std::vector<double> rpy = {target.at(3),target.at(4),target.at(5)};
-        Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
-        double dist = approach_retreat.at(3);
-        Vector3d v(approach_retreat.at(0),approach_retreat.at(1),approach_retreat.at(2));
-        Vector3d vv = Rot_tar*v;
-        tar_pos = tar_pos + dist*vv;
+    double max_ext = Lh+Ll+Lu;
+    if(!straight){
+        // check if the target is in the workspace of the robotic arm
+        Vector3d tar_pos(target.at(0),target.at(1),target.at(2));
+        Vector3d tar_pos_app(target.at(0),target.at(1),target.at(2));
+        Vector3d tar_pos_ret(target.at(0),target.at(1),target.at(2));
+        if(approach){
+            std::vector<double> rpy = {target.at(3),target.at(4),target.at(5)};
+            Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+            double dist = approach_vec.at(3);
+            Vector3d v(approach_vec.at(0),approach_vec.at(1),approach_vec.at(2));
+            Vector3d vv = Rot_tar*v;
+            tar_pos_app = tar_pos_app + dist*vv;
+        }else if(retreat){
+            std::vector<double> rpy = {target.at(3),target.at(4),target.at(5)};
+            Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+            double dist = retreat_vec.at(3);
+            Vector3d v(retreat_vec.at(0),retreat_vec.at(1),retreat_vec.at(2));
+            Vector3d vv = Rot_tar*v;
+            tar_pos_ret = tar_pos_ret + dist*vv;
+        }
+        if((sqrt(pow(tar_pos(0) - shPos.at(0),2)+
+                pow(tar_pos(1) - shPos.at(1),2)+
+                pow(tar_pos(2) - shPos.at(2),2))>= max_ext)||
+                (sqrt(pow(tar_pos_app(0) - shPos.at(0),2)+
+                      pow(tar_pos_app(1) - shPos.at(1),2)+
+                      pow(tar_pos_app(2) - shPos.at(2),2))>= max_ext)||
+                (sqrt(pow(tar_pos_ret(0) - shPos.at(0),2)+
+                      pow(tar_pos_ret(1) - shPos.at(1),2)+
+                      pow(tar_pos_ret(2) - shPos.at(2),2))>= max_ext)){
+            throw string("The movement to be planned goes out of the reachable workspace");
+        }
     }
-
-    if(sqrt(pow(tar_pos(0) - shPos.at(0),2)+
-            pow(tar_pos(1) - shPos.at(1),2)+
-            pow(tar_pos(2) - shPos.at(2),2))>= max_ext){
-        throw string("The movement to be planned goes out of the reachable workspace");
-    }    
 
     // initial guess
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
