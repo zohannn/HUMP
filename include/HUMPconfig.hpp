@@ -183,7 +183,41 @@ typedef struct{
     vector<double> alpha_max; /**< maximum angular acceleration for each joint [rad/s²] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
-}hump_params;
+} hump_params;
+
+/** this struct defines the tolerances that have to be set before planning the trajectory*/
+typedef struct{
+    mov_params mov_specs_right; /**< specifications of the movement (right) */
+    mov_params mov_specs_left; /**< specifications of the movement (left) */
+    vector<double> tolsArm_right; /**< radius of the spheres along the right arm in [mm] */
+    vector<double> tolsArm_left; /**< radius of the spheres along the left arm in [mm] */
+    MatrixXd tolsHand_right; /**< radius of the spheres along the right hand fingers in [mm] */
+    MatrixXd tolsHand_left; /**< radius of the spheres along the left hand fingers in [mm] */
+    MatrixXd final_tolsObstacles_right; /**< tolerances of the final right posture against the obstacles in [mm] */
+    MatrixXd final_tolsObstacles_left; /**< tolerances of the final left posture against the obstacles in [mm] */
+    vector< MatrixXd > singleArm_tolsTarget_right; /**< tolerances of the trajectory against the target in [mm] (right) */
+    vector< MatrixXd > singleArm_tolsTarget_left; /**< tolerances of the trajectory against the target in [mm] (left) */
+    vector< MatrixXd > singleArm_tolsObstacles_right; /**< tolerances of the trajectory against the obstacles in [mm] (right) */
+    vector< MatrixXd > singleArm_tolsObstacles_left; /**< tolerances of the trajectory against the obstacles in [mm] (left) */
+    double tolTarPos_right; /**< tolerance of the final position of the right hand against the target in [mm] */
+    double tolTarPos_left; /**< tolerance of the final position of the left hand against the target in [mm] */
+    double tolTarOr_right; /**< tolerance of the final orientation of the right hand against the target in [mm] */
+    double tolTarOr_left; /**< tolerance of the final orientation of the left hand against the target in [mm] */
+    boundaryConditions bounds_right; /**< boundary condistions of the bounce problem (right) */
+    boundaryConditions bounds_left; /**< boundary condistions of the bounce problem (left) */
+    vector<double> vel_approach_right; /**< velocity of the joints in [rad/s] at the beginning of the approach stage (right) */
+    vector<double> vel_approach_left; /**< velocity of the joints in [rad/s] at the beginning of the approach stage (left) */
+    vector<double> acc_approach_right; /**< acceleration of the joints in [rad/s²] at the beginning of the approach stage (right) */
+    vector<double> acc_approach_left; /**< acceleration of the joints in [rad/s²] at the beginning of the approach stage (left) */
+    vector<double> lambda_final_right; /**< weights for the final posture optimization (right) */
+    vector<double> lambda_final_left; /**< weights for the final posture optimization (left) */
+    vector<double> lambda_bounce_right; /**< weights for the bounce posture optimization (right) */
+    vector<double> lambda_bounce_left; /**< weights for the bounce posture optimization (left) */
+    vector<double> w_max; /**< maximum angular velocity for each joint [rad/s] */
+    vector<double> alpha_max; /**< maximum angular acceleration for each joint [rad/s²] */
+    bool obstacle_avoidance; /**< true to avoid obstacle */
+    bool target_avoidance; /**< true to avoid the target during the motion */
+}hump_dual_params;
 
 /** This struct defines the result of the planned trajectory */
 typedef struct{
