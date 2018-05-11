@@ -164,7 +164,7 @@ typedef struct{
     vector<double> acc_f; /**< final acceleration of the joints in [rad/s²] */
 } boundaryConditions;
 
-/** this struct defines the tolerances that have to be set before planning the trajectory*/
+/** this struct defines the tolerances that have to be set before planning the trajectory (single-arm)*/
 typedef struct{
     mov_params mov_specs; /**< specifications of the movement */
     vector<double> tolsArm; /**< radius of the spheres along the arm in [mm] */
@@ -185,7 +185,7 @@ typedef struct{
     bool target_avoidance; /**< true to avoid the target during the motion */
 } hump_params;
 
-/** this struct defines the tolerances that have to be set before planning the trajectory*/
+/** this struct defines the tolerances that have to be set before planning the trajectory (dual-arm) */
 typedef struct{
     mov_params mov_specs_right; /**< specifications of the movement (right) */
     mov_params mov_specs_left; /**< specifications of the movement (left) */
@@ -219,7 +219,7 @@ typedef struct{
     bool target_avoidance; /**< true to avoid the target during the motion */
 }hump_dual_params;
 
-/** This struct defines the result of the planned trajectory */
+/** This struct defines the result of the planned trajectory (single-arm) */
 typedef struct{
     int mov_type;/**< type of the planned movement */
     int status;/**< status code of the planning */
@@ -231,6 +231,21 @@ typedef struct{
     vector<double> time_steps; /**< sequence of each time steps for each trajectory */
     vector<string> trajectory_descriptions;/**< description of the trajectories */
 }planning_result;
+
+/** This struct defines the result of the planned trajectory (dual-arm) */
+typedef struct{
+    int mov_type_right;/**< type of the planned movement (right) */
+    int mov_type_left;/**< type of the planned movement (left) */
+    int status;/**< status code of the planning */
+    string status_msg;/**< status message of the planning */
+    string object_right_id;/**< identity of the object involved in the movement (right) */
+    string object_left_id;/**< identity of the object involved in the movement (left) */
+    vector<MatrixXd> trajectory_stages;/**< sequence of the trajectories */
+    vector<MatrixXd> velocity_stages;/**< sequence of the velocities */
+    vector<MatrixXd> acceleration_stages;/**< sequence of the accelerations */
+    vector<double> time_steps; /**< sequence of each time steps for each trajectory */
+    vector<string> trajectory_descriptions;/**< description of the trajectories */
+}planning_dual_result;
 
 
 

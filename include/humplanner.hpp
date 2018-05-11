@@ -10,7 +10,8 @@ using namespace std;
 
 namespace HUMotion{
 
-typedef boost::shared_ptr<planning_result> planning_result_ptr; /**< pointer to the results of the planning process*/
+typedef boost::shared_ptr<planning_result> planning_result_ptr; /**< pointer to the results of the planning process (single-arm) */
+typedef boost::shared_ptr<planning_dual_result> planning_dual_result_ptr; /**< pointer to the results of the planning process (dual-arm) */
 
 //! The Object class
 /**
@@ -262,6 +263,7 @@ public:
     HumanHand getHumanHand();
 
 
+    // -------------- single-arm planning --------------------- //
     /**
      * @brief plan_pick
      * @param params
@@ -295,6 +297,88 @@ public:
      */
     planning_result_ptr plan_move(hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture);
 
+
+    // -------------- dual-arm planning --------------------- //
+    /**
+     * @brief plan_dual_pick_pick
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_pick_pick(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_place_place
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_place_place(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_move_move
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_move_move(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_pick_place
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_pick_place(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_pick_move
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_pick_move(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_place_pick
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_place_pick(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_place_move
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_place_move(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_move_pick
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_move_pick(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
+
+    /**
+     * @brief plan_dual_move_place
+     * @param params
+     * @param initPosture_right
+     * @param initPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_move_place(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
 
 
 

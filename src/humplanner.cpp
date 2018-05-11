@@ -6026,6 +6026,41 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
     return res;
 }
 
+
+planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &params, std::vector<double> initPosture_right, std::vector<double> initPosture_left)
+{
+    planning_dual_result_ptr res;
+    res.reset(new planning_dual_result);
+/*
+    int mov_type = 0; // pick
+    bool coll = params.mov_specs.coll;
+    res->mov_type = mov_type;
+    std::vector<double> finalHand = params.mov_specs.finalHand;
+    int arm_code = params.mov_specs.hand_code;
+    std::vector<double> minLimits; std::vector<double> maxLimits;
+    switch(arm_code){
+    case 1: // right arm
+        minLimits = this->minRightLimits;
+        maxLimits = this->maxRightLimits;
+        break;
+    case 2: // left arm
+        minLimits = this->minLeftLimits;
+        maxLimits = this->maxLeftLimits;
+        break;
+    }
+
+    res->object_id = params.mov_specs.obj->getName();
+    bool approach = params.mov_specs.approach;
+    bool retreat = params.mov_specs.retreat;
+    bool straight_line = params.mov_specs.straight_line;
+    int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
+    int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
+
+*/
+    return res;
+
+}
+
 int HUMPlanner::getSteps(std::vector<double> &maxLimits, std::vector<double> &minLimits, std::vector<double> &initPosture, std::vector<double> &finalPosture)
 {
 
