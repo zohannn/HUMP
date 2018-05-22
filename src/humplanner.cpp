@@ -368,13 +368,102 @@ void HUMPlanner::writeArmDHParams(DHparameters dh, ofstream &stream, int k)
     }
 }
 
+void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_left, std::ofstream& stream)
+{
+    // D-H Parameters of the Right Arm
+    stream << string("# D-H PARAMETERS OF THE RIGHT ARM \n");
+    stream << string("param alpha_right := \n");
+    string alpha_right_str;
+    alpha_right_str =  boost::str(boost::format("%.2f") % (dh_right.alpha.at(0)));
+    stream << to_string(1)+string(" ")+alpha_right_str+string("\n");
+    for(std::size_t i=1; i< joints_arm; ++i){
+        alpha_right_str =  boost::str(boost::format("%.2f") % (dh_right.alpha.at(i)));
+
+        if (i == dh_right.alpha.size()-1){
+            stream << to_string(i+1)+string(" ")+alpha_right_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+alpha_right_str+string("\n");
+        }
+    }
+    stream << string("param a_right := \n");
+    string a_right_str;
+    for(std::size_t i=0; i<joints_arm; ++i){
+        a_right_str =  boost::str(boost::format("%.2f") % (dh_right.a.at(i)));
+        if (i == dh_right.a.size()-1){
+            stream << to_string(i+1)+string(" ")+a_right_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+a_right_str+string("\n");
+        }
+    }
+    stream << string("param d_right := \n");
+    string d_right_str;
+    for(std::size_t i=0; i<joints_arm; ++i){
+        d_right_str =  boost::str(boost::format("%.2f") % (dh_right.d.at(i)));
+        if (i == dh_right.d.size()-1){
+            stream << to_string(i+1)+string(" ")+d_right_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+d_right_str+string("\n");
+        }
+    }
+
+    // D-H Parameters of the Left Arm
+    stream << string("# D-H PARAMETERS OF THE LEFT ARM \n");
+    stream << string("param alpha_left := \n");
+    string alpha_left_str;
+    alpha_left_str =  boost::str(boost::format("%.2f") % (dh_left.alpha.at(0)));
+    stream << to_string(1)+string(" ")+alpha_left_str+string("\n");
+    for(std::size_t i=1; i< joints_arm; ++i){
+        alpha_left_str =  boost::str(boost::format("%.2f") % (-1*dh_left.alpha.at(i)));
+
+        if (i == dh_left.alpha.size()-1){
+            stream << to_string(i+1)+string(" ")+alpha_left_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+alpha_left_str+string("\n");
+        }
+    }
+    stream << string("param a_left := \n");
+    string a_left_str;
+    for(std::size_t i=0; i<joints_arm; ++i){
+        a_left_str =  boost::str(boost::format("%.2f") % (dh_left.a.at(i)));
+        if (i == dh_left.a.size()-1){
+            stream << to_string(i+1)+string(" ")+a_left_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+a_left_str+string("\n");
+        }
+    }
+    stream << string("param d_left := \n");
+    string d_left_str;
+    for(std::size_t i=0; i<joints_arm; ++i){
+        d_left_str =  boost::str(boost::format("%.2f") % (-1*dh_left.d.at(i)));
+        if (i == dh_left.d.size()-1){
+            stream << to_string(i+1)+string(" ")+d_left_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+d_left_str+string("\n");
+        }
+    }
+
+}
+
+
 void HUMPlanner::write_dHO(std::ofstream& stream, double dHO)
 {
-
     string dHOstr=  boost::str(boost::format("%.2f") % (dHO));
     boost::replace_all(dHOstr,",",".");
     stream << string("# DISTANCE HAND - TARGET\n");
     stream << string("param dFH := ")+dHOstr+string(";\n");
+}
+
+void HUMPlanner::write_dual_dHO(std::ofstream& stream, double dHO_right, double dHO_left)
+{
+    string dHOstr_right=  boost::str(boost::format("%.2f") % (dHO_right));
+    boost::replace_all(dHOstr_right,",",".");
+    stream << string("# DISTANCE RIGHT HAND - TARGET\n");
+    stream << string("param dFH_right := ")+dHOstr_right+string(";\n");
+
+    string dHOstr_left=  boost::str(boost::format("%.2f") % (dHO_left));
+    boost::replace_all(dHOstr_left,",",".");
+    stream << string("# DISTANCE LEFT HAND - TARGET\n");
+    stream << string("param dFH_left := ")+dHOstr_left+string(";\n");
 }
 
 void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLimits, std::vector<double> &maxArmLimits)
@@ -410,8 +499,68 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
 
 }
 
+void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& minRightArmLimits,std::vector<double>& maxRightArmLimits,
+                        std::vector<double>& minLeftArmLimits,std::vector<double>& maxLeftArmLimits)
+{
+
+    std::vector<double> minArmLimits; std::vector<double> maxArmLimits;
+    minArmLimits = minRightArmLimits;
+    minArmLimits.insert(minRightArmLimits.end(),minLeftArmLimits.begin(),minLeftArmLimits.end());
+    maxArmLimits = maxRightArmLimits;
+    maxArmLimits.insert(maxRightArmLimits.end(),maxLeftArmLimits.begin(),maxLeftArmLimits.end());
+
+
+    stream << string("# JOINT LIMITS \n");
+    stream << string("# Lower Bound \n");
+    stream << string("param llim := \n");
+
+    for (std::size_t i=0; i < minArmLimits.size(); ++i){
+        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+SPACER));
+        boost::replace_all(minLim,",",".");
+        if (i == minArmLimits.size()-1){
+            stream << to_string(i+1)+string(" ")+minLim+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+minLim+string("\n");
+        }
+    }
+
+    stream << string("# Upper Bound \n");
+    stream << string("param ulim := \n");
+
+    for (std::size_t i=0; i < maxArmLimits.size(); ++i){
+        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-SPACER));
+        boost::replace_all(maxLim,",",".");
+
+        if (i == maxArmLimits.size()-1){
+            stream << to_string(i+1)+string(" ")+maxLim+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+maxLim+string("\n");
+        }
+    }
+}
+
 void HUMPlanner::writeArmInitPose(ofstream &stream, std::vector<double> &initArmPosture)
 {
+
+    stream << string("# INITIAL POSE \n");
+    stream << string("param thet_init := \n");
+
+    for (std::size_t i=0; i < initArmPosture.size(); ++i){
+        string initArmstr =  boost::str(boost::format("%.2f") % (initArmPosture.at(i)));
+        boost::replace_all(initArmstr,",",".");
+        if (i == initArmPosture.size()-1){
+            stream << to_string(i+1)+string(" ")+initArmstr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+initArmstr+string("\n");
+        }
+    }
+
+}
+
+void HUMPlanner::writeDualArmInitPose(std::ofstream& stream,std::vector<double>& initRightArmPosture,std::vector<double>& initLeftArmPosture)
+{
+    std::vector<double> initArmPosture = initRightArmPosture;
+    initArmPosture.insert(initRightArmPosture.end(),initLeftArmPosture.begin(),initLeftArmPosture.end());
 
     stream << string("# INITIAL POSE \n");
     stream << string("param thet_init := \n");
@@ -446,6 +595,36 @@ void HUMPlanner::writeFingerFinalPose(ofstream &stream, std::vector<double> &fin
 
 }
 
+void HUMPlanner::writeFingerDualFinalPose(std::ofstream& stream,std::vector<double>& finalHand_right,std::vector<double>& finalHand_left)
+{
+    stream << string("# FINAL FINGER JOINTS RIGHT \n");
+    stream << string("param joint_fingers_right := \n");
+
+    for (std::size_t i=0; i < finalHand_right.size(); ++i){
+        string finalHandstr =  boost::str(boost::format("%.2f") % (finalHand_right.at(i)));
+        boost::replace_all(finalHandstr,",",".");
+        if (i == finalHand_right.size()-1){
+            stream << to_string(i+1)+string(" ")+finalHandstr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+finalHandstr+string("\n");
+        }
+    }
+
+    stream << string("# FINAL FINGER JOINTS LEFT \n");
+    stream << string("param joint_fingers_left := \n");
+
+    for (std::size_t i=0; i < finalHand_left.size(); ++i){
+        string finalHandstr =  boost::str(boost::format("%.2f") % (finalHand_left.at(i)));
+        boost::replace_all(finalHandstr,",",".");
+        if (i == finalHand_left.size()-1){
+            stream << to_string(i+1)+string(" ")+finalHandstr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+finalHandstr+string("\n");
+        }
+    }
+}
+
+
 void HUMPlanner::writeLambda(ofstream &stream, std::vector<double> &lambda)
 {
 
@@ -462,6 +641,26 @@ void HUMPlanner::writeLambda(ofstream &stream, std::vector<double> &lambda)
         }
     }
 }
+
+void HUMPlanner::writeDualLambda(std::ofstream& stream,std::vector<double>& lambda_right,std::vector<double>& lambda_left)
+{
+    std::vector<double> lambda = lambda_right;
+    lambda_right.insert(lambda_right.end(),lambda_left.begin(),lambda_left.end());
+
+    stream << string("# JOINT EXPENSE FACTORS \n");
+    stream << string("param lambda := \n");
+
+    for (std::size_t i=0; i < lambda.size(); ++i){
+        string lambdastr =  boost::str(boost::format("%.2f") % (lambda.at(i)));
+        boost::replace_all(lambdastr,",",".");
+        if (i == lambda.size()-1){
+            stream << to_string(i+1)+string(" ")+lambdastr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+lambdastr+string("\n");
+        }
+    }
+}
+
 
 void HUMPlanner::writeHumanHandParams(HumanHand& hhand, std::ofstream& stream, int k)
 {
@@ -634,9 +833,315 @@ void HUMPlanner::writeHumanHandParams(HumanHand& hhand, std::ofstream& stream, i
     stream << theta0_thumb_str+string(";\n");
 }
 
+void HUMPlanner::writeDualHumanHandParams(HumanHand& hhand, std::ofstream& stream, bool right)
+{
+    if(right){
+        stream << string("# PARAMETERS OF THE RIGHT HAND \n");
+        // Index finger
+        stream << string("# Index Finger \n");
+        HumanFinger finger_1 = hhand.fingers.at(0);
+        stream << string("param u1x_right := ");
+        string ux_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.ux));
+        stream << ux_fing1_str+string(";\n");
+        stream << string("param u1y_right := ");
+        string uy_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.uy));
+        stream << uy_fing1_str+string(";\n");
+        stream << string("param u1z_right := ");
+        string uz_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.uz));
+        stream << uz_fing1_str+string(";\n");
+        stream << string("param alpha_fing1_right := \n");
+        string alpha_fing1_str;
+        alpha_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.alpha.at(0)));
+        stream << to_string(1)+string(" ")+alpha_fing1_str+string("\n");
+        for(std::size_t i=1; i<n_phalange+1; ++i){
+            alpha_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.alpha.at(i)));
+            if (i == finger_1.finger_specs.alpha.size()-1){
+                stream << to_string(i+1)+string(" ")+alpha_fing1_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+alpha_fing1_str+string("\n");
+            }
+        }
+        stream << string("param a_fing1_right := \n");
+        string a_fing1_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            a_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.a.at(i)));
+            if (i == finger_1.finger_specs.a.size()-1){
+                stream << to_string(i+1)+string(" ")+a_fing1_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+a_fing1_str+string("\n");
+            }
+        }
+        stream << string("param d_fing1_right := \n");
+        string d_fing1_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            d_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.d.at(i)));
+            if (i == finger_1.finger_specs.d.size()-1){
+                stream << to_string(i+1)+string(" ")+d_fing1_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+d_fing1_str+string("\n");
+            }
+        }
+        stream << string("param theta0_fing1_right := ");
+        string theta0_fing1_str;
+        theta0_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.theta.at(0)));
+        stream << theta0_fing1_str+string(";\n");
+        // Ring finger
+        stream << string("# Ring Finger \n");
+        HumanFinger finger_3 = hhand.fingers.at(2);
+        stream << string("param u3x_right := ");
+        string ux_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.ux));
+        stream << ux_fing3_str+string(";\n");
+        stream << string("param u3y_right := ");
+        string uy_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.uy));
+        stream << uy_fing3_str+string(";\n");
+        stream << string("param u3z_right := ");
+        string uz_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.uz));
+        stream << uz_fing3_str+string(";\n");
+        stream << string("param alpha_fing3_right := \n");
+        string alpha_fing3_str;
+        alpha_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.alpha.at(0)));
+        stream << to_string(1)+string(" ")+alpha_fing3_str+string("\n");
+        for(std::size_t i=1; i<n_phalange+1; ++i){
+            alpha_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.alpha.at(i)));
+            if (i == finger_3.finger_specs.alpha.size()-1){
+                stream << to_string(i+1)+string(" ")+alpha_fing3_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+alpha_fing3_str+string("\n");
+            }
+        }
+        stream << string("param a_fing3_right := \n");
+        string a_fing3_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            a_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.a.at(i)));
+            if (i == finger_3.finger_specs.a.size()-1){
+                stream << to_string(i+1)+string(" ")+a_fing3_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+a_fing3_str+string("\n");
+            }
+        }
+        stream << string("param d_fing3_right := \n");
+        string d_fing3_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            d_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.d.at(i)));
+            if (i == finger_3.finger_specs.d.size()-1){
+                stream << to_string(i+1)+string(" ")+d_fing3_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+d_fing3_str+string("\n");
+            }
+        }
+        stream << string("param theta0_fing3_right := ");
+        string theta0_fing3_str;
+        theta0_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.theta.at(0)));
+        stream << theta0_fing3_str+string(";\n");
+        // Thumb finger
+        stream << string("# Thumb Finger \n");
+        HumanThumb thumb_finger = hhand.thumb;
+        stream << string("param uTx_right := ");
+        string uTx_fing2_str =  boost::str(boost::format("%.2f") % (thumb_finger.uTx));
+        stream << uTx_fing2_str+string(";\n");
+        stream << string("param uTy_right := ");
+        string uTy_fing2_str =  boost::str(boost::format("%.2f") % (thumb_finger.uTy));
+        stream << uTy_fing2_str+string(";\n");
+        stream << string("param uTz_right := ");
+        string uTz_fing2_str =  boost::str(boost::format("%.2f") % (thumb_finger.uTz));
+        stream << uTz_fing2_str+string(";\n");
+        stream << string("param alpha_thumb_right := \n");
+        string alpha_thumb_str;
+        //if (k == 1){ // right hand
+        alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(0)));
+        //}else if(k==-1){// left hand
+        //alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(0)-M_PI/2));
+        //}
+        stream << to_string(1)+string(" ")+alpha_thumb_str+string("\n");
+        for(std::size_t i=1; i<n_phalange+2; ++i){
+            alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(i)));
+            if (i == thumb_finger.thumb_specs.alpha.size()-1){
+                stream << to_string(i+1)+string(" ")+alpha_thumb_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+alpha_thumb_str+string("\n");
+            }
+        }
+        stream << string("param a_thumb_right := \n");
+        string a_thumb_str;
+        for(std::size_t i=0; i<n_phalange+2; ++i){
+            a_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.a.at(i)));
+            if (i == thumb_finger.thumb_specs.a.size()-1){
+                stream << to_string(i+1)+string(" ")+a_thumb_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+a_thumb_str+string("\n");
+            }
+        }
+        stream << string("param d_thumb_right := \n");
+        string d_thumb_str;
+        for(std::size_t i=0; i<n_phalange+2; ++i){
+            d_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.d.at(i)));
+            if (i == thumb_finger.thumb_specs.d.size()-1){
+                stream << to_string(i+1)+string(" ")+d_thumb_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+d_thumb_str+string("\n");
+            }
+        }
+        stream << string("param theta0_thumb_right:= ");
+        string theta0_thumb_str;
+        theta0_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.theta.at(0)));
+        stream << theta0_thumb_str+string(";\n");
+    }else{
+        stream << string("# PARAMETERS OF THE LEFT HAND \n");
+        // Index finger
+        stream << string("# Index Finger \n");
+        HumanFinger finger_1 = hhand.fingers.at(0);
+        stream << string("param u1x_left := ");
+        string ux_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.ux));
+        stream << ux_fing1_str+string(";\n");
+        stream << string("param u1y_left := ");
+        string uy_fing1_str =  boost::str(boost::format("%.2f") % (-1*finger_1.uy));
+        stream << uy_fing1_str+string(";\n");
+        stream << string("param u1z_left := ");
+        string uz_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.uz));
+        stream << uz_fing1_str+string(";\n");
+        stream << string("param alpha_fing1_left := \n");
+        string alpha_fing1_str;
+        alpha_fing1_str =  boost::str(boost::format("%.2f") % (-1*finger_1.finger_specs.alpha.at(0)));
+        stream << to_string(1)+string(" ")+alpha_fing1_str+string("\n");
+        for(std::size_t i=1; i<n_phalange+1; ++i){
+            alpha_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.alpha.at(i)));
+            if (i == finger_1.finger_specs.alpha.size()-1){
+                stream << to_string(i+1)+string(" ")+alpha_fing1_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+alpha_fing1_str+string("\n");
+            }
+        }
+        stream << string("param a_fing1_left := \n");
+        string a_fing1_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            a_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.a.at(i)));
+            if (i == finger_1.finger_specs.a.size()-1){
+                stream << to_string(i+1)+string(" ")+a_fing1_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+a_fing1_str+string("\n");
+            }
+        }
+        stream << string("param d_fing1_left := \n");
+        string d_fing1_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            d_fing1_str =  boost::str(boost::format("%.2f") % (finger_1.finger_specs.d.at(i)));
+            if (i == finger_1.finger_specs.d.size()-1){
+                stream << to_string(i+1)+string(" ")+d_fing1_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+d_fing1_str+string("\n");
+            }
+        }
+        stream << string("param theta0_fing1_left := ");
+        string theta0_fing1_str;
+        theta0_fing1_str =  boost::str(boost::format("%.2f") % (-1*finger_1.finger_specs.theta.at(0)));
+        stream << theta0_fing1_str+string(";\n");
+        // Ring finger
+        stream << string("# Ring Finger \n");
+        HumanFinger finger_3 = hhand.fingers.at(2);
+        stream << string("param u3x_left := ");
+        string ux_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.ux));
+        stream << ux_fing3_str+string(";\n");
+        stream << string("param u3y_left := ");
+        string uy_fing3_str =  boost::str(boost::format("%.2f") % (-1*finger_3.uy));
+        stream << uy_fing3_str+string(";\n");
+        stream << string("param u3z_left := ");
+        string uz_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.uz));
+        stream << uz_fing3_str+string(";\n");
+        stream << string("param alpha_fing3_left := \n");
+        string alpha_fing3_str;
+        alpha_fing3_str =  boost::str(boost::format("%.2f") % (-1*finger_3.finger_specs.alpha.at(0)));
+        stream << to_string(1)+string(" ")+alpha_fing3_str+string("\n");
+        for(std::size_t i=1; i<n_phalange+1; ++i){
+            alpha_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.alpha.at(i)));
+            if (i == finger_3.finger_specs.alpha.size()-1){
+                stream << to_string(i+1)+string(" ")+alpha_fing3_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+alpha_fing3_str+string("\n");
+            }
+        }
+        stream << string("param a_fing3_left := \n");
+        string a_fing3_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            a_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.a.at(i)));
+            if (i == finger_3.finger_specs.a.size()-1){
+                stream << to_string(i+1)+string(" ")+a_fing3_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+a_fing3_str+string("\n");
+            }
+        }
+        stream << string("param d_fing3_left := \n");
+        string d_fing3_str;
+        for(std::size_t i=0; i<n_phalange+1; ++i){
+            d_fing3_str =  boost::str(boost::format("%.2f") % (finger_3.finger_specs.d.at(i)));
+            if (i == finger_3.finger_specs.d.size()-1){
+                stream << to_string(i+1)+string(" ")+d_fing3_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+d_fing3_str+string("\n");
+            }
+        }
+        stream << string("param theta0_fing3_left := ");
+        string theta0_fing3_str;
+        theta0_fing3_str =  boost::str(boost::format("%.2f") % (-1*finger_3.finger_specs.theta.at(0)));
+        stream << theta0_fing3_str+string(";\n");
+        // Thumb finger
+        stream << string("# Thumb Finger \n");
+        HumanThumb thumb_finger = hhand.thumb;
+        stream << string("param uTx_left := ");
+        string uTx_fing2_str =  boost::str(boost::format("%.2f") % (thumb_finger.uTx));
+        stream << uTx_fing2_str+string(";\n");
+        stream << string("param uTy_left := ");
+        string uTy_fing2_str =  boost::str(boost::format("%.2f") % (-1*thumb_finger.uTy));
+        stream << uTy_fing2_str+string(";\n");
+        stream << string("param uTz_left := ");
+        string uTz_fing2_str =  boost::str(boost::format("%.2f") % (thumb_finger.uTz));
+        stream << uTz_fing2_str+string(";\n");
+        stream << string("param alpha_thumb_left := \n");
+        string alpha_thumb_str;
+        //if (k == 1){ // right hand
+        //alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(0)));
+        //}else if(k==-1){// left hand
+        alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(0)-M_PI/2));
+        //}
+        stream << to_string(1)+string(" ")+alpha_thumb_str+string("\n");
+        for(std::size_t i=1; i<n_phalange+2; ++i){
+            alpha_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.alpha.at(i)));
+            if (i == thumb_finger.thumb_specs.alpha.size()-1){
+                stream << to_string(i+1)+string(" ")+alpha_thumb_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+alpha_thumb_str+string("\n");
+            }
+        }
+        stream << string("param a_thumb_left := \n");
+        string a_thumb_str;
+        for(std::size_t i=0; i<n_phalange+2; ++i){
+            a_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.a.at(i)));
+            if (i == thumb_finger.thumb_specs.a.size()-1){
+                stream << to_string(i+1)+string(" ")+a_thumb_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+a_thumb_str+string("\n");
+            }
+        }
+        stream << string("param d_thumb_left := \n");
+        string d_thumb_str;
+        for(std::size_t i=0; i<n_phalange+2; ++i){
+            d_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.d.at(i)));
+            if (i == thumb_finger.thumb_specs.d.size()-1){
+                stream << to_string(i+1)+string(" ")+d_thumb_str+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+d_thumb_str+string("\n");
+            }
+        }
+        stream << string("param theta0_thumb_left:= ");
+        string theta0_thumb_str;
+        theta0_thumb_str =  boost::str(boost::format("%.2f") % (thumb_finger.thumb_specs.theta.at(0)));
+        stream << theta0_thumb_str+string(";\n");
+
+    }
+}
+
 void HUMPlanner::writeHumanHandParamsMod(ofstream &stream)
 {
-    stream << string("# Parameters of the Hand \n");
+    stream << string("# PARAMETERS OF THE HAND \n");
 
     stream << string("# Index finger \n");
     stream << string("param u1x; \n");
@@ -667,10 +1172,74 @@ void HUMPlanner::writeHumanHandParamsMod(ofstream &stream)
 
 }
 
+void HUMPlanner::writeDualHumanHandParamsMod(std::ofstream& stream,bool right)
+{
+    if(right)
+    {
+        stream << string("# PARAMETERS OF THE RIGHT HAND \n");
+
+        stream << string("# Index finger \n");
+        stream << string("param u1x_right; \n");
+        stream << string("param u1y_right; \n");
+        stream << string("param u1z_right; \n");
+        stream << string("param alpha_fing1_right {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param a_fing1_right {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param d_fing1_right {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param theta0_fing1_right; \n");
+
+        stream << string("# Ring finger \n");
+        stream << string("param u3x_right; \n");
+        stream << string("param u3y_right; \n");
+        stream << string("param u3z_right; \n");
+        stream << string("param alpha_fing3_right {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param a_fing3_right {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param d_fing3_right {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param theta0_fing3_right; \n");
+
+        stream << string("# Thumb finger \n");
+        stream << string("param uTx_right; \n");
+        stream << string("param uTy_right; \n");
+        stream << string("param uTz_right; \n");
+        stream << string("param alpha_thumb_right {i in 1..")+to_string(n_phalange+2)+string("} ; \n");
+        stream << string("param a_thumb_right {i in 1..")+to_string(n_phalange+2)+string("} ; \n");
+        stream << string("param d_thumb_right {i in 1..")+to_string(n_phalange+2)+string("} ; \n");
+        stream << string("param theta0_thumb_right; \n");
+    }else{
+        stream << string("# PARAMETERS OF THE LEFT HAND \n");
+
+        stream << string("# Index finger \n");
+        stream << string("param u1x_left; \n");
+        stream << string("param u1y_left; \n");
+        stream << string("param u1z_left; \n");
+        stream << string("param alpha_fing1_left {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param a_fing1_left {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param d_fing1_left {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param theta0_fing1_left; \n");
+
+        stream << string("# Ring finger \n");
+        stream << string("param u3x_left; \n");
+        stream << string("param u3y_left; \n");
+        stream << string("param u3z_left; \n");
+        stream << string("param alpha_fing3_left {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param a_fing3_left {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param d_fing3_left {i in 1..")+to_string(n_phalange+1)+string("} ; \n");
+        stream << string("param theta0_fing3_left; \n");
+
+        stream << string("# Thumb finger \n");
+        stream << string("param uTx_left; \n");
+        stream << string("param uTy_left; \n");
+        stream << string("param uTz_left; \n");
+        stream << string("param alpha_thumb_left {i in 1..")+to_string(n_phalange+2)+string("} ; \n");
+        stream << string("param a_thumb_left {i in 1..")+to_string(n_phalange+2)+string("} ; \n");
+        stream << string("param d_thumb_left {i in 1..")+to_string(n_phalange+2)+string("} ; \n");
+        stream << string("param theta0_thumb_left; \n");
+    }
+}
+
 void HUMPlanner::writeBarrettHandParams(BarrettHand& bhand, std::ofstream& stream)
 {
 
-
+    stream << string("# PARAMETERS OF THE HAND \n");
     // rk and jk parameters
     stream << string("# R and J parameters \n");
     stream << string("param rk := \n");
@@ -729,6 +1298,104 @@ void HUMPlanner::writeBarrettHandParams(BarrettHand& bhand, std::ofstream& strea
 
 }
 
+void HUMPlanner::writeDualBarrettHandParams(BarrettHand& bhand, std::ofstream& stream,bool right)
+{
+    if(right){
+        stream << string("# PARAMETERS OF THE RIGHT HAND \n");
+        // rk and jk parameters
+        stream << string("# R and J parameters (right) \n");
+        stream << string("param rk_right := \n");
+        for (size_t i=0; i < bhand.rk.size(); ++i){
+            string rkstr =  boost::str(boost::format("%.2f") % (bhand.rk.at(i)));
+            boost::replace_all(rkstr,",",".");
+            if (i == bhand.rk.size()-1){
+                stream << to_string(i+1)+string(" ")+rkstr+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+rkstr+string("\n");
+            }
+        }
+        stream << string("param jk_right := \n");
+        for (size_t i=0; i < bhand.jk.size(); ++i){
+            string jkstr =  boost::str(boost::format("%.2f") % (bhand.jk.at(i)));
+            boost::replace_all(jkstr,",",".");
+            if (i == bhand.jk.size()-1){
+                stream << to_string(i+1)+string(" ")+jkstr+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+jkstr+string("\n");
+            }
+
+        }
+        string Awstr =  boost::str(boost::format("%.2f") % (bhand.Aw));
+        boost::replace_all(Awstr,",",".");
+        stream << string("param Aw_right :=")+Awstr+string(";\n");
+        string A1str =  boost::str(boost::format("%.2f") % (bhand.A1));
+        boost::replace_all(A1str,",",".");
+        stream << string("param A1_right :=")+A1str+string(";\n");
+        string A2str =  boost::str(boost::format("%.2f") % (bhand.A2));
+        boost::replace_all(A2str,",",".");
+        stream << string("param A2_right :=")+A2str+string(";\n");
+        string A3str =  boost::str(boost::format("%.2f") % (bhand.A3));
+        boost::replace_all(A3str,",",".");
+        stream << string("param A3_right :=")+A3str+string(";\n");
+        string D3str =  boost::str(boost::format("%.2f") % (bhand.D3));
+        boost::replace_all(D3str,",",".");
+        stream << string("param D3_right :=")+D3str+string(";\n");
+        string phi2str =  boost::str(boost::format("%.2f") % (bhand.phi2));
+        boost::replace_all(phi2str,",",".");
+        stream << string("param phi_2_right :=")+phi2str+string(";\n");
+        string phi3str =  boost::str(boost::format("%.2f") % (bhand.phi3));
+        boost::replace_all(phi3str,",",".");
+        stream << string("param phi_3_right :=")+phi3str+string(";\n");
+    }else{
+        stream << string("# PARAMETERS OF THE LEFT HAND \n");
+        // rk and jk parameters
+        stream << string("# R and J parameters (left) \n");
+        stream << string("param rk_left := \n");
+        for (size_t i=0; i < bhand.rk.size(); ++i){
+            string rkstr =  boost::str(boost::format("%.2f") % (bhand.rk.at(i)));
+            boost::replace_all(rkstr,",",".");
+            if (i == bhand.rk.size()-1){
+                stream << to_string(i+1)+string(" ")+rkstr+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+rkstr+string("\n");
+            }
+        }
+        stream << string("param jk_left := \n");
+        for (size_t i=0; i < bhand.jk.size(); ++i){
+            string jkstr =  boost::str(boost::format("%.2f") % (bhand.jk.at(i)));
+            boost::replace_all(jkstr,",",".");
+            if (i == bhand.jk.size()-1){
+                stream << to_string(i+1)+string(" ")+jkstr+string(";\n");
+            }else{
+                stream << to_string(i+1)+string(" ")+jkstr+string("\n");
+            }
+
+        }
+        string Awstr =  boost::str(boost::format("%.2f") % (bhand.Aw));
+        boost::replace_all(Awstr,",",".");
+        stream << string("param Aw_left :=")+Awstr+string(";\n");
+        string A1str =  boost::str(boost::format("%.2f") % (bhand.A1));
+        boost::replace_all(A1str,",",".");
+        stream << string("param A1_left :=")+A1str+string(";\n");
+        string A2str =  boost::str(boost::format("%.2f") % (bhand.A2));
+        boost::replace_all(A2str,",",".");
+        stream << string("param A2_left :=")+A2str+string(";\n");
+        string A3str =  boost::str(boost::format("%.2f") % (bhand.A3));
+        boost::replace_all(A3str,",",".");
+        stream << string("param A3_left :=")+A3str+string(";\n");
+        string D3str =  boost::str(boost::format("%.2f") % (bhand.D3));
+        boost::replace_all(D3str,",",".");
+        stream << string("param D3_left :=")+D3str+string(";\n");
+        string phi2str =  boost::str(boost::format("%.2f") % (bhand.phi2));
+        boost::replace_all(phi2str,",",".");
+        stream << string("param phi_2_left :=")+phi2str+string(";\n");
+        string phi3str =  boost::str(boost::format("%.2f") % (bhand.phi3));
+        boost::replace_all(phi3str,",",".");
+        stream << string("param phi_3_left :=")+phi3str+string(";\n");
+    }
+}
+
+
 void HUMPlanner::writeBarrettHandParamsMod(ofstream &stream)
 {
     stream << string("param rk {i in 1..3} ; \n");
@@ -740,6 +1407,33 @@ void HUMPlanner::writeBarrettHandParamsMod(ofstream &stream)
     stream << string("param D3; \n");
     stream << string("param phi_2; \n");
     stream << string("param phi_3; \n");
+}
+
+void HUMPlanner::writeDualBarrettHandParamsMod(std::ofstream& stream, bool right)
+{
+    if(right){
+        stream << string("# PARAMETERS OF THE RIGHT HAND \n");
+        stream << string("param rk_right {i in 1..3} ; \n");
+        stream << string("param jk_right {i in 1..3} ; \n");
+        stream << string("param Aw_right; \n");
+        stream << string("param A1_right; \n");
+        stream << string("param A2_right; \n");
+        stream << string("param A3_right; \n");
+        stream << string("param D3_right; \n");
+        stream << string("param phi_2_right; \n");
+        stream << string("param phi_3_right; \n");
+    }else{
+        stream << string("# PARAMETERS OF THE LEFT HAND \n");
+        stream << string("param rk_left {i in 1..3} ; \n");
+        stream << string("param jk_left {i in 1..3} ; \n");
+        stream << string("param Aw_left; \n");
+        stream << string("param A1_left; \n");
+        stream << string("param A2_left; \n");
+        stream << string("param A3_left; \n");
+        stream << string("param D3_left; \n");
+        stream << string("param phi_2_left; \n");
+        stream << string("param phi_3_left; \n");
+    }
 }
 
 void HUMPlanner::writeInfoTarget(ofstream &stream, std::vector<double> tar)
@@ -807,6 +1501,112 @@ void HUMPlanner::writeInfoTarget(ofstream &stream, std::vector<double> tar)
 
 }
 
+void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_right,std::vector<double> tar_left)
+{
+    string tarx; string tary; string tarz;
+    string tarxt0; string taryt0; string tarzt0;
+    string tarxt1; string taryt1; string tarzt1;
+    string tarxt2; string taryt2; string tarzt2;
+    std::vector<double> rpy;
+    std::vector<double> xt; std::vector<double> yt; std::vector<double> zt;
+
+    stream << string("# TARGET RIGHT POSITION \n");
+    stream << string("param Tar_pos_right := \n");
+    tarx =  boost::str(boost::format("%.2f") % (tar_right.at(0)));
+    boost::replace_all(tarx,",",".");
+    stream << to_string(1)+string(" ")+tarx+string("\n");
+    tary =  boost::str(boost::format("%.2f") % (tar_right.at(1)));
+    boost::replace_all(tary,",",".");
+    stream << to_string(2)+string(" ")+tary+string("\n");
+    tarz =  boost::str(boost::format("%.2f") % (tar_right.at(2)));
+    boost::replace_all(tarz,",",".");
+    stream << to_string(3)+string(" ")+tarz+string(";\n");
+
+    stream << string("# TARGET RIGHT ORIENTATION \n");
+    rpy = {tar_right.at(3),tar_right.at(4),tar_right.at(5)};
+    this->getRotAxis(xt,0,rpy);
+    this->getRotAxis(yt,1,rpy);
+    this->getRotAxis(zt,2,rpy);
+    stream << string("param x_t_right := \n");
+    tarxt0 =  boost::str(boost::format("%.2f") % (xt[0]));
+    boost::replace_all(tarxt0,",",".");
+    stream << to_string(1)+string(" ")+tarxt0+string("\n");
+    tarxt1 =  boost::str(boost::format("%.2f") % (xt[1]));
+    boost::replace_all(tarxt1,",",".");
+    stream << to_string(2)+string(" ")+tarxt1+string("\n");
+    tarxt2 =  boost::str(boost::format("%.2f") % (xt[2]));
+    boost::replace_all(tarxt2,",",".");
+    stream << to_string(3)+string(" ")+tarxt2+string(";\n");
+    stream << string("param y_t_right := \n");
+    taryt0 =  boost::str(boost::format("%.2f") % (yt[0]));
+    boost::replace_all(taryt0,",",".");
+    stream << to_string(1)+string(" ")+taryt0+string("\n");
+    taryt1 =  boost::str(boost::format("%.2f") % (yt[1]));
+    boost::replace_all(taryt1,",",".");
+    stream << to_string(2)+string(" ")+taryt1+string("\n");
+    taryt2 =  boost::str(boost::format("%.2f") % (yt[2]));
+    boost::replace_all(taryt2,",",".");
+    stream << to_string(3)+string(" ")+taryt2+string(";\n");
+    stream << string("param z_t_right := \n");
+    tarzt0 =  boost::str(boost::format("%.2f") % (zt[0]));
+    boost::replace_all(tarzt0,",",".");
+    stream << to_string(1)+string(" ")+tarzt0+string("\n");
+    tarzt1 =  boost::str(boost::format("%.2f") % (zt[1]));
+    boost::replace_all(tarzt1,",",".");
+    stream << to_string(2)+string(" ")+tarzt1+string("\n");
+    tarzt2 =  boost::str(boost::format("%.2f") % (zt[2]));
+    boost::replace_all(tarzt2,",",".");
+    stream << to_string(3)+string(" ")+tarzt2+string(";\n");
+
+    stream << string("# TARGET LEFT POSITION \n");
+    stream << string("param Tar_pos_left := \n");
+    tarx =  boost::str(boost::format("%.2f") % (tar_left.at(0)));
+    boost::replace_all(tarx,",",".");
+    stream << to_string(1)+string(" ")+tarx+string("\n");
+    tary =  boost::str(boost::format("%.2f") % (tar_left.at(1)));
+    boost::replace_all(tary,",",".");
+    stream << to_string(2)+string(" ")+tary+string("\n");
+    tarz =  boost::str(boost::format("%.2f") % (tar_left.at(2)));
+    boost::replace_all(tarz,",",".");
+    stream << to_string(3)+string(" ")+tarz+string(";\n");
+
+    stream << string("# TARGET LEFT ORIENTATION \n");
+    rpy = {tar_left.at(3),tar_left.at(4),tar_left.at(5)};
+    this->getRotAxis(xt,0,rpy);
+    this->getRotAxis(yt,1,rpy);
+    this->getRotAxis(zt,2,rpy);
+    stream << string("param x_t_left := \n");
+    tarxt0 =  boost::str(boost::format("%.2f") % (xt[0]));
+    boost::replace_all(tarxt0,",",".");
+    stream << to_string(1)+string(" ")+tarxt0+string("\n");
+    tarxt1 =  boost::str(boost::format("%.2f") % (xt[1]));
+    boost::replace_all(tarxt1,",",".");
+    stream << to_string(2)+string(" ")+tarxt1+string("\n");
+    tarxt2 =  boost::str(boost::format("%.2f") % (xt[2]));
+    boost::replace_all(tarxt2,",",".");
+    stream << to_string(3)+string(" ")+tarxt2+string(";\n");
+    stream << string("param y_t_left := \n");
+    taryt0 =  boost::str(boost::format("%.2f") % (yt[0]));
+    boost::replace_all(taryt0,",",".");
+    stream << to_string(1)+string(" ")+taryt0+string("\n");
+    taryt1 =  boost::str(boost::format("%.2f") % (yt[1]));
+    boost::replace_all(taryt1,",",".");
+    stream << to_string(2)+string(" ")+taryt1+string("\n");
+    taryt2 =  boost::str(boost::format("%.2f") % (yt[2]));
+    boost::replace_all(taryt2,",",".");
+    stream << to_string(3)+string(" ")+taryt2+string(";\n");
+    stream << string("param z_t_left := \n");
+    tarzt0 =  boost::str(boost::format("%.2f") % (zt[0]));
+    boost::replace_all(tarzt0,",",".");
+    stream << to_string(1)+string(" ")+tarzt0+string("\n");
+    tarzt1 =  boost::str(boost::format("%.2f") % (zt[1]));
+    boost::replace_all(tarzt1,",",".");
+    stream << to_string(2)+string(" ")+tarzt1+string("\n");
+    tarzt2 =  boost::str(boost::format("%.2f") % (zt[2]));
+    boost::replace_all(tarzt2,",",".");
+    stream << to_string(3)+string(" ")+tarzt2+string(";\n");
+}
+
 
 void HUMPlanner::writeInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat)
 {
@@ -838,6 +1638,55 @@ void HUMPlanner::writeInfoApproachRetreat(ofstream &stream, std::vector<double> 
     stream << to_string(3)+string(" ")+tarxt2+string(";\n");
 
 }
+
+void HUMPlanner::writeDualInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat, bool right)
+{
+    double dist; string dist_str; std::vector<double> rpy; Matrix3d Rot_tar;
+    string tarxt0; string tarxt1; string tarxt2;
+
+    if(right){
+        dist = approach_retreat.at(3);
+        dist_str = boost::str(boost::format("%.2f") % dist); boost::replace_all(dist_str,",",".");
+        rpy = {tar.at(3),tar.at(4),tar.at(5)};
+        this->RPY_matrix(rpy,Rot_tar);
+        Vector3d v_r(approach_retreat.at(0),approach_retreat.at(1),approach_retreat.at(2));
+        Vector3d vv_r = Rot_tar*v_r;
+        stream << string("# VECTOR APPROACH/RETREAT RIGHT DISTANCE \n");
+        stream << string("param dist_right :=")+dist_str+string(";\n");
+        stream << string("# VECTOR APPROACH/RETREAT RIGHT ORIENTATION \n");
+        stream << string("param v_t_right := \n");
+        tarxt0 =  boost::str(boost::format("%.2f") % (vv_r(0)));
+        boost::replace_all(tarxt0,",",".");
+        stream << to_string(1)+string(" ")+tarxt0+string("\n");
+        tarxt1 =  boost::str(boost::format("%.2f") % (vv_r(1)));
+        boost::replace_all(tarxt1,",",".");
+        stream << to_string(2)+string(" ")+tarxt1+string("\n");
+        tarxt2 =  boost::str(boost::format("%.2f") % (vv_r(2)));
+        boost::replace_all(tarxt2,",",".");
+        stream << to_string(3)+string(" ")+tarxt2+string(";\n");
+    }else{
+        dist = approach_retreat.at(3);
+        dist_str = boost::str(boost::format("%.2f") % dist); boost::replace_all(dist_str,",",".");
+        rpy = {tar.at(3),tar.at(4),tar.at(5)};
+        this->RPY_matrix(rpy,Rot_tar);
+        Vector3d v_l(approach_retreat.at(0),approach_retreat.at(1),approach_retreat.at(2));
+        Vector3d vv_l = Rot_tar*v_l;
+        stream << string("# VECTOR APPROACH/RETREAT LEFT DISTANCE \n");
+        stream << string("param dist_left :=")+dist_str+string(";\n");
+        stream << string("# VECTOR APPROACH/RETREAT LEFT ORIENTATION \n");
+        stream << string("param v_t_left := \n");
+        tarxt0 =  boost::str(boost::format("%.2f") % (vv_l(0)));
+        boost::replace_all(tarxt0,",",".");
+        stream << to_string(1)+string(" ")+tarxt0+string("\n");
+        tarxt1 =  boost::str(boost::format("%.2f") % (vv_l(1)));
+        boost::replace_all(tarxt1,",",".");
+        stream << to_string(2)+string(" ")+tarxt1+string("\n");
+        tarxt2 =  boost::str(boost::format("%.2f") % (vv_l(2)));
+        boost::replace_all(tarxt2,",",".");
+        stream << to_string(3)+string(" ")+tarxt2+string(";\n");
+    }
+}
+
 
 void HUMPlanner::writeInfoApproachRetreat_place(ofstream &stream, std::vector<double> tar, std::vector<double> approach, std::vector<double> retreat)
 {
@@ -991,6 +1840,89 @@ void HUMPlanner::writeInfoObjectTarget(ofstream &stream, objectPtr obj)
     stream << string(" param n_ObjTar := ")+to_string(1)+string(";\n");
 }
 
+void HUMPlanner::writeDualInfoObjectTarget(ofstream &stream, objectPtr obj_right, objectPtr obj_left)
+{
+    std::vector<double> position; string objx; string objy; string objz;
+    std::vector<double> orientation; string objroll; string objpitch; string objyaw;
+    std::vector<double> dimension; string objxsize; string objysize; string objzsize;
+
+    obj_right->getPos(position);
+    obj_right->getOr(orientation);
+    obj_right->getSize(dimension);
+    stream << string("# OBJECT OF THE RIGHT TARGET POSITION+RADIUS+ORIENTATION \n");
+    stream << string("param ObjTar_right : 1 2 3 4 5 6 7 8 9 := \n");
+    objx =  boost::str(boost::format("%.2f") % (position.at(0)));
+    boost::replace_all(objx,",",".");
+    objy =  boost::str(boost::format("%.2f") % (position.at(1)));
+    boost::replace_all(objy,",",".");
+    objz =  boost::str(boost::format("%.2f") % (position.at(2)));
+    boost::replace_all(objz,",",".");
+    objxsize =  boost::str(boost::format("%.2f") % (dimension.at(0)/2));
+    boost::replace_all(objxsize,",",".");
+    objysize =  boost::str(boost::format("%.2f") % (dimension.at(1)/2));
+    boost::replace_all(objysize,",",".");
+    objzsize =  boost::str(boost::format("%.2f") % (dimension.at(2)/2));
+    boost::replace_all(objzsize,",",".");
+    objroll =  boost::str(boost::format("%.2f") % (orientation.at(0)));
+    boost::replace_all(objroll,",",".");
+    objpitch =  boost::str(boost::format("%.2f") % (orientation.at(1)));
+    boost::replace_all(objpitch,",",".");
+    objyaw =  boost::str(boost::format("%.2f") % (orientation.at(2)));
+    boost::replace_all(objyaw,",",".");
+    stream << to_string(1)+string(" ")+
+                       objx+string(" ")+
+                       objy+string(" ")+
+                       objz+string(" ")+
+                       objxsize+string(" ")+
+                       objysize+string(" ")+
+                       objzsize+string(" ")+
+                       objroll+string(" ")+
+                       objpitch+string(" ")+
+                       objyaw+string(" ")+
+                       string(" #")+obj_right->getName()+
+                       string("\n");
+    stream << string("  ;\n");
+    stream << string(" param n_ObjTar_right := ")+to_string(1)+string(";\n");
+
+    obj_left->getPos(position);
+    obj_left->getOr(orientation);
+    obj_left->getSize(dimension);
+    stream << string("# OBJECT OF THE LEFT TARGET POSITION+RADIUS+ORIENTATION \n");
+    stream << string("param ObjTar_left : 1 2 3 4 5 6 7 8 9 := \n");
+    objx =  boost::str(boost::format("%.2f") % (position.at(0)));
+    boost::replace_all(objx,",",".");
+    objy =  boost::str(boost::format("%.2f") % (position.at(1)));
+    boost::replace_all(objy,",",".");
+    objz =  boost::str(boost::format("%.2f") % (position.at(2)));
+    boost::replace_all(objz,",",".");
+    objxsize =  boost::str(boost::format("%.2f") % (dimension.at(0)/2));
+    boost::replace_all(objxsize,",",".");
+    objysize =  boost::str(boost::format("%.2f") % (dimension.at(1)/2));
+    boost::replace_all(objysize,",",".");
+    objzsize =  boost::str(boost::format("%.2f") % (dimension.at(2)/2));
+    boost::replace_all(objzsize,",",".");
+    objroll =  boost::str(boost::format("%.2f") % (orientation.at(0)));
+    boost::replace_all(objroll,",",".");
+    objpitch =  boost::str(boost::format("%.2f") % (orientation.at(1)));
+    boost::replace_all(objpitch,",",".");
+    objyaw =  boost::str(boost::format("%.2f") % (orientation.at(2)));
+    boost::replace_all(objyaw,",",".");
+    stream << to_string(1)+string(" ")+
+                       objx+string(" ")+
+                       objy+string(" ")+
+                       objz+string(" ")+
+                       objxsize+string(" ")+
+                       objysize+string(" ")+
+                       objzsize+string(" ")+
+                       objroll+string(" ")+
+                       objpitch+string(" ")+
+                       objyaw+string(" ")+
+                       string(" #")+obj_left->getName()+
+                       string("\n");
+    stream << string("  ;\n");
+    stream << string(" param n_ObjTar_left := ")+to_string(1)+string(";\n");
+}
+
 void HUMPlanner::writePI(ofstream &stream)
 {
     stream << string("param pi := 4*atan(1); \n");
@@ -1010,10 +1942,32 @@ void HUMPlanner::writeArmDHParamsMod(ofstream &stream)
     stream << string("param d {i in 1..")+to_string(joints_arm)+string("} ; \n");
 }
 
+void HUMPlanner::writeDualArmDHParamsMod(ofstream &stream)
+{
+    stream << string("# D-H parameters of the right arm \n");
+    stream << string("param alpha_right {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    stream << string("param a_right {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    stream << string("param d_right {i in 1..")+to_string(joints_arm)+string("} ; \n");
+
+    stream << string("# D-H parameters of the left arm \n");
+    stream << string("param alpha_left {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    stream << string("param a_left {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    stream << string("param d_left {i in 1..")+to_string(joints_arm)+string("} ; \n");
+}
+
 void HUMPlanner::write_dHOMod(ofstream &stream)
 {
     stream << string("# Distance hand - target  \n");
     stream << string("param dFH; \n");
+}
+
+void HUMPlanner::write_dual_dHOMod(ofstream &stream)
+{
+    stream << string("# Distance right hand - target  \n");
+    stream << string("param dFH_right; \n");
+
+    stream << string("# Distance left hand - target  \n");
+    stream << string("param dFH_left; \n");
 }
 
 void HUMPlanner::writeInfoObjectsMod(ofstream &stream,bool vec)
@@ -1040,6 +1994,48 @@ void HUMPlanner::writeInfoObjectsMod(ofstream &stream,bool vec)
     stream << string("# Object of the target \n");
     stream << string("param n_ObjTar; \n");
     stream << string("param ObjTar {i in 1..n_ObjTar, j in 1..9}; \n");
+}
+
+void HUMPlanner::writeDualInfoObjectsMod(ofstream &stream,bool vec_right,bool vec_left)
+{
+    stream << string("# Right Target Position \n");
+    stream << string("param Tar_pos_right {i in 1..3}; \n");
+    stream << string("# Right Target orientation \n");
+    stream << string("param x_t_right {i in 1..3}; \n");
+    stream << string("param y_t_right {i in 1..3}; \n");
+    stream << string("param z_t_right {i in 1..3}; \n");
+
+    stream << string("# Left Target Position \n");
+    stream << string("param Tar_pos_left {i in 1..3}; \n");
+    stream << string("# Left Target orientation \n");
+    stream << string("param x_t_left {i in 1..3}; \n");
+    stream << string("param y_t_left {i in 1..3}; \n");
+    stream << string("param z_t_left {i in 1..3}; \n");
+
+    if(vec_right){
+        stream << string("# Vector approach/retreat right distance \n");
+        stream << string("param dist_right; \n");
+        stream << string("# Vector approach/retreat right orientation \n");
+        stream << string("param v_t_right {i in 1..3}; \n");
+    }
+    if(vec_left){
+        stream << string("# Vector approach/retreat left distance \n");
+        stream << string("param dist_left; \n");
+        stream << string("# Vector approach/retreat left orientation \n");
+        stream << string("param v_t_left {i in 1..3}; \n");
+    }
+
+    stream << string("# Obstacles \n");
+    stream << string("param n_Obstacles; \n");
+    stream << string("param Obstacles {i in 1..n_Obstacles, j in 1..9}; \n");
+
+    stream << string("# Object of the right target \n");
+    stream << string("param n_ObjTar_right; \n");
+    stream << string("param ObjTar_right {i in 1..n_ObjTar_right, j in 1..9}; \n");
+
+    stream << string("# Object of the left target \n");
+    stream << string("param n_ObjTar_left; \n");
+    stream << string("param ObjTar_left {i in 1..n_ObjTar_left, j in 1..9}; \n");
 }
 
 void HUMPlanner::writeInfoObjectsMod_place(ofstream &stream, bool vec)
@@ -1118,6 +2114,59 @@ void HUMPlanner::writeRotMatObjTar(ofstream &stream)
     stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_obj[i] \n");
     stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_obj[i]*s_yaw_obj[i] \n");
     stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_obj[i]*c_yaw_obj[i] \n");
+    stream << string("   ; \n");
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+}
+
+void HUMPlanner::writeRotMatObjTarDual(ofstream &stream)
+{
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("# Rotation matrix of the object to place by the right arm \n");
+    stream << string("param c_roll_obj_right {i in 1..n_ObjTar_right} := cos(ObjTar_right[i,7]); \n");
+    stream << string("param s_roll_obj_right {i in 1..n_ObjTar_right} := sin(ObjTar_right[i,7]); \n");
+    stream << string("param c_pitch_obj_right {i in 1..n_ObjTar_right} := cos(ObjTar_right[i,8]); \n");
+    stream << string("param s_pitch_obj_right {i in 1..n_ObjTar_right} := sin(ObjTar_right[i,8]); \n");
+    stream << string("param c_yaw_obj_right {i in 1..n_ObjTar_right} := cos(ObjTar_right[i,9]); \n");
+    stream << string("param s_yaw_obj_right {i in 1..n_ObjTar_right} := sin(ObjTar_right[i,9]); \n");
+
+    stream << string("param Rot_obj_right {i1 in 1..4, i2 in 1..4,i in 1..n_ObjTar_right} :=  \n");
+    stream << string("# 1st row \n");
+    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_obj_right[i]*c_pitch_obj_right[i] \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_obj_right[i]*c_yaw_obj_right[i]+c_roll_obj_right[i]*s_pitch_obj_right[i]*s_yaw_obj_right[i] \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_obj_right[i]*s_yaw_obj_right[i]+c_roll_obj_right[i]*s_pitch_obj_right[i]*c_yaw_obj_right[i] \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_obj_right[i]*c_pitch_obj_right[i] \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_obj_right[i]*c_yaw_obj_right[i]+s_roll_obj_right[i]*s_pitch_obj_right[i]*s_yaw_obj_right[i] \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_obj_right[i]*s_yaw_obj_right[i]+s_roll_obj_right[i]*s_pitch_obj_right[i]*c_yaw_obj_right[i] \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_obj_right[i] \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_obj_right[i]*s_yaw_obj_right[i] \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_obj_right[i]*c_yaw_obj_right[i] \n");
+    stream << string("   ; \n");
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("# Rotation matrix of the object to place by the left arm \n");
+    stream << string("param c_roll_obj_left {i in 1..n_ObjTar_left} := cos(ObjTar_left[i,7]); \n");
+    stream << string("param s_roll_obj_left {i in 1..n_ObjTar_left} := sin(ObjTar_left[i,7]); \n");
+    stream << string("param c_pitch_obj_left {i in 1..n_ObjTar_left} := cos(ObjTar_left[i,8]); \n");
+    stream << string("param s_pitch_obj_left {i in 1..n_ObjTar_left} := sin(ObjTar_left[i,8]); \n");
+    stream << string("param c_yaw_obj_left {i in 1..n_ObjTar_left} := cos(ObjTar_left[i,9]); \n");
+    stream << string("param s_yaw_obj_left {i in 1..n_ObjTar_left} := sin(ObjTar_left[i,9]); \n");
+
+    stream << string("param Rot_obj_left {i1 in 1..4, i2 in 1..4,i in 1..n_ObjTar_left} :=  \n");
+    stream << string("# 1st row \n");
+    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_obj_left[i]*c_pitch_obj_left[i] \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_obj_left[i]*c_yaw_obj_left[i]+c_roll_obj_left[i]*s_pitch_obj_left[i]*s_yaw_obj_left[i] \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_obj_left[i]*s_yaw_obj_left[i]+c_roll_obj_left[i]*s_pitch_obj_left[i]*c_yaw_obj_left[i] \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_obj_left[i]*c_pitch_obj_left[i] \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_obj_left[i]*c_yaw_obj_left[i]+s_roll_obj_left[i]*s_pitch_obj_left[i]*s_yaw_obj_left[i] \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_obj_left[i]*s_yaw_obj_left[i]+s_roll_obj_left[i]*s_pitch_obj_left[i]*c_yaw_obj_left[i] \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_obj_left[i] \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_obj_left[i]*s_yaw_obj_left[i] \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_obj_left[i]*c_yaw_obj_left[i] \n");
     stream << string("   ; \n");
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
 }
@@ -1342,6 +2391,428 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("var z_H {j in 1..3,i in Iterations} = T_W_H [j,3,i]; \n");
         stream << string("var Rot_H {j in 1..3,k in 1..3,i in Iterations} = T_W_H [j,k,i]; \n");
     }
+}
+
+void HUMPlanner::writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightArm, Matrix4d &matRightHand, std::vector<double>& tolsRightArm, Matrix4d &matWorldToLeftArm, Matrix4d &matLeftHand, std::vector<double>& tolsLeftArm,bool final)
+{
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("#  Direct Kinematics model of the right arm \n\n");
+
+    stream << string("param c_alpha_right {i in 1..7} := cos(alpha_right[i]); \n");
+    stream << string("param s_alpha_right {i in 1..7} := sin(alpha_right[i]); \n");
+    stream << string("\n");
+
+    string mat00_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(0,0))); boost::replace_all(mat00_right,",",".");
+    string mat01_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(0,1))); boost::replace_all(mat01_right,",",".");
+    string mat02_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(0,2))); boost::replace_all(mat02_right,",",".");
+    string mat03_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(0,3))); boost::replace_all(mat03_right,",",".");
+    string mat10_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(1,0))); boost::replace_all(mat10_right,",",".");
+    string mat11_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(1,1))); boost::replace_all(mat11_right,",",".");
+    string mat12_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(1,2))); boost::replace_all(mat12_right,",",".");
+    string mat13_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(1,3))); boost::replace_all(mat13_right,",",".");
+    string mat20_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(2,0))); boost::replace_all(mat20_right,",",".");
+    string mat21_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(2,1))); boost::replace_all(mat21_right,",",".");
+    string mat22_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(2,2))); boost::replace_all(mat22_right,",",".");
+    string mat23_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(2,3))); boost::replace_all(mat23_right,",",".");
+    string mat30_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(3,0))); boost::replace_all(mat30_right,",",".");
+    string mat31_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(3,1))); boost::replace_all(mat31_right,",",".");
+    string mat32_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(3,2))); boost::replace_all(mat32_right,",",".");
+    string mat33_right =  boost::str(boost::format("%.2f") % (matWorldToRightArm(3,3))); boost::replace_all(mat33_right,",",".");
+
+    stream << string("param T_WorldToRightArm {i1 in 1..4, i2 in 1..4} =  \n");
+    stream << string("# 1st row \n");
+    stream << string("if ( i1=1 && i2=1 ) then ")+mat00_right+string("  \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then ")+mat01_right+string("  \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then ")+mat02_right+string("  \n");
+    stream << string("else	if ( i1=1 && i2=4 ) then ")+mat03_right+string("  \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then ")+mat10_right+string("  \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then ")+mat11_right+string("  \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then ")+mat12_right+string("  \n");
+    stream << string("else	if ( i1=2 && i2=4 ) then ")+mat13_right+string("  \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then ")+mat20_right+string("  \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then ")+mat21_right+string("  \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then ")+mat22_right+string("  \n");
+    stream << string("else	if ( i1=3 && i2=4 ) then ")+mat23_right+string("  \n");
+    stream << string("# 4th row \n");
+    stream << string("else	if ( i1=4 && i2=1 ) then ")+mat30_right+string("  \n");
+    stream << string("else	if ( i1=4 && i2=2 ) then ")+mat31_right+string("  \n");
+    stream << string("else	if ( i1=4 && i2=3 ) then ")+mat32_right+string("  \n");
+    stream << string("else	if ( i1=4 && i2=4 ) then ")+mat33_right+string("  \n");
+    stream << string(";  \n");
+
+    string idx_r;
+    string idx1_r;
+    for (unsigned i = 0 ; i < joints_arm; ++i){
+        idx_r = to_string(i);
+        idx1_r = to_string(i+1);
+        if (final){
+            stream << string("var T_")+idx_r+string("_")+idx1_r+string("_right")+string(" {i1 in 1..4, i2 in 1..4} =  \n");
+        }else{
+            stream << string("var T_")+idx_r+string("_")+idx1_r+string("_right")+string(" {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+        }
+        stream << string("# 1st row \n");
+        if(final){
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[")+idx1_r+string("]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[")+idx1_r+string("])  \n");
+        }else{
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,")+idx1_r+string("]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,")+idx1_r+string("])  \n");
+        }
+        stream << string("else	if ( i1=1 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then a_right[")+idx1_r+string("]  \n");
+        stream << string("# 2st row \n");
+        if(final){
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[")+idx1_r+string("])*c_alpha_right[")+idx1_r+string("] \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[")+idx1_r+string("])*c_alpha_right[")+idx1_r+string("] \n");
+        }else{
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,")+idx1_r+string("])*c_alpha_right[")+idx1_r+string("] \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,")+idx1_r+string("])*c_alpha_right[")+idx1_r+string("] \n");
+        }
+        stream << string("else	if ( i1=2 && i2=3 ) then -s_alpha_right[")+idx1_r+string("] \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then -s_alpha_right[")+idx1_r+string("]*d_right[")+idx1_r+string("] \n");
+        stream << string("# 3rd row \n");
+        if(final){
+            stream << string("else	if ( i1=3 && i2=1 ) then sin(theta[")+idx1_r+string("])*s_alpha_right[")+idx1_r+string("] \n");
+            stream << string("else	if ( i1=3 && i2=2 ) then cos(theta[")+idx1_r+string("])*s_alpha_right[")+idx1_r+string("] \n");
+        }else{
+            stream << string("else	if ( i1=3 && i2=1 ) then sin(theta[i,")+idx1_r+string("])*s_alpha_right[")+idx1_r+string("] \n");
+            stream << string("else	if ( i1=3 && i2=2 ) then cos(theta[i,")+idx1_r+string("])*s_alpha_right[")+idx1_r+string("] \n");
+        }
+        stream << string("else	if ( i1=3 && i2=3 ) then c_alpha_right[")+idx1_r+string("] \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then c_alpha_right[")+idx1_r+string("]*d_right[")+idx1_r+string("] \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0 \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+    }
+
+    string matHand00_right =  boost::str(boost::format("%.2f") % (matRightHand(0,0))); boost::replace_all(matHand00_right,",",".");
+    string matHand01_right =  boost::str(boost::format("%.2f") % (matRightHand(0,1))); boost::replace_all(matHand01_right,",",".");
+    string matHand02_right =  boost::str(boost::format("%.2f") % (matRightHand(0,2))); boost::replace_all(matHand02_right,",",".");
+    string matHand03_right =  boost::str(boost::format("%.2f") % (matRightHand(0,3))); boost::replace_all(matHand03_right,",",".");
+    string matHand10_right =  boost::str(boost::format("%.2f") % (matRightHand(1,0))); boost::replace_all(matHand10_right,",",".");
+    string matHand11_right =  boost::str(boost::format("%.2f") % (matRightHand(1,1))); boost::replace_all(matHand11_right,",",".");
+    string matHand12_right =  boost::str(boost::format("%.2f") % (matRightHand(1,2))); boost::replace_all(matHand12_right,",",".");
+    string matHand13_right =  boost::str(boost::format("%.2f") % (matRightHand(1,3))); boost::replace_all(matHand13_right,",",".");
+    string matHand20_right =  boost::str(boost::format("%.2f") % (matRightHand(2,0))); boost::replace_all(matHand20_right,",",".");
+    string matHand21_right =  boost::str(boost::format("%.2f") % (matRightHand(2,1))); boost::replace_all(matHand21_right,",",".");
+    string matHand22_right =  boost::str(boost::format("%.2f") % (matRightHand(2,2))); boost::replace_all(matHand22_right,",",".");
+    string matHand23_right =  boost::str(boost::format("%.2f") % (matRightHand(2,3))); boost::replace_all(matHand23_right,",",".");
+    string matHand30_right =  boost::str(boost::format("%.2f") % (matRightHand(3,0))); boost::replace_all(matHand30_right,",",".");
+    string matHand31_right =  boost::str(boost::format("%.2f") % (matRightHand(3,1))); boost::replace_all(matHand31_right,",",".");
+    string matHand32_right =  boost::str(boost::format("%.2f") % (matRightHand(3,2))); boost::replace_all(matHand32_right,",",".");
+    string matHand33_right =  boost::str(boost::format("%.2f") % (matRightHand(3,3))); boost::replace_all(matHand33_right,",",".");
+
+    stream << string("param T_")+idx1_r+string("_H_right {i1 in 1..4, i2 in 1..4} =  \n");
+    stream << string("# 1st row \n");
+    stream << string("if ( i1=1 && i2=1 ) then ")+matHand00_right+string("  \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then ")+matHand01_right+string("  \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then ")+matHand02_right+string("  \n");
+    stream << string("else	if ( i1=1 && i2=4 ) then ")+matHand03_right+string("  \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then ")+matHand10_right+string("  \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then ")+matHand11_right+string("  \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then ")+matHand12_right+string("  \n");
+    stream << string("else	if ( i1=2 && i2=4 ) then ")+matHand13_right+string("  \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then ")+matHand20_right+string("  \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then ")+matHand21_right+string("  \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then ")+matHand22_right+string("  \n");
+    stream << string("else	if ( i1=3 && i2=4 ) then ")+matHand23_right+string("  \n");
+    stream << string("# 4th row \n");
+    stream << string("else	if ( i1=4 && i2=1 ) then ")+matHand30_right+string("  \n");
+    stream << string("else	if ( i1=4 && i2=2 ) then ")+matHand31_right+string("  \n");
+    stream << string("else	if ( i1=4 && i2=3 ) then ")+matHand32_right+string("  \n");
+    stream << string("else	if ( i1=4 && i2=4 ) then ")+matHand33_right+string("  \n");
+    stream << string(";  \n");
+
+    // --------------------------- positions on the right arm ------------------------------------------ //
+    if(final){
+        stream << string("var T_W_1_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_WorldToRightArm[i1,j]*T_0_1_right[j,i2];\n");
+    }else{
+        stream << string("var T_W_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_WorldToRightArm[i1,j]*T_0_1_right[j,i2,i];\n");
+    }
+    for (unsigned i = 1 ; i < joints_arm; ++i){
+        idx_r = to_string(i);
+        idx1_r = to_string(i+1);
+        if(final){
+            stream << string("var T_W_")+idx1_r+string("_right")+string(" {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx_r+string("_right")+string("[i1,j]*T_")+idx_r+string("_")+idx1_r+string("_right")+string("[j,i2];\n");
+        }else{
+            stream << string("var T_W_")+idx1_r+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_W_")+idx_r+string("_right")+string("[i1,j,i]*T_")+idx_r+string("_")+idx1_r+string("_right")+string("[j,i2,i];\n");
+        }
+    }
+    if(final){
+        stream << string("var T_W_H_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx1_r+string("_right")+string("[i1,j]*T_")+idx1_r+string("_H_right[j,i2];\n\n");
+    }else{
+        stream << string("var T_W_H_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_W_")+idx1_r+string("_right")+string("[i1,j,i]*T_")+idx1_r+string("_H_right[j,i2];\n\n");
+    }
+
+    string tolArm1_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(0)); boost::replace_all(tolArm1_right,",",".");
+    string tolArm2_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(1)); boost::replace_all(tolArm2_right,",",".");
+    string tolArm3_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(2)); boost::replace_all(tolArm3_right,",",".");
+    string tolArm4_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(3)); boost::replace_all(tolArm4_right,",",".");
+
+    if(final){
+        stream << string("var Shoulder_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_1_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm1_right+string("\n");
+        stream << string(";  \n");
+        stream << string("var Elbow_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_3_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm2_right+string("\n");
+        stream << string(";  \n");
+        stream << string("var Wrist_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_5_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm3_right+string("\n");
+        stream << string(";  \n");
+        stream << string("var Hand_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_H_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm4_right+string("\n");
+        stream << string(";  \n");
+        stream << string("# Right Hand orientation \n");
+        stream << string("var x_H_right {j in 1..3} = T_W_H_right [j,1]; \n");
+        stream << string("var y_H_right {j in 1..3} = T_W_H_right [j,2]; \n");
+        stream << string("var z_H_right {j in 1..3} = T_W_H_right [j,3]; \n");
+        stream << string("var Rot_H_right {j in 1..3,k in 1..3} = T_W_H_right [j,k]; \n");
+
+    }else{
+        stream << string("var Shoulder_right {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_1_right[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm1_right+string("\n");
+        stream << string(";  \n");
+        stream << string("var Elbow_right {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_3_right[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm2_right+string("\n");
+        stream << string(";  \n");
+        stream << string("var Wrist_right {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_5_right[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm3_right+string("\n");
+        stream << string(";  \n");
+        stream << string("var Hand_right {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_H_right[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm4_right+string("\n");
+        stream << string(";  \n");
+        stream << string("# Right Hand orientation \n");
+        stream << string("var x_H_right {j in 1..3,i in Iterations} = T_W_H_right [j,1,i]; \n");
+        stream << string("var y_H_right {j in 1..3,i in Iterations} = T_W_H_right [j,2,i]; \n");
+        stream << string("var z_H_right {j in 1..3,i in Iterations} = T_W_H_right [j,3,i]; \n");
+        stream << string("var Rot_H_right {j in 1..3,k in 1..3,i in Iterations} = T_W_H_right [j,k,i]; \n");
+    }
+
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("#  Direct Kinematics model of the left arm \n\n");
+
+    stream << string("param c_alpha_left {i in 1..7} := cos(alpha_left[i]); \n");
+    stream << string("param s_alpha_left {i in 1..7} := sin(alpha_left[i]); \n");
+    stream << string("\n");
+
+    string mat00_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(0,0))); boost::replace_all(mat00_left,",",".");
+    string mat01_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(0,1))); boost::replace_all(mat01_left,",",".");
+    string mat02_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(0,2))); boost::replace_all(mat02_left,",",".");
+    string mat03_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(0,3))); boost::replace_all(mat03_left,",",".");
+    string mat10_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(1,0))); boost::replace_all(mat10_left,",",".");
+    string mat11_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(1,1))); boost::replace_all(mat11_left,",",".");
+    string mat12_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(1,2))); boost::replace_all(mat12_left,",",".");
+    string mat13_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(1,3))); boost::replace_all(mat13_left,",",".");
+    string mat20_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(2,0))); boost::replace_all(mat20_left,",",".");
+    string mat21_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(2,1))); boost::replace_all(mat21_left,",",".");
+    string mat22_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(2,2))); boost::replace_all(mat22_left,",",".");
+    string mat23_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(2,3))); boost::replace_all(mat23_left,",",".");
+    string mat30_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(3,0))); boost::replace_all(mat30_left,",",".");
+    string mat31_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(3,1))); boost::replace_all(mat31_left,",",".");
+    string mat32_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(3,2))); boost::replace_all(mat32_left,",",".");
+    string mat33_left =  boost::str(boost::format("%.2f") % (matWorldToLeftArm(3,3))); boost::replace_all(mat33_left,",",".");
+
+    stream << string("param T_WorldToLeftArm {i1 in 1..4, i2 in 1..4} =  \n");
+    stream << string("# 1st row \n");
+    stream << string("if ( i1=1 && i2=1 ) then ")+mat00_left+string("  \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then ")+mat01_left+string("  \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then ")+mat02_left+string("  \n");
+    stream << string("else	if ( i1=1 && i2=4 ) then ")+mat03_left+string("  \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then ")+mat10_left+string("  \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then ")+mat11_left+string("  \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then ")+mat12_left+string("  \n");
+    stream << string("else	if ( i1=2 && i2=4 ) then ")+mat13_left+string("  \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then ")+mat20_left+string("  \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then ")+mat21_left+string("  \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then ")+mat22_left+string("  \n");
+    stream << string("else	if ( i1=matRightHand3 && i2=4 ) then ")+mat23_left+string("  \n");
+    stream << string("# 4th row \n");
+    stream << string("else	if ( i1=4 && i2=1 ) then ")+mat30_left+string("  \n");
+    stream << string("else	if ( i1=4 && i2=2 ) then ")+mat31_left+string("  \n");
+    stream << string("else	if ( i1=4 && i2=3 ) then ")+mat32_left+string("  \n");
+    stream << string("else	if ( i1=4 && i2=4 ) then ")+mat33_left+string("  \n");
+    stream << string(";  \n");
+
+    string idx_l; string idx_ll;
+    string idx1_l; string idx1_ll;
+    for (unsigned i = 0 ; i < joints_arm; ++i){
+        idx_l = to_string(i); idx_ll = to_string(i+joints_arm);
+        idx1_l = to_string(i+1); idx1_ll = to_string(i+1+joints_arm);
+        if (final){
+            stream << string("var T_")+idx_l+string("_")+idx1_l+string("_right")+string(" {i1 in 1..4, i2 in 1..4} =  \n");
+        }else{
+            stream << string("var T_")+idx_l+string("_")+idx1_l+string("_right")+string(" {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+        }
+        stream << string("# 1st row \n");
+        if(final){
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[")+idx1_ll+string("]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[")+idx1_ll+string("])  \n");
+        }else{
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,")+idx1_ll+string("]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,")+idx1_ll+string("])  \n");
+        }
+        stream << string("else	if ( i1=1 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then a_left[")+idx1_l+string("]  \n");
+        stream << string("# 2st row \n");
+        if(final){
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[")+idx1_ll+string("])*c_alpha_left[")+idx1_l+string("] \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[")+idx1_ll+string("])*c_alpha_left[")+idx1_l+string("] \n");
+        }else{
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,")+idx1_ll+string("])*c_alpha_left[")+idx1_l+string("] \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,")+idx1_ll+string("])*c_alpha_left[")+idx1_l+string("] \n");
+        }
+        stream << string("else	if ( i1=2 && i2=3 ) then -s_alpha_left[")+idx1_l+string("] \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then -s_alpha_left[")+idx1_l+string("]*d_left[")+idx1_l+string("] \n");
+        stream << string("# 3rd row \n");
+        if(final){
+            stream << string("else	if ( i1=3 && i2=1 ) then sin(theta[")+idx1_ll+string("])*s_alpha_left[")+idx1_l+string("] \n");
+            stream << string("else	if ( i1=3 && i2=2 ) then cos(theta[")+idx1_ll+string("])*s_alpha_left[")+idx1_l+string("] \n");
+        }else{
+            stream << string("else	if ( i1=3 && i2=1 ) then sin(theta[i,")+idx1_ll+string("])*s_alpha_left[")+idx1_l+string("] \n");
+            stream << string("else	if ( i1=3 && i2=2 ) then cos(theta[i,")+idx1_ll+string("])*s_alpha_left[")+idx1_l+string("] \n");
+        }
+        stream << string("else	if ( i1=3 && i2=3 ) then c_alpha_left[")+idx1_l+string("] \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then c_alpha_left[")+idx1_l+string("]*d_left[")+idx1_l+string("] \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0 \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+    }
+
+    string matHand00_left =  boost::str(boost::format("%.2f") % (matLeftHand(0,0))); boost::replace_all(matHand00_left,",",".");
+    string matHand01_left =  boost::str(boost::format("%.2f") % (matLeftHand(0,1))); boost::replace_all(matHand01_left,",",".");
+    string matHand02_left =  boost::str(boost::format("%.2f") % (matLeftHand(0,2))); boost::replace_all(matHand02_left,",",".");
+    string matHand03_left =  boost::str(boost::format("%.2f") % (matLeftHand(0,3))); boost::replace_all(matHand03_left,",",".");
+    string matHand10_left =  boost::str(boost::format("%.2f") % (matLeftHand(1,0))); boost::replace_all(matHand10_left,",",".");
+    string matHand11_left =  boost::str(boost::format("%.2f") % (matLeftHand(1,1))); boost::replace_all(matHand11_left,",",".");
+    string matHand12_left =  boost::str(boost::format("%.2f") % (matLeftHand(1,2))); boost::replace_all(matHand12_left,",",".");
+    string matHand13_left =  boost::str(boost::format("%.2f") % (matLeftHand(1,3))); boost::replace_all(matHand13_left,",",".");
+    string matHand20_left =  boost::str(boost::format("%.2f") % (matLeftHand(2,0))); boost::replace_all(matHand20_left,",",".");
+    string matHand21_left =  boost::str(boost::format("%.2f") % (matLeftHand(2,1))); boost::replace_all(matHand21_left,",",".");
+    string matHand22_left =  boost::str(boost::format("%.2f") % (matLeftHand(2,2))); boost::replace_all(matHand22_left,",",".");
+    string matHand23_left =  boost::str(boost::format("%.2f") % (matLeftHand(2,3))); boost::replace_all(matHand23_left,",",".");
+    string matHand30_left =  boost::str(boost::format("%.2f") % (matLeftHand(3,0))); boost::replace_all(matHand30_left,",",".");
+    string matHand31_left =  boost::str(boost::format("%.2f") % (matLeftHand(3,1))); boost::replace_all(matHand31_left,",",".");
+    string matHand32_left =  boost::str(boost::format("%.2f") % (matLeftHand(3,2))); boost::replace_all(matHand32_left,",",".");
+    string matHand33_left =  boost::str(boost::format("%.2f") % (matLeftHand(3,3))); boost::replace_all(matHand33_left,",",".");
+
+    stream << string("param T_")+idx1_l+string("_H_left {i1 in 1..4, i2 in 1..4} =  \n");
+    stream << string("# 1st row \n");
+    stream << string("if ( i1=1 && i2=1 ) then ")+matHand00_left+string("  \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then ")+matHand01_left+string("  \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then ")+matHand02_left+string("  \n");
+    stream << string("else	if ( i1=1 && i2=4 ) then ")+matHand03_left+string("  \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then ")+matHand10_left+string("  \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then ")+matHand11_left+string("  \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then ")+matHand12_left+string("  \n");
+    stream << string("else	if ( i1=2 && i2=4 ) then ")+matHand13_left+string("  \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then ")+matHand20_left+string("  \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then ")+matHand21_left+string("  \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then ")+matHand22_left+string("  \n");
+    stream << string("else	if ( i1=3 && i2=4 ) then ")+matHand23_left+string("  \n");
+    stream << string("# 4th row \n");
+    stream << string("else	if ( i1=4 && i2=1 ) then ")+matHand30_left+string("  \n");
+    stream << string("else	if ( i1=4 && i2=2 ) then ")+matHand31_left+string("  \n");
+    stream << string("else	if ( i1=4 && i2=3 ) then ")+matHand32_left+string("  \n");
+    stream << string("else	if ( i1=4 && i2=4 ) then ")+matHand33_left+string("  \n");
+    stream << string(";  \n");
+
+    // --------------------------- positions on the left arm ------------------------------------------ //
+    if(final){
+        stream << string("var T_W_1_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_WorldToLeftArm[i1,j]*T_0_1_left[j,i2];\n");
+    }else{
+        stream << string("var T_W_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_WorldToLeftArm[i1,j]*T_0_1_left[j,i2,i];\n");
+    }
+    for (unsigned i = 1 ; i < joints_arm; ++i){
+        idx_l = to_string(i);
+        idx1_l = to_string(i+1);
+        if(final){
+            stream << string("var T_W_")+idx1_l+string("_left")+string(" {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx_l+string("_left")+string("[i1,j]*T_")+idx_l+string("_")+idx1_l+string("_left")+string("[j,i2];\n");
+        }else{
+            stream << string("var T_W_")+idx1_l+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_W_")+idx_l+string("_left")+string("[i1,j,i]*T_")+idx_l+string("_")+idx1_l+string("_left")+string("[j,i2,i];\n");
+        }
+    }
+    if(final){
+        stream << string("var T_W_H_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx1_l+string("_left")+string("[i1,j]*T_")+idx1_l+string("_H_left[j,i2];\n\n");
+    }else{
+        stream << string("var T_W_H_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}   T_W_")+idx1_l+string("_left")+string("[i1,j,i]*T_")+idx1_l+string("_H_left[j,i2];\n\n");
+    }
+
+    string tolArm1_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(0)); boost::replace_all(tolArm1_left,",",".");
+    string tolArm2_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(1)); boost::replace_all(tolArm2_left,",",".");
+    string tolArm3_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(2)); boost::replace_all(tolArm3_left,",",".");
+    string tolArm4_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(3)); boost::replace_all(tolArm4_left,",",".");
+
+    if(final){
+        stream << string("var Shoulder_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_1_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm1_left+string("\n");
+        stream << string(";  \n");
+        stream << string("var Elbow_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_3_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm2_left+string("\n");
+        stream << string(";  \n");
+        stream << string("var Wrist_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_5_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm3_left+string("\n");
+        stream << string(";  \n");
+        stream << string("var Hand_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_H_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm4_left+string("\n");
+        stream << string(";  \n");
+        stream << string("# Left Hand orientation \n");
+        stream << string("var x_H_left {j in 1..3} = T_W_H_left [j,1]; \n");
+        stream << string("var y_H_left {j in 1..3} = T_W_H_left [j,2]; \n");
+        stream << string("var z_H_left {j in 1..3} = T_W_H_left [j,3]; \n");
+        stream << string("var Rot_H_left {j in 1..3,k in 1..3} = T_W_H_left [j,k]; \n");
+
+    }else{
+        stream << string("var Shoulder_left {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_1_left[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm1_left+string("\n");
+        stream << string(";  \n");
+        stream << string("var Elbow_left {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_3_left[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm2_left+string("\n");
+        stream << string(";  \n");
+        stream << string("var Wrist_left {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_5_left[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm3_left+string("\n");
+        stream << string(";  \n");
+        stream << string("var Hand_left {i in 1..4,j in Iterations} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_H_left[i,4,j] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm4_left+string("\n");
+        stream << string(";  \n");
+        stream << string("# Left Hand orientation \n");
+        stream << string("var x_H_left {j in 1..3,i in Iterations} = T_W_H_left [j,1,i]; \n");
+        stream << string("var y_H_left {j in 1..3,i in Iterations} = T_W_H_left [j,2,i]; \n");
+        stream << string("var z_H_left {j in 1..3,i in Iterations} = T_W_H_left [j,3,i]; \n");
+        stream << string("var Rot_H_left {j in 1..3,k in 1..3,i in Iterations} = T_W_H_left [j,k,i]; \n");
+    }
+
 }
 
 void HUMPlanner::writeHumanHandDirKin(ofstream &stream, MatrixXd &tolsHand, bool final, bool transport)
@@ -1942,6 +3413,1189 @@ void HUMPlanner::writeHumanHandDirKin(ofstream &stream, MatrixXd &tolsHand, bool
 
 }
 
+void HUMPlanner::writeDualHumanHandDirKin(std::ofstream& stream,MatrixXd& tolsHand, bool final, bool transport_right, bool transport_left,bool right)
+{
+
+    string tolHand1; string tolHand2; string tolHand3; string tolHand4;
+
+    if (right)
+    {
+        // right hand
+        stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+        stream << string("#  Direct Kinematics model of the fingers in the RIGHT HAND \n\n");
+
+        stream << string("# Index finger right \n\n");
+
+        stream << string("param TF1_H_0_right {i1 in 1..4, i2 in 1..4} =  \n");
+        stream << string("# 1st row \n");
+        stream << string("if ( i1=1 && i2=1 ) then cos(theta0_fing1_right) \n");
+        stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta0_fing1_right)*cos(alpha_fing1_right[1])  \n");
+        stream << string("else	if ( i1=1 && i2=3 ) then sin(theta0_fing1_right)*sin(alpha_fing1_right[1])  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then u1x_right \n");
+        stream << string("# 2nd row \n");
+        stream << string("else	if ( i1=2 && i2=1 ) then sin(theta0_fing1_right)  \n");
+        stream << string("else	if ( i1=2 && i2=2 ) then cos(theta0_fing1_right)*cos(alpha_fing1_right[1])  \n");
+        stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta0_fing1_right)*sin(alpha_fing1_right[1])  \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then u1y_right  \n");
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_right[1])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_right[1])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then u1z_right  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF1_0_1_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_right[2]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_right[2])*cos(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_right[2])*sin(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_right[2]*cos(joint_fingers_right[2]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_right[2])*cos(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[2])*sin(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[2]*sin(joint_fingers_right[2])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF1_0_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,9]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,9])*cos(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,9])*sin(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_right[2]*cos(theta[i,9]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,9])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,9])*cos(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,9])*sin(alpha_fing1_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[2]*sin(theta[i,9])  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_right[2])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_right[2])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing1_right[2]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF1_1_2_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*joint_fingers_right[2]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*joint_fingers_right[2]/3)*cos(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*joint_fingers_right[2]/3)*sin(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_right[3]*cos(2*joint_fingers_right[2]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*joint_fingers_right[2]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*joint_fingers_right[2]/3)*cos(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*joint_fingers_right[2]/3)*sin(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[3]*sin(2*joint_fingers_right[2]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF1_1_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*theta[i,9]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*theta[i,9]/3)*cos(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*theta[i,9]/3)*sin(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_right[3]*cos(2*theta[i,9]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*theta[i,9]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*theta[i,9]/3)*cos(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*theta[i,9]/3)*sin(alpha_fing1_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[3]*sin(2*theta[i,9]/3)  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_right[3])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_right[3])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing1_right[3]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF1_2_3_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_right[2]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_right[2]/3)*cos(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_right[2]/3)*sin(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_right[4]*cos(joint_fingers_right[2]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_right[2]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_right[2]/3)*cos(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[2]/3)*sin(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[4]*sin(joint_fingers_right[2]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF1_2_3_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,9]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,9]/3)*cos(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,9]/3)*sin(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_right[4]*cos(theta[i,9]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,9]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,9]/3)*cos(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,9]/3)*sin(alpha_fing1_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[4]*sin(theta[i,9]/3)  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_right[4])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_right[4])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing1_right[4]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+
+        // position of the fingers
+        tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,0)); boost::replace_all(tolHand1,",",".");
+        tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,0)); boost::replace_all(tolHand2,",",".");
+        tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,0)); boost::replace_all(tolHand3,",",".");
+        tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,0)); boost::replace_all(tolHand4,",",".");
+
+        if(final){
+            // final posture selection
+            stream << string("var F1_0_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_right[i1,j]*TF1_H_0_right[j,i2]; \n");
+            stream << string("var F1_1_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F1_0_right[i1,j]*TF1_0_1_right[j,i2]; \n");
+            stream << string("var F1_2_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F1_1_right[i1,j]*TF1_1_2_right[j,i2]; \n");
+            stream << string("var F1_tip_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F1_2_right[i1,j]*TF1_2_3_right[j,i2]; \n\n");
+
+            stream << string("var Finger1_0_right {i1 in 1..4} =  if i1<4 then F1_0_right[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger1_1_right {i1 in 1..4} =  if i1<4 then F1_1_right[i1,4] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger1_2_right {i1 in 1..4} =  if i1<4 then F1_2_right[i1,4] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger1_tip_right {i1 in 1..4} =  if i1<4 then F1_tip_right[i1,4] else ")+tolHand4+string("; \n\n");
+        }else{
+            //bounce posture selection
+            stream << string("var F1_0_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_right[i1,j,i]*TF1_H_0_right[j,i2]; \n");
+            if(transport_right){
+                stream << string("var F1_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_0_right[i1,j,i]*TF1_0_1_right[j,i2]; \n");
+                stream << string("var F1_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_1_right[i1,j,i]*TF1_1_2_right[j,i2]; \n");
+                stream << string("var F1_tip_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_2_right[i1,j,i]*TF1_2_3_right[j,i2]; \n\n");
+            }else{
+                stream << string("var F1_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_0_right[i1,j,i]*TF1_0_1_right[j,i2,i]; \n");
+                stream << string("var F1_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_1_right[i1,j,i]*TF1_1_2_right[j,i2,i]; \n");
+                stream << string("var F1_tip_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_2_right[i1,j,i]*TF1_2_3_right[j,i2,i]; \n\n");
+            }
+            stream << string("var Finger1_0_right {i1 in 1..4,i in Iterations} =  if i1<4 then F1_0_right[i1,4,i] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger1_1_right {i1 in 1..4,i in Iterations} =  if i1<4 then F1_1_right[i1,4,i] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger1_2_right {i1 in 1..4,i in Iterations} =  if i1<4 then F1_2_right[i1,4,i] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger1_tip_right {i1 in 1..4,i in Iterations} =  if i1<4 then F1_tip_right[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+        }
+
+        stream << string("# Ring finger right \n\n");
+
+        stream << string("param TF2_H_0_right {i1 in 1..4, i2 in 1..4} =  \n");
+        stream << string("# 1st row \n");
+        stream << string("if ( i1=1 && i2=1 ) then cos(theta0_fing3_right) \n");
+        stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta0_fing3_right)*cos(alpha_fing3_right[1])  \n");
+        stream << string("else	if ( i1=1 && i2=3 ) then sin(theta0_fing3_right)*sin(alpha_fing3_right[1])  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then u3x_right \n");
+        stream << string("# 2nd row \n");
+        stream << string("else	if ( i1=2 && i2=1 ) then sin(theta0_fing3_right)  \n");
+        stream << string("else	if ( i1=2 && i2=2 ) then cos(theta0_fing3_right)*cos(alpha_fing3_right[1])  \n");
+        stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta0_fing3_right)*sin(alpha_fing3_right[1])  \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then u3y_right  \n");
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_right[1])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_right[1])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then u3z_right  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF2_0_1_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_right[3]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_right[3])*cos(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_right[3])*sin(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_right[2]*cos(joint_fingers_right[3]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_right[3])*cos(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[3])*sin(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_right[2]*sin(joint_fingers_right[3])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF2_0_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,9]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,9])*cos(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,9])*sin(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_right[2]*cos(theta[i,9]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,9])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,9])*cos(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,9])*sin(alpha_fing3_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_right[2]*sin(theta[i,9])  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_right[2])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_right[2])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing3_right[2]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF2_1_2_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*joint_fingers_right[3]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*joint_fingers_right[3]/3)*cos(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*joint_fingers_right[3]/3)*sin(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_right[3]*cos(2*joint_fingers_right[3]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*joint_fingers_right[3]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*joint_fingers_right[3]/3)*cos(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*joint_fingers_right[3]/3)*sin(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[3]*sin(2*joint_fingers_right[3]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF2_1_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*theta[i,9]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*theta[i,9]/3)*cos(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*theta[i,9]/3)*sin(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_right[3]*cos(2*theta[i,9]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*theta[i,9]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*theta[i,9]/3)*cos(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*theta[i,9]/3)*sin(alpha_fing3_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_right[3]*sin(2*theta[i,9]/3)  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_right[3])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_right[3])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing3_right[3]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF2_2_3_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_right[3]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_right[3]/3)*cos(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_right[3]/3)*sin(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_right[4]*cos(joint_fingers_right[3]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_right[3]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_right[3]/3)*cos(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[3]/3)*sin(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_right[4]*sin(joint_fingers_right[3]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF2_2_3_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,9]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,9]/3)*cos(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,9]/3)*sin(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_right[4]*cos(theta[i,9]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,9]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,9]/3)*cos(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,9]/3)*sin(alpha_fing3_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_right[4]*sin(theta[i,9]/3)  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_right[4])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_right[4])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing3_right[4]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        // position of the fingers
+        tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,1)); boost::replace_all(tolHand1,",",".");
+        tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,1)); boost::replace_all(tolHand2,",",".");
+        tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,1)); boost::replace_all(tolHand3,",",".");
+        tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,1)); boost::replace_all(tolHand4,",",".");
+
+        if(final){
+            // final posture selection
+            stream << string("var F2_0_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_right[i1,j]*TF2_H_0_right[j,i2]; \n");
+            stream << string("var F2_1_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} F2_0_right[i1,j]*TF2_0_1_right[j,i2]; \n");
+            stream << string("var F2_2_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} F2_1_right[i1,j]*TF2_1_2_right[j,i2]; \n");
+            stream << string("var F2_tip_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} F2_2_right[i1,j]*TF2_2_3_right[j,i2]; \n\n");
+
+            stream << string("var Finger2_0_right {i1 in 1..4} =  if i1<4 then F2_0_right[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger2_1_right {i1 in 1..4} =  if i1<4 then F2_1_right[i1,4] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger2_2_right {i1 in 1..4} =  if i1<4 then F2_2_right[i1,4] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger2_tip_right {i1 in 1..4} =  if i1<4 then F2_tip_right[i1,4] else ")+tolHand4+string("; \n\n");
+        }else{
+            //bounce posture selection
+            stream << string("var F2_0_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_right[i1,j,i]*TF2_H_0_right[j,i2]; \n");
+            if (transport_right){
+                stream << string("var F2_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_0_right[i1,j,i]*TF2_0_1_right[j,i2]; \n");
+                stream << string("var F2_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_1_right[i1,j,i]*TF2_1_2_right[j,i2]; \n");
+                stream << string("var F2_tip_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_2_right[i1,j,i]*TF2_2_3_right[j,i2]; \n\n");
+            }else{
+                stream << string("var F2_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_0_right[i1,j,i]*TF2_0_1_right[j,i2,i]; \n");
+                stream << string("var F2_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_1_right[i1,j,i]*TF2_1_2_right[j,i2,i]; \n");
+                stream << string("var F2_tip_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_2_right[i1,j,i]*TF2_2_3_right[j,i2,i]; \n\n");
+            }
+            stream << string("var Finger2_0_right {i1 in 1..4,i in Iterations} =  if i1<4 then F2_0_right[i1,4,i] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger2_1_right {i1 in 1..4,i in Iterations} =  if i1<4 then F2_1_right[i1,4,i] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger2_2_right {i1 in 1..4,i in Iterations} =  if i1<4 then F2_2_right[i1,4,i] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger2_tip_right {i1 in 1..4,i in Iterations} =  if i1<4 then F2_tip_right[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+        }
+
+        stream << string("# Thumb finger right \n\n");
+
+        stream << string("param TF3_H_0_right {i1 in 1..4, i2 in 1..4} =  \n");
+        stream << string("# 1st row \n");
+        stream << string("if ( i1=1 && i2=1 ) then cos(theta0_thumb_right) \n");
+        stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta0_thumb_right)*cos(alpha_thumb_right[1])  \n");
+        stream << string("else	if ( i1=1 && i2=3 ) then sin(theta0_thumb_right)*sin(alpha_thumb_right[1])  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then uTx_right \n");
+        stream << string("# 2nd row \n");
+        stream << string("else	if ( i1=2 && i2=1 ) then sin(theta0_thumb_right)  \n");
+        stream << string("else	if ( i1=2 && i2=2 ) then cos(theta0_thumb_right)*cos(alpha_thumb_right[1])  \n");
+        stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta0_thumb_right)*sin(alpha_thumb_right[1])  \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then uTy_right  \n");
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_right[1])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_right[1])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then uTz_right  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_0_1_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_right[1]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_right[1])*cos(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_right[1])*sin(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[2]*cos(joint_fingers_right[1]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_right[1])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_right[1])*cos(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[1])*sin(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[2]*sin(joint_fingers_right[1])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_0_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,8]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,8])*cos(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,8])*sin(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[2]*cos(theta[i,8]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,8])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,8])*cos(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,8])*sin(alpha_thumb_right[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[2]*sin(theta[i,8])  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_right[2])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_right[2])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_right[2]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_1_2_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_right[4]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_right[4])*cos(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_right[4])*sin(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[3]*cos(joint_fingers_right[4]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_right[4])*cos(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[4])*sin(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[3]*sin(joint_fingers_right[4])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_1_2_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,10]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,10])*cos(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,10])*sin(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[3]*cos(theta[i,10]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,10])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,10])*cos(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,10])*sin(alpha_thumb_right[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[3]*sin(theta[i,10])  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_right[3])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_right[3])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_right[3]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_2_3_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*joint_fingers_right[4]/10) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*joint_fingers_right[4]/10)*cos(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*joint_fingers_right[4]/10)*sin(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[4]*cos(11*joint_fingers_right[4]/10) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*joint_fingers_right[4]/10)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*joint_fingers_right[4]/10)*cos(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*joint_fingers_right[4]/10)*sin(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[4]*sin(11*joint_fingers_right[4]/10)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_2_3_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*theta[i,10]/10) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*theta[i,10]/10)*cos(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*theta[i,10]/10)*sin(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[4]*cos(11*theta[i,10]/10) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*theta[i,10]/10)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*theta[i,10]/10)*cos(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*theta[i,10]/10)*sin(alpha_thumb_right[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[4]*sin(11*theta[i,10]/10)  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_right[4])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_right[4])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_right[4]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_right){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_3_4_right {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*joint_fingers_right[4]/12) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*joint_fingers_right[4]/12)*cos(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*joint_fingers_right[4]/12)*sin(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[5]*cos(11*joint_fingers_right[4]/12) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*joint_fingers_right[4]/12)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*joint_fingers_right[4]/12)*cos(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*joint_fingers_right[4]/12)*sin(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[5]*sin(11*joint_fingers_right[4]/12)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_3_4_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*theta[i,10]/12) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*theta[i,10]/12)*cos(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*theta[i,10]/12)*sin(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_right[5]*cos(11*theta[i,10]/12) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*theta[i,10]/12)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*theta[i,10]/12)*cos(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*theta[i,10]/12)*sin(alpha_thumb_right[5])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_right[5]*sin(11*theta[i,10]/12)  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_right[5])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_right[5])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_right[5]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        // position of the fingers
+        tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,2)); boost::replace_all(tolHand1,",",".");
+        tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,2)); boost::replace_all(tolHand2,",",".");
+        tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,2)); boost::replace_all(tolHand3,",",".");
+        tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,2)); boost::replace_all(tolHand4,",",".");
+
+        if(final){
+            // final posture selection
+            stream << string("var F3_0_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_right[i1,j]*TF3_H_0_right[j,i2]; \n");
+            stream << string("var F3_1_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_0_right[i1,j]*TF3_0_1_right[j,i2]; \n");
+            stream << string("var F3_2_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_1_right[i1,j]*TF3_1_2_right[j,i2]; \n");
+            stream << string("var F3_3_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_2_right[i1,j]*TF3_2_3_right[j,i2]; \n");
+            stream << string("var F3_tip_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_3_right[i1,j]*TF3_3_4_right[j,i2]; \n\n");
+
+            //PostureMod << string("var Finger3_0   {i1 in 1..4} =  if i1<4 then F3_0[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger3_1_right {i1 in 1..4} =  if i1<4 then F3_1_right[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger3_2_right {i1 in 1..4} =  if i1<4 then F3_2_right[i1,4] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger3_3_right {i1 in 1..4} =  if i1<4 then F3_3_right[i1,4] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger3_tip_right {i1 in 1..4} =  if i1<4 then F3_tip_right[i1,4] else ")+tolHand4+string("; \n\n");
+
+        }else{
+            //bounce posture selection
+            stream << string("var F3_0_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4} T_W_H_right[i1,j,i]*TF3_H_0_right[j,i2]; \n");
+            if(transport_right){
+                stream << string("var F3_1_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_0_right[i1,j,i]*TF3_0_1_right[j,i2]; \n");
+                stream << string("var F3_2_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_1_right[i1,j,i]*TF3_1_2_right[j,i2]; \n");
+                stream << string("var F3_3_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_2_right[i1,j,i]*TF3_2_3_right[j,i2]; \n");
+                stream << string("var F3_tip_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_3_right[i1,j,i]*TF3_3_4_right[j,i2]; \n\n");
+            }else{
+                stream << string("var F3_1_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_0_right[i1,j,i]*TF3_0_1_right[j,i2,i]; \n");
+                stream << string("var F3_2_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_1_right[i1,j,i]*TF3_1_2_right[j,i2,i]; \n");
+                stream << string("var F3_3_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_2_right[i1,j,i]*TF3_2_3_right[j,i2,i]; \n");
+                stream << string("var F3_tip_right {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_3_right[i1,j,i]*TF3_3_4_right[j,i2,i]; \n\n");
+            }
+            stream << string("var Finger3_1_right {i1 in 1..4, i in Iterations} =  if i1<4 then F3_1_right[i1,4,i] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger3_2_right {i1 in 1..4, i in Iterations} =  if i1<4 then F3_2_right[i1,4,i] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger3_3_right {i1 in 1..4, i in Iterations} =  if i1<4 then F3_3_right[i1,4,i] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger3_tip_right {i1 in 1..4, i in Iterations} =  if i1<4 then F3_tip_right[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+        }
+    }else{
+        // left hand
+        stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+        stream << string("#  Direct Kinematics model of the fingers in the LEFT HAND \n\n");
+
+        stream << string("# Index finger left \n\n");
+
+        stream << string("param TF1_H_0_left {i1 in 1..4, i2 in 1..4} =  \n");
+        stream << string("# 1st row \n");
+        stream << string("if ( i1=1 && i2=1 ) then cos(theta0_fing1_left) \n");
+        stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta0_fing1_left)*cos(alpha_fing1_left[1])  \n");
+        stream << string("else	if ( i1=1 && i2=3 ) then sin(theta0_fing1_left)*sin(alpha_fing1_left[1])  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then u1x_left \n");
+        stream << string("# 2nd row \n");
+        stream << string("else	if ( i1=2 && i2=1 ) then sin(theta0_fing1_left)  \n");
+        stream << string("else	if ( i1=2 && i2=2 ) then cos(theta0_fing1_left)*cos(alpha_fing1_left[1])  \n");
+        stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta0_fing1_left)*sin(alpha_fing1_left[1])  \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then u1y_left  \n");
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_left[1])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_left[1])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then u1z_left  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF1_0_1_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_left[2]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_left[2])*cos(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_left[2])*sin(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_left[2]*cos(joint_fingers_left[2]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_left[2])*cos(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_left[2])*sin(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[2]*sin(joint_fingers_left[2])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF1_0_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,18]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,18])*cos(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,18])*sin(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_left[2]*cos(theta[i,18]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,18])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,18])*cos(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,18])*sin(alpha_fing1_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[2]*sin(theta[i,18])  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_left[2])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_left[2])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing1_left[2]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF1_1_2_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*joint_fingers_left[2]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*joint_fingers_left[2]/3)*cos(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*joint_fingers_left[2]/3)*sin(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_left[3]*cos(2*joint_fingers_left[2]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*joint_fingers_left[2]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*joint_fingers_left[2]/3)*cos(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*joint_fingers_left[2]/3)*sin(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[3]*sin(2*joint_fingers_left[2]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF1_1_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*theta[i,18]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*theta[i,18]/3)*cos(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*theta[i,18]/3)*sin(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_left[3]*cos(2*theta[i,18]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*theta[i,18]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*theta[i,18]/3)*cos(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*theta[i,18]/3)*sin(alpha_fing1_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[3]*sin(2*theta[i,18]/3)  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_left[3])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_left[3])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing1_left[3]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF1_2_3_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_left[2]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_left[2]/3)*cos(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_left[2]/3)*sin(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_left[4]*cos(joint_fingers_left[2]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_left[2]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_left[2]/3)*cos(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_left[2]/3)*sin(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[4]*sin(joint_fingers_left[2]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF1_2_3_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,18]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,18]/3)*cos(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,18]/3)*sin(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing1_left[4]*cos(theta[i,18]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,18]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,18]/3)*cos(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,18]/3)*sin(alpha_fing1_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[4]*sin(theta[i,18]/3)  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing1_left[4])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing1_left[4])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing1_left[4]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+
+        // position of the fingers
+        tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,0)); boost::replace_all(tolHand1,",",".");
+        tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,0)); boost::replace_all(tolHand2,",",".");
+        tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,0)); boost::replace_all(tolHand3,",",".");
+        tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,0)); boost::replace_all(tolHand4,",",".");
+
+        if(final){
+            // final posture selection
+            stream << string("var F1_0_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_left[i1,j]*TF1_H_0_left[j,i2]; \n");
+            stream << string("var F1_1_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F1_0_left[i1,j]*TF1_0_1_left[j,i2]; \n");
+            stream << string("var F1_2_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F1_1_left[i1,j]*TF1_1_2_left[j,i2]; \n");
+            stream << string("var F1_tip_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F1_2_left[i1,j]*TF1_2_3_left[j,i2]; \n\n");
+
+            stream << string("var Finger1_0_left {i1 in 1..4} =  if i1<4 then F1_0_left[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger1_1_left {i1 in 1..4} =  if i1<4 then F1_1_left[i1,4] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger1_2_left {i1 in 1..4} =  if i1<4 then F1_2_left[i1,4] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger1_tip_left {i1 in 1..4} =  if i1<4 then F1_tip_left[i1,4] else ")+tolHand4+string("; \n\n");
+        }else{
+            //bounce posture selection
+            stream << string("var F1_0_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_left[i1,j,i]*TF1_H_0_left[j,i2]; \n");
+            if(transport_left){
+                stream << string("var F1_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_0_left[i1,j,i]*TF1_0_1_left[j,i2]; \n");
+                stream << string("var F1_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_1_left[i1,j,i]*TF1_1_2_left[j,i2]; \n");
+                stream << string("var F1_tip_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_2_left[i1,j,i]*TF1_2_3_left[j,i2]; \n\n");
+            }else{
+                stream << string("var F1_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_0_left[i1,j,i]*TF1_0_1_left[j,i2,i]; \n");
+                stream << string("var F1_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_1_left[i1,j,i]*TF1_1_2_left[j,i2,i]; \n");
+                stream << string("var F1_tip_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F1_2_left[i1,j,i]*TF1_2_3_left[j,i2,i]; \n\n");
+            }
+            stream << string("var Finger1_0_left {i1 in 1..4,i in Iterations} =  if i1<4 then F1_0_left[i1,4,i] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger1_1_left {i1 in 1..4,i in Iterations} =  if i1<4 then F1_1_left[i1,4,i] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger1_2_left {i1 in 1..4,i in Iterations} =  if i1<4 then F1_2_left[i1,4,i] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger1_tip_left {i1 in 1..4,i in Iterations} =  if i1<4 then F1_tip_left[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+        }
+
+        stream << string("# Ring finger left \n\n");
+
+        stream << string("param TF2_H_0_left {i1 in 1..4, i2 in 1..4} =  \n");
+        stream << string("# 1st row \n");
+        stream << string("if ( i1=1 && i2=1 ) then cos(theta0_fing3_left) \n");
+        stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta0_fing3_left)*cos(alpha_fing3_left[1])  \n");
+        stream << string("else	if ( i1=1 && i2=3 ) then sin(theta0_fing3_left)*sin(alpha_fing3_left[1])  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then u3x_left \n");
+        stream << string("# 2nd row \n");
+        stream << string("else	if ( i1=2 && i2=1 ) then sin(theta0_fing3_left)  \n");
+        stream << string("else	if ( i1=2 && i2=2 ) then cos(theta0_fing3_left)*cos(alpha_fing3_left[1])  \n");
+        stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta0_fing3_left)*sin(alpha_fing3_left[1])  \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then u3y_left  \n");
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_left[1])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_left[1])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then u3z_left  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF2_0_1_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_left[3]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_left[3])*cos(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_left[3])*sin(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_left[2]*cos(joint_fingers_left[3]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_left[3])*cos(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_left[3])*sin(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_left[2]*sin(joint_fingers_left[3])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF2_0_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,18]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,18])*cos(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,18])*sin(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_left[2]*cos(theta[i,18]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,18])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,18])*cos(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,18])*sin(alpha_fing3_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_left[2]*sin(theta[i,18])  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_left[2])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_left[2])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing3_left[2]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF2_1_2_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*joint_fingers_left[3]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*joint_fingers_left[3]/3)*cos(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*joint_fingers_right[3]/3)*sin(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_left[3]*cos(2*joint_fingers_left[3]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*joint_fingers_left[3]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*joint_fingers_left[3]/3)*cos(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*joint_fingers_left[3]/3)*sin(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[3]*sin(2*joint_fingers_left[3]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF2_1_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(2*theta[i,18]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(2*theta[i,18]/3)*cos(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(2*theta[i,18]/3)*sin(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_left[3]*cos(2*theta[i,18]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(2*theta[i,18]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(2*theta[i,18]/3)*cos(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(2*theta[i,18]/3)*sin(alpha_fing3_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing1_left[3]*sin(2*theta[i,18]/3)  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_left[3])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_left[3])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing3_left[3]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF2_2_3_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_left[3]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_left[3]/3)*cos(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_left[3]/3)*sin(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_left[4]*cos(joint_fingers_left[3]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_left[3]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_left[3]/3)*cos(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_left[3]/3)*sin(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_left[4]*sin(joint_fingers_left[3]/3)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF2_2_3_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,18]/3) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,18]/3)*cos(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,18]/3)*sin(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_fing3_left[4]*cos(theta[i,18]/3) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,18]/3)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,18]/3)*cos(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,18]/3)*sin(alpha_fing3_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_fing3_left[4]*sin(theta[i,18]/3)  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_fing3_left[4])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_fing3_left[4])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_fing3_left[4]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        // position of the fingers
+        tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,1)); boost::replace_all(tolHand1,",",".");
+        tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,1)); boost::replace_all(tolHand2,",",".");
+        tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,1)); boost::replace_all(tolHand3,",",".");
+        tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,1)); boost::replace_all(tolHand4,",",".");
+
+        if(final){
+            // final posture selection
+            stream << string("var F2_0_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_left[i1,j]*TF2_H_0_left[j,i2]; \n");
+            stream << string("var F2_1_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} F2_0_left[i1,j]*TF2_0_1_left[j,i2]; \n");
+            stream << string("var F2_2_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} F2_1_left[i1,j]*TF2_1_2_left[j,i2]; \n");
+            stream << string("var F2_tip_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} F2_2_left[i1,j]*TF2_2_3_left[j,i2]; \n\n");
+
+            stream << string("var Finger2_0_left {i1 in 1..4} =  if i1<4 then F2_0_left[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger2_1_left {i1 in 1..4} =  if i1<4 then F2_1_left[i1,4] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger2_2_left {i1 in 1..4} =  if i1<4 then F2_2_left[i1,4] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger2_tip_left {i1 in 1..4} =  if i1<4 then F2_tip_left[i1,4] else ")+tolHand4+string("; \n\n");
+        }else{
+            //bounce posture selection
+            stream << string("var F2_0_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_left[i1,j,i]*TF2_H_0_left[j,i2]; \n");
+            if (transport_left){
+                stream << string("var F2_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_0_left[i1,j,i]*TF2_0_1_left[j,i2]; \n");
+                stream << string("var F2_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_1_left[i1,j,i]*TF2_1_2_left[j,i2]; \n");
+                stream << string("var F2_tip_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_2_left[i1,j,i]*TF2_2_3_left[j,i2]; \n\n");
+            }else{
+                stream << string("var F2_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_0_left[i1,j,i]*TF2_0_1_left[j,i2,i]; \n");
+                stream << string("var F2_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_1_left[i1,j,i]*TF2_1_2_left[j,i2,i]; \n");
+                stream << string("var F2_tip_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F2_2_left[i1,j,i]*TF2_2_3_left[j,i2,i]; \n\n");
+            }
+            stream << string("var Finger2_0_left {i1 in 1..4,i in Iterations} =  if i1<4 then F2_0_left[i1,4,i] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger2_1_left {i1 in 1..4,i in Iterations} =  if i1<4 then F2_1_left[i1,4,i] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger2_2_left {i1 in 1..4,i in Iterations} =  if i1<4 then F2_2_left[i1,4,i] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger2_tip_left {i1 in 1..4,i in Iterations} =  if i1<4 then F2_tip_left[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+        }
+
+        stream << string("# Thumb finger left \n\n");
+
+        stream << string("param TF3_H_0_left {i1 in 1..4, i2 in 1..4} =  \n");
+        stream << string("# 1st row \n");
+        stream << string("if ( i1=1 && i2=1 ) then cos(theta0_thumb_left) \n");
+        stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta0_thumb_left)*cos(alpha_thumb_left[1])  \n");
+        stream << string("else	if ( i1=1 && i2=3 ) then sin(theta0_thumb_left)*sin(alpha_thumb_left[1])  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then uTx_left \n");
+        stream << string("# 2nd row \n");
+        stream << string("else	if ( i1=2 && i2=1 ) then sin(theta0_thumb_left)  \n");
+        stream << string("else	if ( i1=2 && i2=2 ) then cos(theta0_thumb_left)*cos(alpha_thumb_left[1])  \n");
+        stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta0_thumb_left)*sin(alpha_thumb_left[1])  \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then uTy_left  \n");
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_left[1])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_left[1])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then uTz_right  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_0_1_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_left[1]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_left[1])*cos(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_left[1])*sin(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[2]*cos(joint_fingers_left[1]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_left[1])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_left[1])*cos(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_right[1])*sin(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[2]*sin(joint_fingers_left[1])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_0_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,17]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,17])*cos(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,17])*sin(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[2]*cos(theta[i,17]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,17])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,17])*cos(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,17])*sin(alpha_thumb_left[2])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[2]*sin(theta[i,17])  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_left[2])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_left[2])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_left[2]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_1_2_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(joint_fingers_left[4]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(joint_fingers_left[4])*cos(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(joint_fingers_left[4])*sin(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[3]*cos(joint_fingers_left[4]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(joint_fingers_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(joint_fingers_left[4])*cos(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(joint_fingers_left[4])*sin(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[3]*sin(joint_fingers_left[4])  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_1_2_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(theta[i,19]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(theta[i,19])*cos(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(theta[i,19])*sin(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[3]*cos(theta[i,19]) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(theta[i,19])  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(theta[i,19])*cos(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(theta[i,19])*sin(alpha_thumb_left[3])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[3]*sin(theta[i,19])  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_left[3])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_left[3])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_left[3]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_2_3_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*joint_fingers_left[4]/10) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*joint_fingers_left[4]/10)*cos(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*joint_fingers_left[4]/10)*sin(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[4]*cos(11*joint_fingers_left[4]/10) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*joint_fingers_left[4]/10)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*joint_fingers_left[4]/10)*cos(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*joint_fingers_left[4]/10)*sin(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[4]*sin(11*joint_fingers_left[4]/10)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_2_3_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*theta[i,19]/10) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*theta[i,19]/10)*cos(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*theta[i,19]/10)*sin(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[4]*cos(11*theta[i,19]/10) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*theta[i,19]/10)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*theta[i,19]/10)*cos(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*theta[i,19]/10)*sin(alpha_thumb_left[4])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[4]*sin(11*theta[i,19]/10)  \n");
+
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_left[4])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_left[4])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_left[4]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        if (final || transport_left){
+            // final posture selection or bounce posture selection for transporting movements
+            stream << string("param TF3_3_4_left {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*joint_fingers_left[4]/12) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*joint_fingers_left[4]/12)*cos(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*joint_fingers_left[4]/12)*sin(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[5]*cos(11*joint_fingers_left[4]/12) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*joint_fingers_left[4]/12)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*joint_fingers_left[4]/12)*cos(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*joint_fingers_left[4]/12)*sin(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[5]*sin(11*joint_fingers_left[4]/12)  \n");
+        }else{
+            // bounce posture selection for reaching movements
+            stream << string("var TF3_3_4_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("# 1st row \n");
+            stream << string("if ( i1=1 && i2=1 ) then cos(11*theta[i,19]/12) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(11*theta[i,19]/12)*cos(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=1 && i2=3 ) then sin(11*theta[i,19]/12)*sin(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=1 && i2=4 ) then a_thumb_left[5]*cos(11*theta[i,19]/12) \n");
+            stream << string("# 2nd row \n");
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(11*theta[i,19]/12)  \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(11*theta[i,19]/12)*cos(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=2 && i2=3 ) then -cos(11*theta[i,19]/12)*sin(alpha_thumb_left[5])  \n");
+            stream << string("else	if ( i1=2 && i2=4 ) then a_thumb_left[5]*sin(11*theta[i,19]/12)  \n");
+        }
+        stream << string("# 3rd row \n");
+        stream << string("else	if ( i1=3 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=3 && i2=2 ) then sin(alpha_thumb_left[5])  \n");
+        stream << string("else	if ( i1=3 && i2=3 ) then cos(alpha_thumb_left[5])  \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then d_thumb_left[5]  \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+        // position of the fingers
+        tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,2)); boost::replace_all(tolHand1,",",".");
+        tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,2)); boost::replace_all(tolHand2,",",".");
+        tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,2)); boost::replace_all(tolHand3,",",".");
+        tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,2)); boost::replace_all(tolHand4,",",".");
+
+        if(final){
+            // final posture selection
+            stream << string("var F3_0_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_left[i1,j]*TF3_H_0_left[j,i2]; \n");
+            stream << string("var F3_1_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_0_left[i1,j]*TF3_0_1_left[j,i2]; \n");
+            stream << string("var F3_2_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_1_left[i1,j]*TF3_1_2_left[j,i2]; \n");
+            stream << string("var F3_3_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_2_left[i1,j]*TF3_2_3_left[j,i2]; \n");
+            stream << string("var F3_tip_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F3_3_left[i1,j]*TF3_3_4_left[j,i2]; \n\n");
+
+            //PostureMod << string("var Finger3_0   {i1 in 1..4} =  if i1<4 then F3_0[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger3_1_left {i1 in 1..4} =  if i1<4 then F3_1_left[i1,4] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger3_2_left {i1 in 1..4} =  if i1<4 then F3_2_left[i1,4] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger3_3_left {i1 in 1..4} =  if i1<4 then F3_3_left[i1,4] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger3_tip_left {i1 in 1..4} =  if i1<4 then F3_tip_left[i1,4] else ")+tolHand4+string("; \n\n");
+
+        }else{
+            //bounce posture selection
+            stream << string("var F3_0_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4} T_W_H_left[i1,j,i]*TF3_H_0_left[j,i2]; \n");
+            if(transport_left){
+                stream << string("var F3_1_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_0_left[i1,j,i]*TF3_0_1_left[j,i2]; \n");
+                stream << string("var F3_2_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_1_left[i1,j,i]*TF3_1_2_left[j,i2]; \n");
+                stream << string("var F3_3_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_2_left[i1,j,i]*TF3_2_3_left[j,i2]; \n");
+                stream << string("var F3_tip_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_3_left[i1,j,i]*TF3_3_4_left[j,i2]; \n\n");
+            }else{
+                stream << string("var F3_1_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_0_left[i1,j,i]*TF3_0_1_left[j,i2,i]; \n");
+                stream << string("var F3_2_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_1_left[i1,j,i]*TF3_1_2_left[j,i2,i]; \n");
+                stream << string("var F3_3_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_2_left[i1,j,i]*TF3_2_3_left[j,i2,i]; \n");
+                stream << string("var F3_tip_left {i1 in 1..4, i2 in 1..4, i in Iterations} =  sum {j in 1..4}  F3_3_left[i1,j,i]*TF3_3_4_left[j,i2,i]; \n\n");
+            }
+            stream << string("var Finger3_1_left {i1 in 1..4, i in Iterations} =  if i1<4 then F3_1_left[i1,4,i] 	else ")+tolHand1+string("; \n");
+            stream << string("var Finger3_2_left {i1 in 1..4, i in Iterations} =  if i1<4 then F3_2_left[i1,4,i] 	else ")+tolHand2+string("; \n");
+            stream << string("var Finger3_3_left {i1 in 1..4, i in Iterations} =  if i1<4 then F3_3_left[i1,4,i] 	else ")+tolHand3+string("; \n");
+            stream << string("var Finger3_tip_left {i1 in 1..4, i in Iterations} =  if i1<4 then F3_tip_left[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+        }
+    }
+}
+
 void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXd &tolsHand, bool final, bool place)
 {
     std::vector<int> rk; std::vector<int> jk;
@@ -2052,7 +4706,7 @@ void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXd &tolsHand, bo
                  stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers[")+to_string(i+2)+string("])/3+phi_3) \n");
                  stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers[")+to_string(i+2)+string("])/3+phi_3) \n");
                  stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
-                 stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
+                 stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 1 \n");
                  stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
                  stream << string("; \n");
 
@@ -2172,6 +4826,452 @@ void HUMPlanner::writeBarrettHandDirKin(ofstream &stream, MatrixXd &tolsHand, bo
 
 }
 
+void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tolsHand, bool final, bool place_right, bool place_left, bool right)
+{
+    std::vector<int> rk; std::vector<int> jk;
+    rk = this->bhand.rk; jk = this->bhand.jk;
+
+    if(right)
+    { // right hand
+
+        stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+        stream << string("#  Direct Kinematics model of the fingers in the RIGHT HAND \n\n");
+
+        if(final){
+            // final posture selection
+            for (unsigned i = 0 ; i < hand_fingers; ++i){
+                //for (int j = 0; j <N_PHALANGE; ++j){
+
+                string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
+                string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
+
+                     stream << string("# Right Finger ")+to_string(i+1)+string(" \n\n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(1)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string(" if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos(")+rkk+string("*joint_fingers_right[")+to_string(1)+string("]-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(")+rkk+string("*joint_fingers_right[")+to_string(1)+string("]-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*joint_fingers_right[")+to_string(1)+string("]-(pi/2)*(")+jkk+string("))  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
+                     stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
+                     stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
+                     stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
+                     stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string(";\n\n");
+
+
+                     // position of the fingers
+                     stream << string("var F")+to_string(i+1)+string("_0_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_right[i1,j]*TF")+to_string(i+1)+string("_1_right[j,i2]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_1_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F")+to_string(i+1)+string("_0_right[i1,j]*TF")+to_string(i+1)+string("_2_right[j,i2]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_2_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F")+to_string(i+1)+string("_1_right[i1,j]*TF")+to_string(i+1)+string("_3_right[j,i2]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_tip_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F")+to_string(i+1)+string("_2_right[i1,j]*TF")+to_string(i+1)+string("_4_right[j,i2]; \n\n");
+
+                     string tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,i)); boost::replace_all(tolHand1,",",".");
+                     string tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,i)); boost::replace_all(tolHand2,",",".");
+                     string tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,i)); boost::replace_all(tolHand3,",",".");
+                     string tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,i)); boost::replace_all(tolHand4,",",".");
+
+                     stream << string("var Finger")+to_string(i+1)+string("_0_right {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_0_right[i1,4] 	else ")+tolHand1+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_1_right {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_1_right[i1,4] 	else ")+tolHand2+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_2_right {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_2_right[i1,4] 	else ")+tolHand3+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_tip_right {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_tip_right[i1,4] else ")+tolHand4+string("; \n\n");
+
+               // }
+            }
+        }else{
+            // bounce posture selection
+            if (place_right){
+                // place right movement
+                for (unsigned i = 0 ; i < hand_fingers; ++i){
+                    //for (int j = 0; j <N_PHALANGE; ++j){
+                    string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
+                    string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
+
+                     stream << string("# Right Finger ")+to_string(i+1)+string(" \n\n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(1)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string(" if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
+                     stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
+                     stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
+                     stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
+                     stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string(";\n\n");
+
+
+                     // position of the fingers
+                     stream << string("var F")+to_string(i+1)+string("_0_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_right[i1,j,i]*TF")+to_string(i+1)+string("_1_right[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_0_right[i1,j,i]*TF")+to_string(i+1)+string("_2_right[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_1_right[i1,j,i]*TF")+to_string(i+1)+string("_3_right[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_tip_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_2_right[i1,j,i]*TF")+to_string(i+1)+string("_4_right[j,i2,i]; \n\n");
+
+
+                     string tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,i)); boost::replace_all(tolHand1,",",".");
+                     string tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,i)); boost::replace_all(tolHand2,",",".");
+                     string tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,i)); boost::replace_all(tolHand3,",",".");
+                     string tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,i)); boost::replace_all(tolHand4,",",".");
+
+                     stream << string("var Finger")+to_string(i+1)+string("_0_right   {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_0_right[i1,4,i] 	else ")+tolHand1+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_1_right   {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_1_right[i1,4,i] 	else ")+tolHand2+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_2_right   {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_2_right[i1,4,i] 	else ")+tolHand3+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_tip_right {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_tip_right[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+
+                   // }
+
+                }
+
+            }else{
+                // pick or move  right movements
+                for (unsigned i = 0 ; i < hand_fingers; ++i){
+                    //for (int j = 0; j <N_PHALANGE; ++j){
+
+                    int k;
+                    if (i == 2){
+                        k = 8;
+                    }else{
+                        k = 9;
+                    }
+
+                    string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
+                    string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
+
+                     stream << string("# Right Finger ")+to_string(i+1)+string(" \n\n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(1)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string(" if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
+                     stream << string("; \n");
+
+                     stream << string("var TF")+to_string(i+1)+string("_")+to_string(2)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
+                     stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
+                     stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("; \n");
+
+                     stream << string("var TF")+to_string(i+1)+string("_")+to_string(3)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
+                     stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
+                     stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string(";\n\n");
+
+
+                     // position of the fingers
+                     stream << string("var F")+to_string(i+1)+string("_0_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_right[i1,j,i]*TF")+to_string(i+1)+string("_1_right[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_1_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_0_right[i1,j,i]*TF")+to_string(i+1)+string("_2_right[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_2_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_1_right[i1,j,i]*TF")+to_string(i+1)+string("_3_right[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_tip_right {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_2_right[i1,j,i]*TF")+to_string(i+1)+string("_4_right[j,i2,i]; \n\n");
+
+                     string tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,i)); boost::replace_all(tolHand1,",",".");
+                     string tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,i)); boost::replace_all(tolHand2,",",".");
+                     string tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,i)); boost::replace_all(tolHand3,",",".");
+                     string tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,i)); boost::replace_all(tolHand4,",",".");
+
+                     stream << string("var Finger")+to_string(i+1)+string("_0_right {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_0_right[i1,4,i] 	else ")+tolHand1+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_1_right {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_1_right[i1,4,i] 	else ")+tolHand2+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_2_right {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_2_right[i1,4,i] 	else ")+tolHand3+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_tip_right {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_tip_right[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+
+                   // }
+
+                }
+            }
+        }
+    }else{
+        // left hand
+        stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+        stream << string("#  Direct Kinematics model of the fingers in the LEFT HAND \n\n");
+
+        if(final){
+            // final posture selection
+            for (unsigned i = 0 ; i < hand_fingers; ++i){
+                //for (int j = 0; j <N_PHALANGE; ++j){
+
+                string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
+                string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
+
+                     stream << string("# Left Finger ")+to_string(i+1)+string(" \n\n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(1)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string(" if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos(")+rkk+string("*joint_fingers_left[")+to_string(1)+string("]-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(")+rkk+string("*joint_fingers_left[")+to_string(1)+string("]-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*joint_fingers_left[")+to_string(1)+string("]-(pi/2)*(")+jkk+string("))  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
+                     stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
+                     stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
+                     stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
+                     stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string(";\n\n");
+
+
+                     // position of the fingers
+                     stream << string("var F")+to_string(i+1)+string("_0_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4} T_W_H_left[i1,j]*TF")+to_string(i+1)+string("_1_left[j,i2]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_1_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F")+to_string(i+1)+string("_0_left[i1,j]*TF")+to_string(i+1)+string("_2_left[j,i2]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_2_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F")+to_string(i+1)+string("_1_left[i1,j]*TF")+to_string(i+1)+string("_3_left[j,i2]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_tip_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}  F")+to_string(i+1)+string("_2_left[i1,j]*TF")+to_string(i+1)+string("_4_left[j,i2]; \n\n");
+
+                     string tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,i)); boost::replace_all(tolHand1,",",".");
+                     string tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,i)); boost::replace_all(tolHand2,",",".");
+                     string tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,i)); boost::replace_all(tolHand3,",",".");
+                     string tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,i)); boost::replace_all(tolHand4,",",".");
+
+                     stream << string("var Finger")+to_string(i+1)+string("_0_left {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_0_left[i1,4] 	else ")+tolHand1+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_1_left {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_1_left[i1,4] 	else ")+tolHand2+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_2_left {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_2_left[i1,4] 	else ")+tolHand3+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_tip_left {i1 in 1..4} =  if i1<4 then F")+to_string(i+1)+string("_tip_left[i1,4] else ")+tolHand4+string("; \n\n");
+
+               // }
+            }
+        }else{
+            // bounce posture selection
+            if (place_left){
+                // place left movement
+                for (unsigned i = 0 ; i < hand_fingers; ++i){
+                    //for (int j = 0; j <N_PHALANGE; ++j){
+                    string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
+                    string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
+
+                     stream << string("# Left Finger ")+to_string(i+1)+string(" \n\n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(1)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string(" if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
+                     stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
+                     stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
+                     stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
+                     stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string(";\n\n");
+
+
+                     // position of the fingers
+                     stream << string("var F")+to_string(i+1)+string("_0_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_left[i1,j,i]*TF")+to_string(i+1)+string("_1_left[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_0_left[i1,j,i]*TF")+to_string(i+1)+string("_2_left[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_1_left[i1,j,i]*TF")+to_string(i+1)+string("_3_left[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_tip_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_2_left[i1,j,i]*TF")+to_string(i+1)+string("_4_left[j,i2,i]; \n\n");
+
+
+                     string tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,i)); boost::replace_all(tolHand1,",",".");
+                     string tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,i)); boost::replace_all(tolHand2,",",".");
+                     string tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,i)); boost::replace_all(tolHand3,",",".");
+                     string tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,i)); boost::replace_all(tolHand4,",",".");
+
+                     stream << string("var Finger")+to_string(i+1)+string("_0_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_0_left[i1,4,i] 	else ")+tolHand1+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_1_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_1_left[i1,4,i] 	else ")+tolHand2+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_2_left   {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_2_left[i1,4,i] 	else ")+tolHand3+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_tip_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_tip_left[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+
+                   // }
+
+                }
+            }else{
+                // pick or move  left movements
+                for (unsigned i = 0 ; i < hand_fingers; ++i){
+                    //for (int j = 0; j <N_PHALANGE; ++j){
+
+                    int k;
+                    if (i == 2){
+                        k = 17;
+                    }else{
+                        k = 18;
+                    }
+
+                    string rkk = boost::str(boost::format("%.2f") % rk.at(i)); boost::replace_all(rkk,",",".");
+                    string jkk = boost::str(boost::format("%.2f") % jk.at(i)); boost::replace_all(jkk,",",".");
+
+                     stream << string("# Left Finger ")+to_string(i+1)+string(" \n\n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(1)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string(" if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string(")) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
+                     stream << string("; \n");
+
+                     stream << string("var TF")+to_string(i+1)+string("_")+to_string(2)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
+                     stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
+                     stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("; \n");
+
+                     stream << string("var TF")+to_string(i+1)+string("_")+to_string(3)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
+                     stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("; \n");
+
+                     stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
+                     stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
+                     stream << string(";\n\n");
+
+
+                     // position of the fingers
+                     stream << string("var F")+to_string(i+1)+string("_0_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4} T_W_H_left[i1,j,i]*TF")+to_string(i+1)+string("_1_left[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_1_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_0_left[i1,j,i]*TF")+to_string(i+1)+string("_2_left[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_2_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_1_left[i1,j,i]*TF")+to_string(i+1)+string("_3_left[j,i2,i]; \n");
+                     stream << string("var F")+to_string(i+1)+string("_tip_left {i1 in 1..4, i2 in 1..4,i in Iterations} =  sum {j in 1..4}  F")+to_string(i+1)+string("_2_left[i1,j,i]*TF")+to_string(i+1)+string("_4_left[j,i2,i]; \n\n");
+
+                     string tolHand1 =  boost::str(boost::format("%.2f") % tolsHand(0,i)); boost::replace_all(tolHand1,",",".");
+                     string tolHand2 =  boost::str(boost::format("%.2f") % tolsHand(1,i)); boost::replace_all(tolHand2,",",".");
+                     string tolHand3 =  boost::str(boost::format("%.2f") % tolsHand(2,i)); boost::replace_all(tolHand3,",",".");
+                     string tolHand4 =  boost::str(boost::format("%.2f") % tolsHand(3,i)); boost::replace_all(tolHand4,",",".");
+
+                     stream << string("var Finger")+to_string(i+1)+string("_0_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_0_left[i1,4,i] 	else ")+tolHand1+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_1_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_1_left[i1,4,i] 	else ")+tolHand2+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_2_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_2_left[i1,4,i] 	else ")+tolHand3+string("; \n");
+                     stream << string("var Finger")+to_string(i+1)+string("_tip_left {i1 in 1..4,i in Iterations} =  if i1<4 then F")+to_string(i+1)+string("_tip_left[i1,4,i] else ")+tolHand4+string("; \n\n");
+
+
+                   // }
+
+                }
+            }
+        }
+    }
+}
+
 void HUMPlanner::writeObjective(ofstream &stream, bool final)
 {
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
@@ -2203,8 +5303,36 @@ void HUMPlanner::writeBodyConstraints(ofstream &stream, bool final)
         stream << string("subject to BodyArm_Elbow{l in Iterations}: (Elbow[1,l]/(body[1]+Elbow[4,l]))^2 + (Elbow[2,l]/(body[2]+Elbow[4,l]))^2 >= 1; \n");
         stream << string("subject to BodyArm_Wrist{l in Iterations}: (Wrist[1,l]/(body[1]+Wrist[4,l]))^2 + (Wrist[2,l]/(body[2]+Wrist[4,l]))^2 >= 1; \n");
         stream << string("subject to BodyArm_Hand{l in Iterations}:  (Hand[1,l]/(body[1]+Hand[4,l]))^2  + (Hand[2,l]/(body[2]+Hand[4,l]))^2  >= 1; \n\n");
+    }
+}
 
-
+void HUMPlanner::writeDualBodyConstraints(ofstream &stream, bool final,bool right)
+{
+    if(right)
+    {
+        // right arm
+        stream << string("# Constraints of the right arm with the body: the body is modeled as a cylinder \n");
+        if (final){
+            stream << string("subject to BodyArm_Elbow_right: (Elbow_right[1]/(body[1]+Elbow_right[4]))^2 + (Elbow_right[2]/(body[2]+Elbow_right[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist_right: (Wrist_right[1]/(body[1]+Wrist_right[4]))^2 + (Wrist_right[2]/(body[2]+Wrist_right[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand_right:  (Hand_right[1]/(body[1]+Hand_right[4]))^2  + (Hand_right[2]/(body[2]+Hand_right[4]))^2  >= 1; \n\n");
+        }else{
+            stream << string("subject to BodyArm_Elbow_right{l in Iterations}: (Elbow_right[1,l]/(body[1]+Elbow_right[4,l]))^2 + (Elbow_right[2,l]/(body[2]+Elbow_right[4,l]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist_right{l in Iterations}: (Wrist_right[1,l]/(body[1]+Wrist_right[4,l]))^2 + (Wrist_right[2,l]/(body[2]+Wrist_right[4,l]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand_right{l in Iterations}:  (Hand_right[1,l]/(body[1]+Hand_right[4,l]))^2  + (Hand_right[2,l]/(body[2]+Hand_right[4,l]))^2  >= 1; \n\n");
+        }
+    }else{
+        // left arm
+        stream << string("# Constraints of the left arm with the body: the body is modeled as a cylinder \n");
+        if (final){
+            stream << string("subject to BodyArm_Elbow_left: (Elbow_left[1]/(body[1]+Elbow_left[4]))^2 + (Elbow_left[2]/(body[2]+Elbow_left[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist_left: (Wrist_left[1]/(body[1]+Wrist_left[4]))^2 + (Wrist_left[2]/(body[2]+Wrist_left[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand_left:  (Hand_left[1]/(body[1]+Hand_left[4]))^2  + (Hand_left[2]/(body[2]+Hand_left[4]))^2  >= 1; \n\n");
+        }else{
+            stream << string("subject to BodyArm_Elbow_left{l in Iterations}: (Elbow_left[1,l]/(body[1]+Elbow_left[4,l]))^2 + (Elbow_left[2,l]/(body[2]+Elbow_left[4,l]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist_left{l in Iterations}: (Wrist_left[1,l]/(body[1]+Wrist_left[4,l]))^2 + (Wrist_left[2,l]/(body[2]+Wrist_left[4,l]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand_left{l in Iterations}:  (Hand_left[1,l]/(body[1]+Hand_left[4,l]))^2  + (Hand_left[2,l]/(body[2]+Hand_left[4,l]))^2  >= 1; \n\n");
+        }
     }
 }
 
@@ -2461,7 +5589,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     PostureMod << string("param thet_init {i in 1..")+to_string(joints_arm)+string("} ; \n");
 
     PostureMod << string("# Final finger posture \n");
-    PostureMod << string("param joint_fingers {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    PostureMod << string("param joint_fingers {i in 1..")+to_string(finalHand.size())+string("} ; \n");
 
     PostureMod << string("# Joint Expense Factors \n");
     PostureMod << string("param lambda {i in 1..")+to_string(joints_arm)+string("} ; \n");
@@ -4022,6 +7150,828 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
     return n_s;
 }
 
+int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_model,std::vector<double>& obj_tar_size,bool final)
+{
+    int n_s=0;
+    string sphere_radius_str; string sphere_diam_str; double sphere_diam;
+    // Rotation matrix of the object to place
+    this->writeRotMatObjTar(stream_model);
+    std::map< std::string, double > axis_map;
+    std::string axis_min; std::string axis_middle; std::string axis_max;
+    double obj_min; double obj_middle; double obj_max;
+    int n_sphere_1; int n_sphere_2; int ns1; int ns2;
+    int x=0; int y=0; int z=0; int k=0;
+
+    axis_map["x"] = obj_tar_size.at(0);
+    axis_map["y"] = obj_tar_size.at(1);
+    axis_map["z"] = obj_tar_size.at(2);
+    std::vector<std::pair<std::string,double> > obj_sizes(axis_map.begin(), axis_map.end());
+    std::sort(obj_sizes.begin(),obj_sizes.end(),&compare_sizes);
+    axis_min = (obj_sizes.at(0)).first; axis_middle = (obj_sizes.at(1)).first; axis_max = (obj_sizes.at(2)).first;
+    obj_min = (obj_sizes.at(0)).second; obj_middle = (obj_sizes.at(1)).second; obj_max = (obj_sizes.at(2)).second;
+    sphere_diam = obj_min; sphere_diam_str = boost::str(boost::format("%.2f") % (sphere_diam)); boost::replace_all(sphere_diam_str,",",".");
+    sphere_radius_str = boost::str(boost::format("%.2f") % (sphere_diam/2)); boost::replace_all(sphere_radius_str,",",".");
+    n_sphere_1 = round(obj_middle/sphere_diam+0.5); ns1 = round(n_sphere_1/2-0.5);
+    n_sphere_2 = round(obj_max/sphere_diam+0.5); ns2 = round(n_sphere_2/2-0.5);
+    if(axis_min.compare("x")){ // the object minimum size is x
+        y=1; z=1;
+    }else if(axis_min.compare("y")){ // the object minimum size is y
+        x=1;z=1;
+    }else{ // the object minimum size is z
+        x=1; y=1;
+    }
+    if(final){
+        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_right[i1,j]*Rot_obj[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place by both arms\n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var Obj2Transp_center {j in 1..3} = Hand_right[j] + dFH_right * z_H_right[j] + (ObjTar[1,j]-Tar_pos_right[j]); \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }else{
+        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_obj[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place by both arms\n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand_right[j,i] + dFH_right * z_H_right[j,i] + (ObjTar[1,j]-Tar_pos_right[j]); \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s++; std::string n_s_str = to_string(n_s);
+            stream_model << string("# Sphere_")+n_s_str+string("\n");
+            stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s++; std::string n_s_str = to_string(n_s);
+                stream_model << string("# Sphere_")+n_s_str+string("\n");
+                stream_model << string("param ext_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }
+    return n_s;
+}
+
+void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_model,std::vector<double>& obj_tar_right_size,std::vector<double>& obj_tar_left_size,bool final,int& n_s_right, int& n_s_left)
+{
+    string sphere_radius_str; string sphere_diam_str; double sphere_diam;
+    // Rotation matrix of the objects to place
+    this->writeRotMatObjTarDual(stream_model);
+    std::map< std::string, double > axis_map;
+    std::string axis_min; std::string axis_middle; std::string axis_max;
+    double obj_min; double obj_middle; double obj_max;
+    int n_sphere_1; int n_sphere_2; int ns1; int ns2;
+    int x=0; int y=0; int z=0; int k=0;
+
+    // ------------------------------------ Object right target --------------------------------------------------------------- //
+    n_s_right=0;
+    axis_map["x"] = obj_tar_right_size.at(0);
+    axis_map["y"] = obj_tar_right_size.at(1);
+    axis_map["z"] = obj_tar_right_size.at(2);
+    std::vector<std::pair<std::string,double> > obj_right_sizes(axis_map.begin(), axis_map.end());
+    std::sort(obj_right_sizes.begin(),obj_right_sizes.end(),&compare_sizes);
+    axis_min = (obj_right_sizes.at(0)).first; axis_middle = (obj_right_sizes.at(1)).first; axis_max = (obj_right_sizes.at(2)).first;
+    obj_min = (obj_right_sizes.at(0)).second; obj_middle = (obj_right_sizes.at(1)).second; obj_max = (obj_right_sizes.at(2)).second;
+    sphere_diam = obj_min; sphere_diam_str = boost::str(boost::format("%.2f") % (sphere_diam)); boost::replace_all(sphere_diam_str,",",".");
+    sphere_radius_str = boost::str(boost::format("%.2f") % (sphere_diam/2)); boost::replace_all(sphere_radius_str,",",".");
+    n_sphere_1 = round(obj_middle/sphere_diam+0.5); ns1 = round(n_sphere_1/2-0.5);
+    n_sphere_2 = round(obj_max/sphere_diam+0.5); ns2 = round(n_sphere_2/2-0.5);
+    if(axis_min.compare("x")){ // the object minimum size is x
+        y=1; z=1;
+    }else if(axis_min.compare("y")){ // the object minimum size is y
+        x=1;z=1;
+    }else{ // the object minimum size is z
+        x=1; y=1;
+    }
+    if(final){
+        stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_right[i1,j]*Rot_obj_right[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place by the right arm\n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var ObjRight2Transp_center {j in 1..3} = Hand_right[j] + dFH_right * z_H_right[j] + (ObjTar_right[1,j]-Tar_pos_right[j]); \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_right++; std::string n_s_str = to_string(n_s_right);
+            stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+            stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_right++; std::string n_s_str = to_string(n_s_right);
+            stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+            stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;    int x=0; int y=0; int z=0; int k=0;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }else{    int x=0; int y=0; int z=0; int k=0;
+        stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_obj_right[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place by the right arm\n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var ObjRight2Transp_center {j in 1..3, i in Iterations} = Hand_right[j,i] + dFH_right * z_H_right[j,i] + (ObjTar_right[1,j]-Tar_pos_right[j]); \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_right++; std::string n_s_str = to_string(n_s_right);
+            stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+            stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_right++; std::string n_s_str = to_string(n_s_right);
+            stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+            stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_right_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_right++; std::string n_s_str = to_string(n_s_right);
+                stream_model << string("# Sphere_right_")+n_s_str+string("\n");
+                stream_model << string("param ext_right_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_right_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }
+    // ------------------------------------ Object left target --------------------------------------------------------------- //
+    n_s_left=0;
+    axis_map["x"] = obj_tar_left_size.at(0);
+    axis_map["y"] = obj_tar_left_size.at(1);
+    axis_map["z"] = obj_tar_left_size.at(2);
+    std::vector<std::pair<std::string,double> > obj_left_sizes(axis_map.begin(), axis_map.end());
+    std::sort(obj_left_sizes.begin(),obj_left_sizes.end(),&compare_sizes);
+    axis_min = (obj_left_sizes.at(0)).first; axis_middle = (obj_left_sizes.at(1)).first; axis_max = (obj_left_sizes.at(2)).first;
+    obj_min = (obj_left_sizes.at(0)).second; obj_middle = (obj_left_sizes.at(1)).second; obj_max = (obj_left_sizes.at(2)).second;
+    sphere_diam = obj_min; sphere_diam_str = boost::str(boost::format("%.2f") % (sphere_diam)); boost::replace_all(sphere_diam_str,",",".");
+    sphere_radius_str = boost::str(boost::format("%.2f") % (sphere_diam/2)); boost::replace_all(sphere_radius_str,",",".");
+    n_sphere_1 = round(obj_middle/sphere_diam+0.5); ns1 = round(n_sphere_1/2-0.5);
+    n_sphere_2 = round(obj_max/sphere_diam+0.5); ns2 = round(n_sphere_2/2-0.5);
+    if(axis_min.compare("x")){ // the object minimum size is x
+        y=1; z=1;
+    }else if(axis_min.compare("y")){ // the object minimum size is y
+        x=1;z=1;
+    }else{ // the object minimum size is z
+        x=1; y=1;
+    }
+    if(final){
+        stream_model << string("var Rot_s_left {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_left[i1,j]*Rot_obj_left[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place by the left arm\n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var ObjLeft2Transp_center {j in 1..3} = Hand_left[j] + dFH_left * z_H_left[j] + (ObjTar_left[1,j]-Tar_pos_left[j]); \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_left++; std::string n_s_str = to_string(n_s_left);
+            stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+            stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_right_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_left++; std::string n_s_str = to_string(n_s_left);
+            stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+            stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }else{
+        stream_model << string("var Rot_s_left {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_left[i1,j,i]*Rot_obj_left[j,i2,1];\n");
+        // Modellization of the object in spheres
+        stream_model << string("# Modelization of the object to place by the left arm\n");
+        stream_dat << string("# Data of the modelization of the object to place \n");
+
+        stream_model << string("var ObjLeft2Transp_center {j in 1..3, i in Iterations} = Hand_left[j,i] + dFH_left * z_H_left[j,i] + (ObjTar_left[1,j]-Tar_pos_left[j]); \n"); // center of the object
+
+        for(int j=0;j<ns2;++j){// max size axis: positive direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_left++; std::string n_s_str = to_string(n_s_left);
+            stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+            stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+                string ext_1 =  to_string(x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+        for(int j=1;j<ns2;++j){// max size axis: negative direction
+            if(x==1 && y==1){
+                k=j;
+            }else{k=0;}
+            n_s_left++; std::string n_s_str = to_string(n_s_left);
+            stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+            stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+            stream_dat << string("param ext_left_")+n_s_str+string(" := \n");
+            string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+            string ext_2 =  to_string(0); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+            string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+            stream_dat << string(";\n");
+
+            stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            for(int i=1;i<ns1;++i){ // middle size axis: positive direction
+                if(x==1 && z==1){
+                    k=-i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+            for(int i=1;i<ns1;++i){ // middle size axis: negative direction
+                if(x==1 && z==1){
+                    k=i;
+                }else{k=j;}
+                n_s_left++; std::string n_s_str = to_string(n_s_left);
+                stream_model << string("# Sphere_left_")+n_s_str+string("\n");
+                stream_model << string("param ext_left_")+n_s_str+string("{i in 1..3};\n");
+
+                stream_dat << string("param ext_left_")+n_s_str+string(" {i in 1..3}= \n");
+                string ext_1 =  to_string(-x*k); stream_dat << to_string(1)+string(" ")+ext_1+string("\n");
+                string ext_2 =  to_string(-y*i); stream_dat << to_string(2)+string(" ")+ext_2+string("\n");
+                string ext_3 =  to_string(-z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
+                stream_dat << string(";\n");
+
+                stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            }
+        }
+    }
+
+}
+
 bool HUMPlanner::compare_sizes (std::pair<std::string,double> pair_1, std::pair<std::string,double> pair_2)
 {
     return (pair_1.second < pair_2.second);
@@ -4078,6 +8028,92 @@ void HUMPlanner::getObstaclesSingleArm(std::vector<double> center, double radius
     }
 
 }
+
+void HUMPlanner::getObstaclesDualArm(std::vector<double> center_right, std::vector<double> center_left,double radius_right, double radius_left, std::vector<objectPtr>& obsts, int hand_code_right,int hand_code_left)
+{
+    double tol_right;
+    switch (hand_code_right){
+    case 0: // human hand
+        tol_right = 50.0;
+        break;
+    case 1://barrett hand
+        tol_right = 5;
+        break;
+    }
+
+    double tol_left;
+    switch (hand_code_left){
+    case 0: // human hand
+        tol_left = 50.0;
+        break;
+    case 1://barrett hand
+        tol_left = 5;
+        break;
+    }
+
+    for (std::size_t i =0; i < this->obstacles.size(); ++i){
+        objectPtr obj = obstacles.at(i);
+        // get the RPY matrix
+        Matrix3d Rot; std::vector<double> rpy; obj->getOr(rpy); this->RPY_matrix(rpy,Rot);
+        // get the position of the object
+        std::vector<double> pos; obj->getPos(pos);
+        // get the size of the object
+        std::vector<double> dim; obj->getSize(dim);
+
+        // distance vector (right)
+        Vector3d diff_right;
+        diff_right(0) = center_right.at(0) - pos.at(0);
+        diff_right(1) = center_right.at(1) - pos.at(1);
+        diff_right(2) = center_right.at(2) - pos.at(2);
+        // A matrix (right)
+        Matrix3d A_right;
+        A_right(0,0) = 1/pow(radius_right+dim.at(0)+tol_right,2); A_right(0,1) = 0; A_right(0,2) = 0;
+        A_right(1,0) = 0; A_right(1,1) = 1/pow(radius_right+dim.at(1)+tol_right,2); A_right(1,2) = 0;
+        A_right(2,0) = 0; A_right(2,1) = 0; A_right(2,2) = 1/pow(radius_right+dim.at(2)+tol_right,2);
+
+        MatrixXd diff1_right = MatrixXd::Zero(3,1);
+        diff1_right(0,0) = diff_right(0); diff1_right(1,0) = diff_right(1); diff1_right(2,0) = diff_right(2);
+        MatrixXd diffT_right = diff1_right.transpose();
+
+        // distance vector (left)
+        Vector3d diff_left;
+        diff_left(0) = center_left.at(0) - pos.at(0);
+        diff_left(1) = center_left.at(1) - pos.at(1);
+        diff_left(2) = center_left.at(2) - pos.at(2);
+        // A matrix (left)
+        Matrix3d A_left;
+        A_left(0,0) = 1/pow(radius_left+dim.at(0)+tol_left,2); A_left(0,1) = 0; A_left(0,2) = 0;
+        A_left(1,0) = 0; A_left(1,1) = 1/pow(radius_left+dim.at(1)+tol_left,2); A_left(1,2) = 0;
+        A_left(2,0) = 0; A_left(2,1) = 0; A_left(2,2) = 1/pow(radius_left+dim.at(2)+tol_left,2);
+
+        MatrixXd diff1_left = MatrixXd::Zero(3,1);
+        diff1_left(0,0) = diff_left(0); diff1_left(1,0) = diff_left(1); diff1_left(2,0) = diff_left(2);
+        MatrixXd diffT_left = diff1_left.transpose();
+
+
+        MatrixXd RotT = Rot.transpose();
+
+        MatrixXd to_check_right = diffT_right*RotT;
+        to_check_right = to_check_right * A_right;
+        to_check_right = to_check_right * Rot;
+        to_check_right = to_check_right * diff_right;
+
+        MatrixXd to_check_left = diffT_left*RotT;
+        to_check_left = to_check_left * A_left;
+        to_check_left = to_check_left * Rot;
+        to_check_left = to_check_left * diff_left;
+
+        if ((to_check_right(0,0) < 1) && (to_check_left(0,0) < 1)){
+            // the object is a real obstacle
+            obsts.push_back(obj);
+        }
+
+    }
+
+
+
+}
+
 
 /*
 std::string HUMPlanner::exec(const char* cmd) {
@@ -6031,33 +10067,880 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
 {
     planning_dual_result_ptr res;
     res.reset(new planning_dual_result);
-/*
-    int mov_type = 0; // pick
-    bool coll = params.mov_specs.coll;
-    res->mov_type = mov_type;
-    std::vector<double> finalHand = params.mov_specs.finalHand;
-    int arm_code = params.mov_specs.hand_code;
-    std::vector<double> minLimits; std::vector<double> maxLimits;
-    switch(arm_code){
-    case 1: // right arm
-        minLimits = this->minRightLimits;
-        maxLimits = this->maxRightLimits;
-        break;
-    case 2: // left arm
-        minLimits = this->minLeftLimits;
-        maxLimits = this->maxLeftLimits;
-        break;
-    }
 
-    res->object_id = params.mov_specs.obj->getName();
-    bool approach = params.mov_specs.approach;
-    bool retreat = params.mov_specs.retreat;
-    bool straight_line = params.mov_specs.straight_line;
+    int dual_mov_type = 0; // pick right and pick left
+    int mov_type_right = 0; // pick
+    int mov_type_left = 0; // pick
+    bool coll_right = params.mov_specs_right.coll;
+    bool coll_left = params.mov_specs_left.coll;
+    res->mov_type_right = mov_type_right;
+    res->mov_type_left = mov_type_left;
+    std::vector<double> finalHand_right = params.mov_specs_right.finalHand;
+    std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
+    std::vector<double> minLimits_right; std::vector<double> maxLimits_right;
+    std::vector<double> minLimits_left; std::vector<double> maxLimits_left;
+    minLimits_right = this->minRightLimits; maxLimits_right = this->maxRightLimits;
+    minLimits_left = this->minLeftLimits; maxLimits_left = this->maxLeftLimits;
+
+    res->object_right_id = params.mov_specs_right.obj->getName();
+    res->object_left_id = params.mov_specs_left.obj->getName();
+    bool approach_right = params.mov_specs_right.approach;
+    bool approach_left = params.mov_specs_left.approach;
+    bool retreat_right = params.mov_specs_right.retreat;
+    bool retreat_left = params.mov_specs_left.retreat;
+    bool straight_line_right = params.mov_specs_right.straight_line;
+    bool straight_line_left = params.mov_specs_left.straight_line;
+
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
     int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
 
-*/
+    try
+    {
+        // the posture is given by
+        // right arm(7) + right hand(4) + left arm(7) + left hand(4) = 22 joints
+        std::vector<double> finalPosture_pre_grasp; bool FPosture_pre_grasp = false;
+        std::vector<double> bouncePosture_pre_grasp; //bool BPosture_pre_grasp = false;
+        std::vector<double> bouncePosture; bool BPosture = false;
+        std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
+        std::vector<double> finalPosture_post_grasp; bool FPosture_post_grasp = false;
+
+        if(approach_right && approach_left)
+        {
+            pre_post = 1;
+            FPosture_pre_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,initPosture_right,initPosture_left,finalPosture_pre_grasp);
+            if(FPosture_pre_grasp){
+                /*
+                // extend the final postures
+                std::vector<double> finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
+                finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
+                for(size_t i=1;i<finalHand.size();++i){
+                    if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
+                        finalPosture_pre_grasp_ext.push_back(finalHand.at(i)-AP);
+                    }else{
+                       finalPosture_pre_grasp_ext.push_back(minLimits.at(i+7));
+                    }
+                }
+                int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_grasp_ext);
+                */
+
+
+
+
+            }
+        }
+
+
+
+    }catch (const string message){throw message;
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
+
     return res;
+
+}
+
+bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initRightPosture, std::vector<double> initLeftPosture,std::vector<double>& finalPosture)
+{
+    // movement settings
+    //int arm_code = params.mov_specs.arm_code;
+    int hand_code_right = params.mov_specs_right.hand_code;
+    int hand_code_left = params.mov_specs_left.hand_code;
+    bool rand_init_right = params.mov_specs_right.rand_init;
+    bool rand_init_left = params.mov_specs_left.rand_init;
+    bool straight_right = params.mov_specs_right.straight_line;
+    bool straight_left = params.mov_specs_left.straight_line;
+    std::vector<double> target_right = params.mov_specs_right.target;
+    std::vector<double> target_left = params.mov_specs_left.target;
+    std::vector<double> minLimits_right; std::vector<double> minLimits_left;
+    std::vector<double> maxLimits_right; std::vector<double> maxLimits_left;
+    bool approach_right = params.mov_specs_right.approach;
+    bool approach_left = params.mov_specs_left.approach;
+    bool retreat_right = params.mov_specs_right.retreat;
+    bool retreat_left = params.mov_specs_left.retreat;
+    std::vector<double> approach_right_vec; std::vector<double> approach_left_vec;
+    std::vector<double> retreat_right_vec; std::vector<double> retreat_left_vec;
+    switch(dual_mov_type){
+    case 0: // pick pick
+        if(approach_right){approach_right_vec = params.mov_specs_right.pre_grasp_approach;}
+        if(approach_left){approach_left_vec = params.mov_specs_left.pre_grasp_approach;}
+        if(retreat_right){retreat_right_vec = params.mov_specs_right.post_grasp_retreat;}
+        if(retreat_left){retreat_left_vec = params.mov_specs_left.post_grasp_retreat;}
+        break;
+    case 1: // place place
+        // TO DO
+        //if(approach){approach_vec = params.mov_specs.pre_place_approach;}
+        //if(retreat){retreat_vec = params.mov_specs.post_place_retreat;}
+        break;
+    }
+
+    std::vector<double> initRightArmPosture(initRightPosture.begin(),initRightPosture.begin()+joints_arm);
+    std::vector<double> initLeftArmPosture(initLeftPosture.begin(),initLeftPosture.begin()+joints_arm);
+
+    double Lu_right; double Ll_right; double Lh_right;
+    Lu_right = abs(this->DH_rightArm.d.at(2));
+    Ll_right = abs(this->DH_rightArm.d.at(4));
+    Lh_right = abs(this->DH_rightArm.d.at(6));
+    minLimits_right = this->minRightLimits;
+    maxLimits_right = this->maxRightLimits;
+    double Lu_left; double Ll_left; double Lh_left;
+    Lu_left = abs(this->DH_leftArm.d.at(2));
+    Ll_left = abs(this->DH_leftArm.d.at(4));
+    Lh_left = abs(this->DH_leftArm.d.at(6));
+    minLimits_left = this->minLeftLimits;
+    maxLimits_left = this->maxLeftLimits;
+
+    std::vector<double> shPos_right; this->getShoulderPos(1,initRightPosture,shPos_right);
+    double max_ext_right = Lh_right+Ll_right+Lu_right;
+    if(!straight_right){
+        // check if the target is in the workspace of the right arm
+        Vector3d tar_pos(target_right.at(0),target_right.at(1),target_right.at(2));
+        Vector3d tar_pos_app(target_right.at(0),target_right.at(1),target_right.at(2));
+        Vector3d tar_pos_ret(target_right.at(0),target_right.at(1),target_right.at(2));
+        if(approach_right){
+            std::vector<double> rpy = {target_right.at(3),target_right.at(4),target_right.at(5)};
+            Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+            double dist = approach_right_vec.at(3);
+            Vector3d v(approach_right_vec.at(0),approach_right_vec.at(1),approach_right_vec.at(2));
+            Vector3d vv = Rot_tar*v;
+            tar_pos_app = tar_pos_app + dist*vv;
+        }else if(retreat_right){
+            std::vector<double> rpy = {target_right.at(3),target_right.at(4),target_right.at(5)};
+            Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+            double dist = retreat_right_vec.at(3);
+            Vector3d v(retreat_right_vec.at(0),retreat_right_vec.at(1),retreat_right_vec.at(2));
+            Vector3d vv = Rot_tar*v;
+            tar_pos_ret = tar_pos_ret + dist*vv;
+        }
+        if((sqrt(pow(tar_pos(0) - shPos_right.at(0),2)+
+                pow(tar_pos(1) - shPos_right.at(1),2)+
+                pow(tar_pos(2) - shPos_right.at(2),2))>= max_ext_right)||
+                (sqrt(pow(tar_pos_app(0) - shPos_right.at(0),2)+
+                      pow(tar_pos_app(1) - shPos_right.at(1),2)+
+                      pow(tar_pos_app(2) - shPos_right.at(2),2))>= max_ext_right)||
+                (sqrt(pow(tar_pos_ret(0) - shPos_right.at(0),2)+
+                      pow(tar_pos_ret(1) - shPos_right.at(1),2)+
+                      pow(tar_pos_ret(2) - shPos_right.at(2),2))>= max_ext_right)){
+            throw string("The movement to be planned goes out of the right arm reachable workspace");
+        }
+    }
+    std::vector<double> shPos_left; this->getShoulderPos(2,initLeftPosture,shPos_left);
+    double max_ext_left = Lh_left+Ll_left+Lu_left;
+    if(!straight_left){
+        // check if the target is in the workspace of the left arm
+        Vector3d tar_pos(target_left.at(0),target_left.at(1),target_left.at(2));
+        Vector3d tar_pos_app(target_left.at(0),target_left.at(1),target_left.at(2));
+        Vector3d tar_pos_ret(target_left.at(0),target_left.at(1),target_left.at(2));
+        if(approach_left){
+            std::vector<double> rpy = {target_left.at(3),target_left.at(4),target_left.at(5)};
+            Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+            double dist = approach_left_vec.at(3);
+            Vector3d v(approach_left_vec.at(0),approach_left_vec.at(1),approach_left_vec.at(2));
+            Vector3d vv = Rot_tar*v;
+            tar_pos_app = tar_pos_app + dist*vv;
+        }else if(retreat_left){
+            std::vector<double> rpy = {target_left.at(3),target_left.at(4),target_left.at(5)};
+            Matrix3d Rot_tar; this->RPY_matrix(rpy,Rot_tar);
+            double dist = retreat_left_vec.at(3);
+            Vector3d v(retreat_left_vec.at(0),retreat_left_vec.at(1),retreat_left_vec.at(2));
+            Vector3d vv = Rot_tar*v;
+            tar_pos_ret = tar_pos_ret + dist*vv;
+        }
+        if((sqrt(pow(tar_pos(0) - shPos_left.at(0),2)+
+                pow(tar_pos(1) - shPos_left.at(1),2)+
+                pow(tar_pos(2) - shPos_left.at(2),2))>= max_ext_left)||
+                (sqrt(pow(tar_pos_app(0) - shPos_left.at(0),2)+
+                      pow(tar_pos_app(1) - shPos_left.at(1),2)+
+                      pow(tar_pos_app(2) - shPos_left.at(2),2))>= max_ext_left)||
+                (sqrt(pow(tar_pos_ret(0) - shPos_left.at(0),2)+
+                      pow(tar_pos_ret(1) - shPos_left.at(1),2)+
+                      pow(tar_pos_ret(2) - shPos_left.at(2),2))>= max_ext_left)){
+            throw string("The movement to be planned goes out of the left arm reachable workspace");
+        }
+    }
+
+    // initial guess
+    std::vector<double> minRightArmLimits(minLimits_right.begin(),minLimits_right.begin()+joints_arm);
+    std::vector<double> maxRightArmLimits(maxLimits_right.begin(),maxLimits_right.begin()+joints_arm);
+    std::vector<double> minLeftArmLimits(minLimits_left.begin(),minLimits_left.begin()+joints_arm);
+    std::vector<double> maxLeftArmLimits(maxLimits_left.begin(),maxLimits_left.begin()+joints_arm);
+    std::vector<double> initialGuess(minRightArmLimits.size()+minLeftArmLimits.size(),0.0);
+    if ((pre_post==1) && rand_init_right && rand_init_left){ // pre_posture for approaching
+        for(size_t i=0; i < minRightArmLimits.size() + minLeftArmLimits.size();++i){
+            if(i < minRightArmLimits.size()){
+                initialGuess.at(i)=getRand(minRightArmLimits.at(i)+SPACER,maxRightArmLimits.at(i)-SPACER);
+            }else{
+                initialGuess.at(i)=getRand(minLeftArmLimits.at(i-minLeftArmLimits.size())+SPACER,maxLeftArmLimits.at(i-minLeftArmLimits.size())-SPACER);
+            }
+        }
+        // TO DO the combos rand_init_right && !rand_init_left and !rand_init_right && rand_init_left
+    }else{
+        initialGuess = initRightArmPosture;
+        initialGuess.insert(initRightArmPosture.end(),initLeftArmPosture.begin(),initLeftArmPosture.end());
+    }
+
+    // get the obstacles of the workspace
+    std::vector<objectPtr> obsts;
+    this->getObstaclesDualArm(shPos_right,shPos_left,max_ext_right,max_ext_left,obsts,hand_code_right,hand_code_left);
+    if(dual_mov_type==1 && pre_post==0){
+        // place place movement, plan stage
+        // remove the support object from the obstacles
+        if(params.mov_specs_right.support_obj.compare("")){
+            std::string support_obj_name = params.mov_specs_right.support_obj;
+            for(size_t i=0; i < obsts.size();++i){
+                objectPtr curr_obj = obsts.at(i);
+                std::string curr_obj_name = curr_obj->getName();
+                if(support_obj_name.compare(curr_obj_name)==0){
+                    obsts.erase (obsts.begin()+i);
+                }
+            }
+        }
+        if(params.mov_specs_left.support_obj.compare("")){
+            std::string support_obj_name = params.mov_specs_left.support_obj;
+            for(size_t i=0; i < obsts.size();++i){
+                objectPtr curr_obj = obsts.at(i);
+                std::string curr_obj_name = curr_obj->getName();
+                if(support_obj_name.compare(curr_obj_name)==0){
+                    obsts.erase (obsts.begin()+i);
+                }
+            }
+        }
+    }
+
+    // write the files for the final posture selection
+    bool written = this->writeFilesDualFinalPosture(params,dual_mov_type,pre_post,initRightArmPosture,initLeftArmPosture,initialGuess,obsts);
+
+
+    if(written){
+        // call AMPL the produce the .nl file
+        string fn = string("FinalPosture");
+        bool nlwritten = this->amplRead(fn,fn,fn);
+        if(nlwritten){
+            // call ipopt for optimization
+            string nlfile = string("Models/")+fn+string(".nl");
+            std::vector<Number> x_sol;
+            try
+            {
+                if (this->optimize(nlfile,x_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL)){
+                    finalPosture = std::vector<double>(x_sol.size());
+                    for (std::size_t i=0; i < x_sol.size(); ++i){
+                        finalPosture.at(i)=x_sol[i];
+                    }
+                    return true;
+                }else{return false;}
+            }catch(const std::exception &exc){throw string(exc.what());}
+        }else{throw string("Error in reading the files for optimization");}
+    }else{throw string("Error in writing the files for optimization");}
+
+
+}
+
+bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts)
+{
+    //  --- create the "Models" directory if it does not exist ---
+    struct stat st = {0};
+    if (stat("Models", &st) == -1) {
+        mkdir("Models", 0700);
+    }
+    string path("Models/");
+
+    // movement settings
+    //int arm_code = params.mov_specs.arm_code;
+    int hand_code_right = params.mov_specs_right.hand_code;
+    int hand_code_left = params.mov_specs_left.hand_code;
+    //int griptype = params.mov_specs.griptype;
+    bool coll_right = params.mov_specs_right.coll;
+    bool coll_left = params.mov_specs_left.coll;
+    std::vector<double> tar_right = params.mov_specs_right.target;
+    std::vector<double> tar_left = params.mov_specs_left.target;
+    int dHO_right = params.mov_specs_right.dHO;
+    int dHO_left = params.mov_specs_left.dHO;
+    std::vector<double> finalHand_right = params.mov_specs_right.finalHand;
+    std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
+    std::string mov_infoLine_right = params.mov_specs_right.mov_infoline;
+    std::string mov_infoLine_left = params.mov_specs_left.mov_infoline;
+    objectPtr obj_tar_right; objectPtr obj_tar_left;
+    bool approach_right = params.mov_specs_right.approach;
+    bool approach_left = params.mov_specs_left.approach;
+    bool retreat_right = params.mov_specs_right.retreat;
+    bool retreat_left = params.mov_specs_left.retreat;
+    std::vector<double> pre_grasp_approach_right; std::vector<double> pre_grasp_approach_left;
+    std::vector<double> post_grasp_retreat_right; std::vector<double> post_grasp_retreat_left;
+    std::vector<double> pre_place_approach_right; std::vector<double> pre_place_approach_left;
+    std::vector<double> post_place_retreat_right; std::vector<double> post_place_retreat_left;
+
+    switch(dual_mov_type){
+    case 0: // pick right pick left
+        obj_tar_right = params.mov_specs_right.obj;
+        obj_tar_left = params.mov_specs_left.obj;
+        if(approach_right){pre_grasp_approach_right = params.mov_specs_right.pre_grasp_approach;}
+        if(approach_left){pre_grasp_approach_left = params.mov_specs_left.pre_grasp_approach;}
+        if(retreat_right){post_grasp_retreat_right = params.mov_specs_right.post_grasp_retreat;}
+        if(retreat_left){post_grasp_retreat_left = params.mov_specs_left.post_grasp_retreat;}
+        break;
+    case 1: // place right place left
+        // TO DO
+        //obj_tar = params.mov_specs.obj;
+        //if(approach){pre_place_approach = params.mov_specs.pre_place_approach;}
+        //if(retreat){post_place_retreat = params.mov_specs.post_place_retreat;}
+        break;
+    }
+
+    // tolerances
+    std::vector<double> lambda_right(params.lambda_final_right.begin(),params.lambda_final_right.begin()+joints_arm);
+    std::vector<double> lambda_left(params.lambda_final_left.begin(),params.lambda_final_left.begin()+joints_arm);
+    std::vector<double> tolsArm_right = params.tolsArm_right; std::vector<double> tolsArm_left = params.tolsArm_left;
+    MatrixXd tolsHand_right = params.tolsHand_right; MatrixXd tolsHand_left = params.tolsHand_left;
+    MatrixXd tolsObstacles_right = params.final_tolsObstacles_right; MatrixXd tolsObstacles_left = params.final_tolsObstacles_left;
+    double tolTarPos_right = params.tolTarPos_right; double tolTarPos_left = params.tolTarPos_left;
+    double tolTarOr_right = params.tolTarOr_right; double tolTarOr_left = params.tolTarOr_left;
+    bool obstacle_avoidance = params.obstacle_avoidance;
+
+    Matrix4d matWorldToArm_right; Matrix4d matWorldToArm_left;
+    Matrix4d matHand_right; Matrix4d matHand_left;
+    std::vector<double> minLimits_right; std::vector<double> minLimits_left;
+    std::vector<double> maxLimits_right; std::vector<double> maxLimits_left;
+    DHparameters dh_arm_right; DHparameters dh_arm_left;
+
+    //int k;
+    matWorldToArm_right = this->matWorldToRightArm; matWorldToArm_left = this->matWorldToLeftArm;
+    matHand_right = this->matRightHand; matHand_left = this->matLeftHand;
+    minLimits_right = this->minRightLimits; minLimits_left = this->minLeftLimits;
+    maxLimits_right = this->maxRightLimits; maxLimits_left = this->maxLeftLimits;
+    dh_arm_right = this->DH_rightArm; dh_arm_left = this->DH_leftArm;
+
+    std::vector<double> minRightArmLimits(minLimits_right.begin(),minLimits_right.begin()+joints_arm);
+    std::vector<double> maxRightArmLimits(maxLimits_right.begin(),maxLimits_right.begin()+joints_arm);
+    std::vector<double> minLeftArmLimits(minLimits_left.begin(),minLimits_left.begin()+joints_arm);
+    std::vector<double> maxLeftArmLimits(maxLimits_left.begin(),maxLimits_left.begin()+joints_arm);
+
+   //------------------------- Write the dat file --------------------------------------------------
+    string filename("FinalPosture.dat");
+    ofstream PostureDat;
+    // open the file
+    PostureDat.open(path+filename);
+    PostureDat << string("# FINAL POSTURE DATA FILE \n");
+    PostureDat << string("# Units of measure: [rad], [mm] \n\n");
+    PostureDat << string("data; \n");
+
+    //PostureDat << string("param pi := 4*atan(1); \n");
+
+    // Body dimension
+    if(coll_right || coll_left){
+        this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
+    }
+    // D-H Parameters of the Arms
+    this->writeDualArmDHParams(dh_arm_right,dh_arm_left,PostureDat);
+    // distance between the hands and the object
+    this->write_dual_dHO(PostureDat,dHO_right,dHO_left);
+    // joint limits of the arms
+    this->writeDualArmLimits(PostureDat,minRightArmLimits,maxRightArmLimits,minLeftArmLimits,maxLeftArmLimits);
+    // initial pose of the arms
+    this->writeDualArmInitPose(PostureDat,initRightArmPosture,initLeftArmPosture);
+    // final posture of the fingers
+    this->writeFingerDualFinalPose(PostureDat,finalHand_right,finalHand_left);
+    // joint expense factors of the arms
+    this->writeDualLambda(PostureDat,lambda_right,lambda_left);
+    // initial guess
+    PostureDat << string("# INITIAL GUESS \n");
+    PostureDat << string("var theta := \n");
+    for (std::size_t i=0; i < initialGuess.size(); ++i){
+        string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
+        boost::replace_all(guess,",",".");
+        if (i == initialGuess.size()-1){
+            PostureDat << to_string(i+1)+string(" ")+guess+string(";\n");
+        }else{
+            PostureDat << to_string(i+1)+string(" ")+guess+string("\n");
+        }
+    }
+    // Parameters of the Fingers
+    switch(hand_code_right){
+    case 0: // human hand
+        this->writeDualHumanHandParams(this->hhand,PostureDat,true);
+        break;
+    case 1: // barrett hand
+        this->writeDualBarrettHandParams(this->bhand,PostureDat,true);
+        break;
+    }
+    switch(hand_code_left){
+    case 0: // human hand
+        this->writeDualHumanHandParams(this->hhand,PostureDat,false);
+        break;
+    case 1: // barrett hand
+        this->writeDualBarrettHandParams(this->bhand,PostureDat,false);
+        break;
+    }
+    // info of the targets to reach
+    this->writeDualInfoTarget(PostureDat,tar_right,tar_left);
+    // info approach/retreat
+    switch(dual_mov_type){
+    case 0: // pick right pick left
+        switch(pre_post){
+        case 0: // no approach, no retreat
+            break;
+        case 1: // approach
+            if(approach_right){this->writeDualInfoApproachRetreat(PostureDat,tar_right,pre_grasp_approach_right,true);}
+            if(approach_left){this->writeDualInfoApproachRetreat(PostureDat,tar_left,pre_grasp_approach_left,false);}
+            break;
+        case 2: // retreat
+            if(retreat_right){this->writeDualInfoApproachRetreat(PostureDat,tar_right,post_grasp_retreat_right,true);}
+            if(retreat_left){this->writeDualInfoApproachRetreat(PostureDat,tar_left,post_grasp_retreat_left,false);}
+            break;
+        }
+        break;
+    case 1: // place right place left
+        // TO DO
+        /*
+        switch(pre_post){
+        case 0: // no approach, no retreat
+            break;
+        case 1: // approach
+            if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_place_approach);}
+            break;
+        case 2: // retreat
+            if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_place_retreat);}
+            break;
+        }
+        */
+        break;
+    }
+    if(coll_right || coll_left){
+        //info objects
+        this->writeInfoObstacles(PostureDat,obsts);
+        // object that has the target
+        switch(dual_mov_type){
+        case 0: case 1: //dual pick or dual place
+            this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+            break;
+        }
+    }
+    //close the file
+    //PostureDat.close();
+
+    // ------------- Write the mod file ------------------------- //
+    string filenamemod("FinalPosture.mod");
+    ofstream PostureMod;
+    // open the file
+    PostureMod.open(path+filenamemod);
+    PostureMod << string("# DUAL FINAL POSTURE MODEL FILE \n");
+    PostureMod << string("# Right arm Movement to plan: \n");
+    PostureMod << string("# ")+mov_infoLine_right+string("\n");
+    PostureMod << string("# Left arm Movement to plan: \n");
+    PostureMod << string("# ")+mov_infoLine_left+string("\n\n");
+
+    PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    PostureMod << string("# PARAMETERS \n\n");
+    PostureMod << string("set nJoints := 1..")+to_string(initialGuess.size())+string(";\n");
+
+    this->writePI(PostureMod);
+    if(coll_right || coll_left){
+        this->writeBodyDimMod(PostureMod);
+    }
+    this->writeDualArmDHParamsMod(PostureMod);
+    this->write_dual_dHOMod(PostureMod);
+
+    PostureMod << string("# Joint Limits \n");
+    PostureMod << string("param llim {i in 1..")+to_string(initialGuess.size())+string("} ; \n");
+    PostureMod << string("param ulim {i in 1..")+to_string(initialGuess.size())+string("} ; \n");
+
+    PostureMod << string("# Initial posture \n");
+    PostureMod << string("param thet_init {i in 1..")+to_string(initialGuess.size())+string("} ; \n");
+
+    PostureMod << string("# Final finger right posture \n");
+    PostureMod << string("param joint_fingers_right {i in 1..")+to_string(finalHand_right.size())+string("} ; \n");
+    PostureMod << string("# Final finger left posture \n");
+    PostureMod << string("param joint_fingers_left {i in 1..")+to_string(finalHand_left.size())+string("} ; \n");
+
+    PostureMod << string("# Joint Expense Factors \n");
+    PostureMod << string("param lambda {i in 1..")+to_string(initialGuess.size())+string("} ; \n");
+
+    switch(hand_code_right){
+    case 0: // human hand
+        this->writeDualHumanHandParamsMod(PostureMod,true);
+        break;
+    case 1: // barrett hand
+        this->writeDualBarrettHandParamsMod(PostureMod,true);
+        break;
+    }
+    switch(hand_code_left){
+    case 0: // human hand
+        this->writeDualHumanHandParamsMod(PostureMod,false);
+        break;
+    case 1: // barrett hand
+        this->writeDualBarrettHandParamsMod(PostureMod,false);
+        break;
+    }
+    // info objects
+    bool vec_right = false;// true if there is some pre or post operation (right)
+    bool vec_left = false;// true if there is some pre or post operation (left)
+    if((approach_right || retreat_right) && pre_post!=0){vec_right=true;}
+    if((approach_left || retreat_left) && pre_post!=0){vec_left=true;}
+    this->writeDualInfoObjectsMod(PostureMod,vec_right,vec_left);
+
+    PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    PostureMod << string("# DECISION VARIABLES \n");
+    PostureMod << string("var theta {i in 1..")+to_string(initialGuess.size())+string("} >= llim[i], <= ulim[i]; \n");
+    // Rotation matrix of the obstacles
+    this->writeRotMatObsts(PostureMod);
+    // Direct Kinematics of the arms
+    this->writeDualArmDirKin(PostureMod,matWorldToArm_right,matHand_right,tolsArm_right,matWorldToArm_left,matHand_left,tolsArm_left,true);
+
+    bool obj_right_place = false; bool obj_left_place = false;
+    // object to transport (dual place movements in the plan and approach target posture selection or
+    //                        dual pick movement in the retreat target posture selection)
+    int n_s_dual = 0; // number of spheres of the object transported with both hands
+    int n_s_right = 0; // number of spheres of the object (right)
+    int n_s_left = 0; // number of spheres of the object (left)
+    if((dual_mov_type==1 && (pre_post==0 || pre_post==1)) || (dual_mov_type==0 && pre_post==2)){
+        obj_right_place = true; obj_left_place = true;
+        std::vector<double> obj_tar_right_size; std::string obj_right_name = obj_tar_right->getName();
+        obj_tar_right->getSize(obj_tar_right_size);
+        std::vector<double> obj_tar_left_size; std::string obj_left_name =obj_tar_left->getName();
+        obj_tar_left->getSize(obj_tar_left_size);
+        if(obj_right_name.compare(obj_left_name)==0){
+            n_s_dual = this->dual_obj_model_spheres(PostureDat,PostureMod,obj_tar_right_size,true);
+        }else{
+            this->dual_obj_model_spheres(PostureDat,PostureMod,obj_tar_right_size,obj_tar_left_size,true,n_s_right,n_s_left);
+        }
+    }
+    switch(hand_code_right){
+    case 0: // human hand
+        this->writeDualHumanHandDirKin(PostureMod,tolsHand_right,true,false,false,true);
+        break;
+    case 1: // barrett hand
+        this->writeDualBarrettHandDirKin(PostureMod,tolsHand_right,true,false,false,true);
+        break;
+    }    
+    switch(hand_code_left){
+    case 0: // human hand
+        this->writeDualHumanHandDirKin(PostureMod,tolsHand_left,true,false,false,false);
+        break;
+    case 1: // barrett hand
+        this->writeDualBarrettHandDirKin(PostureMod,tolsHand_left,true,false,false,false);
+        break;
+    }
+
+    // Points of the right arm
+    //PostureMod << string("var Points_Arm_right {j in 1..21, i in 1..4} = \n");
+    PostureMod << string("var Points_Arm_right {j in 1..15, i in 1..4} = \n");
+    PostureMod << string("if ( j=1 ) then 	(Shoulder_right[i]+Elbow_right[i])/2  \n");
+    PostureMod << string("else	if ( j=2 ) then 	Elbow_right[i] \n");
+    PostureMod << string("else    if ( j=3 ) then 	(Wrist_right[i]+Elbow_right[i])/2  \n");
+    PostureMod << string("else	if ( j=4 ) then 	Wrist_right[i] \n");
+    PostureMod << string("else	if ( j=5 ) then 	Wrist_right[i]+0.45*(Hand_right[i]-Wrist_right[i]) \n");
+    PostureMod << string("else	if ( j=6 ) then 	Wrist_right[i]+0.75*(Hand_right[i]-Wrist_right[i]) \n");
+    PostureMod << string("else	if ( j=7 ) then 	Finger1_1_right[i] \n");
+    PostureMod << string("else	if ( j=8 ) then 	Finger2_1_right[i] \n");
+    PostureMod << string("else	if ( j=9 ) then 	Finger3_1_right[i]\n");
+    /*
+    PostureMod << string("else	if ( j=10 ) then 	(Finger1_1_right[i]+Finger1_2_right[i])/2 \n");
+    PostureMod << string("else	if ( j=11 ) then 	(Finger2_1_right[i]+Finger2_2_right[i])/2 \n");
+    PostureMod << string("else	if ( j=12 ) then 	(Finger3_1_right[i]+Finger3_2_right[i])/2 \n");
+    PostureMod << string("else	if ( j=13 ) then 	 Finger1_2_right[i] \n");
+    PostureMod << string("else	if ( j=14 ) then 	 Finger2_2_right[i] \n");
+    PostureMod << string("else	if ( j=15 ) then 	 Finger3_2_right[i] \n");
+    PostureMod << string("else	if ( j=16 ) then 	(Finger1_2_right[i]+Finger1_tip_right[i])/2	 \n");
+    PostureMod << string("else	if ( j=17 ) then 	(Finger2_2_right[i]+Finger2_tip_right[i])/2 \n");
+    PostureMod << string("else	if ( j=18 ) then 	(Finger3_2_right[i]+Finger3_tip_right[i])/2 \n");
+    PostureMod << string("else	if ( j=19 ) then 	Finger1_tip_right[i]\n");
+    PostureMod << string("else	if ( j=20 ) then 	Finger2_tip_right[i] \n");
+    PostureMod << string("else	if ( j=21 ) then 	Finger3_tip_right[i] \n");
+    */
+    PostureMod << string("else	if ( j=10 ) then 	 Finger1_2_right[i] \n");
+    PostureMod << string("else	if ( j=11 ) then 	 Finger2_2_right[i] \n");
+    PostureMod << string("else	if ( j=12 ) then 	 Finger3_2_right[i] \n");
+    PostureMod << string("else	if ( j=13 ) then 	Finger1_tip_right[i]\n");
+    PostureMod << string("else	if ( j=14 ) then 	Finger2_tip_right[i] \n");
+    PostureMod << string("else	if ( j=15 ) then 	Finger3_tip_right[i] \n");
+
+    // Points of the left arm
+    //PostureMod << string("var Points_Arm_left {j in 1..21, i in 1..4} = \n");
+    PostureMod << string("var Points_Arm_left {j in 1..15, i in 1..4} = \n");
+    PostureMod << string("if ( j=1 ) then 	(Shoulder_left[i]+Elbow_left[i])/2  \n");
+    PostureMod << string("else	if ( j=2 ) then 	Elbow_left[i] \n");
+    PostureMod << string("else    if ( j=3 ) then 	(Wrist_left[i]+Elbow_left[i])/2  \n");
+    PostureMod << string("else	if ( j=4 ) then 	Wrist_left[i] \n");
+    PostureMod << string("else	if ( j=5 ) then 	Wrist_left[i]+0.45*(Hand_left[i]-Wrist_left[i]) \n");
+    PostureMod << string("else	if ( j=6 ) then 	Wrist_left[i]+0.75*(Hand_left[i]-Wrist_left[i]) \n");
+    PostureMod << string("else	if ( j=7 ) then 	Finger1_1_left[i] \n");
+    PostureMod << string("else	if ( j=8 ) then 	Finger2_1_left[i] \n");
+    PostureMod << string("else	if ( j=9 ) then 	Finger3_1_left[i]\n");
+    /*
+    PostureMod << string("else	if ( j=10 ) then 	(Finger1_1_left[i]+Finger1_2_left[i])/2 \n");
+    PostureMod << string("else	if ( j=11 ) then 	(Finger2_1_left[i]+Finger2_2_left[i])/2 \n");
+    PostureMod << string("else	if ( j=12 ) then 	(Finger3_1_left[i]+Finger3_2_left[i])/2 \n");
+    PostureMod << string("else	if ( j=13 ) then 	 Finger1_2_left[i] \n");
+    PostureMod << string("else	if ( j=14 ) then 	 Finger2_2_left[i] \n");
+    PostureMod << string("else	if ( j=15 ) then 	 Finger3_2_left[i] \n");
+    PostureMod << string("else	if ( j=16 ) then 	(Finger1_2_left[i]+Finger1_tip_left[i])/2	 \n");
+    PostureMod << string("else	if ( j=17 ) then 	(Finger2_2_left[i]+Finger2_tip_left[i])/2 \n");
+    PostureMod << string("else	if ( j=18 ) then 	(Finger3_2_left[i]+Finger3_tip_left[i])/2 \n");
+    PostureMod << string("else	if ( j=19 ) then 	Finger1_tip_left[i]\n");
+    PostureMod << string("else	if ( j=20 ) then 	Finger2_tip_left[i] \n");
+    PostureMod << string("else	if ( j=21 ) then 	Finger3_tip_left[i] \n");
+    */
+    PostureMod << string("else	if ( j=10 ) then 	 Finger1_2_left[i] \n");
+    PostureMod << string("else	if ( j=11 ) then 	 Finger2_2_left[i] \n");
+    PostureMod << string("else	if ( j=12 ) then 	 Finger3_2_left[i] \n");
+    PostureMod << string("else	if ( j=13 ) then 	Finger1_tip_left[i]\n");
+    PostureMod << string("else	if ( j=14 ) then 	Finger2_tip_left[i] \n");
+    PostureMod << string("else	if ( j=15 ) then 	Finger3_tip_left[i] \n");
+
+    if(n_s_dual==0)
+    {
+        if (obj_right_place){
+            int j_init = 15;
+            for(int i=1;i<=n_s_right;++i){
+                std::string i_str = to_string(i);
+                int j = j_init+i; std::string j_str = to_string(j);
+                PostureMod << string("else    if ( j=")+j_str+string(" ) then 	ObjRight2Transp_")+i_str+string("[i] \n");
+            }
+        }
+        if (obj_left_place){
+            int j_init = 15;
+            for(int i=1;i<=n_s_left;++i){
+                std::string i_str = to_string(i);
+                int j = j_init+i; std::string j_str = to_string(j);
+                PostureMod << string("else    if ( j=")+j_str+string(" ) then 	ObjLeft2Transp_")+i_str+string("[i] \n");
+            }
+        }
+    }else{
+        if (obj_right_place){
+            int j_init = 15;
+            for(int i=1;i<=n_s_dual;++i){
+                std::string i_str = to_string(i);
+                int j = j_init+i; std::string j_str = to_string(j);
+                PostureMod << string("else    if ( j=")+j_str+string(" ) then 	Obj2Transp_")+i_str+string("[i] \n");
+            }
+        }
+    }
+    PostureMod << string("; \n\n");
+
+    // objective function
+    this->writeObjective(PostureMod,true);
+
+    // constraints
+    PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    PostureMod << string("#  \n");
+    PostureMod << string("#		      Constraints                  # \n");
+    PostureMod << string("#  \n");
+    string tarpos_right = boost::str(boost::format("%.2f") % tolTarPos_right); boost::replace_all(tarpos_right,",",".");
+    string taror_right = boost::str(boost::format("%.4f") % tolTarOr_right); boost::replace_all(taror_right,",",".");
+    string tarpos_left = boost::str(boost::format("%.2f") % tolTarPos_left); boost::replace_all(tarpos_left,",",".");
+    string taror_left = boost::str(boost::format("%.4f") % tolTarOr_left); boost::replace_all(taror_left,",",".");
+
+    switch (dual_mov_type){
+    case 0: // pick right and pick left
+        if(pre_post == 0){
+            // do not use approach/retreat options
+            PostureMod << string("# Hand position right \n");
+            PostureMod << string("subject to contr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("# Hand position left \n");
+            PostureMod << string("subject to contr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
+        }else if(pre_post==1){
+            // use approach options
+            PostureMod << string("# Hand position right \n");
+            PostureMod << string("subject to contr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("# Hand position left \n");
+            PostureMod << string("subject to contr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
+        }else if(pre_post==2){
+            // use retreat options
+            PostureMod << string("# Hand position right \n");
+            PostureMod << string("subject to contr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("# Hand position left \n");
+            PostureMod << string("subject to contr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
+        }
+        break;
+    case 1: // place right place left
+        /*
+        if(pre_post==0){
+            // do not use approach/retreat options
+            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }else if(pre_post==1){
+            // use approach options
+            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }else if(pre_post==2){
+            // use retreat options
+            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }
+        */
+        break;
+    case 2: // move right move left
+        /*
+        PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] - Tar_pos[i] = 0; \n");
+        PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        */
+        break;
+    }
+
+    PostureMod << string("# Right Hand orientation\n");
+    PostureMod << string("subject to constr_hand_orient_right: (sum{i in 1..3} (x_H_right[i] - x_t_right[i])^2 + sum{i in 1..3} (z_H_right[i] - z_t_right[i])^2 )<= ")+taror_right+string("; #  x_H_right = x_t_right and z_H_right = x_t_right \n");
+    PostureMod << string("# Left Hand orientation\n");
+    PostureMod << string("subject to constr_hand_orient_left: (sum{i in 1..3} (x_H_left[i] - x_t_left[i])^2 + sum{i in 1..3} (z_H_left[i] - z_t_left[i])^2 )<= ")+taror_left+string("; #  x_H_left = x_t_left and z_H_left = x_t_left \n");
+
+    if(obstacle_avoidance && coll_right){
+        // obstacles and right arm-hand
+        //xx
+        string txx1 = boost::str(boost::format("%.2f") % tolsObstacles_right(0,0)); boost::replace_all(txx1,",","."); if(tolsObstacles_right(0,0) >= 0){txx1=string("+")+txx1;}
+        string txx2 = boost::str(boost::format("%.2f") % tolsObstacles_right(1,0)); boost::replace_all(txx2,",","."); if(tolsObstacles_right(1,0) >= 0){txx2=string("+")+txx2;}
+        string txx3 = boost::str(boost::format("%.2f") % tolsObstacles_right(2,0)); boost::replace_all(txx3,",","."); if(tolsObstacles_right(2,0) >= 0){txx3=string("+")+txx3;}
+        //yy
+        string tyy1 = boost::str(boost::format("%.2f") % tolsObstacles_right(0,1)); boost::replace_all(tyy1,",","."); if(tolsObstacles_right(0,1) >= 0){tyy1=string("+")+tyy1;}
+        string tyy2 = boost::str(boost::format("%.2f") % tolsObstacles_right(1,1)); boost::replace_all(tyy2,",","."); if(tolsObstacles_right(1,1) >= 0){tyy2=string("+")+tyy2;}
+        string tyy3 = boost::str(boost::format("%.2f") % tolsObstacles_right(2,1)); boost::replace_all(tyy3,",","."); if(tolsObstacles_right(2,1) >= 0){tyy3=string("+")+tyy3;}
+        //zz
+        string tzz1 = boost::str(boost::format("%.2f") % tolsObstacles_right(0,2)); boost::replace_all(tzz1,",","."); if(tolsObstacles_right(0,2) >= 0){tzz1=string("+")+tzz1;}
+        string tzz2 = boost::str(boost::format("%.2f") % tolsObstacles_right(1,2)); boost::replace_all(tzz2,",","."); if(tolsObstacles_right(1,2) >= 0){tzz2=string("+")+tzz2;}
+        string tzz3 = boost::str(boost::format("%.2f") % tolsObstacles_right(2,2)); boost::replace_all(tzz3,",","."); if(tolsObstacles_right(2,2) >= 0){tzz3=string("+")+tzz3;}
+        //xy
+        string txy1 = boost::str(boost::format("%.2f") % tolsObstacles_right(0,3)); boost::replace_all(txy1,",","."); if(tolsObstacles_right(0,3) >= 0){txy1=string("+")+txy1;}
+        string txy2 = boost::str(boost::format("%.2f") % tolsObstacles_right(1,3)); boost::replace_all(txy2,",","."); if(tolsObstacles_right(1,3) >= 0){txy2=string("+")+txy2;}
+        string txy3 = boost::str(boost::format("%.2f") % tolsObstacles_right(2,3)); boost::replace_all(txy3,",","."); if(tolsObstacles_right(2,3) >= 0){txy3=string("+")+txy3;}
+        //xz
+        string txz1 = boost::str(boost::format("%.2f") % tolsObstacles_right(0,4)); boost::replace_all(txz1,",","."); if(tolsObstacles_right(0,4) >= 0){txz1=string("+")+txz1;}
+        string txz2 = boost::str(boost::format("%.2f") % tolsObstacles_right(1,4)); boost::replace_all(txz2,",","."); if(tolsObstacles_right(1,4) >= 0){txz2=string("+")+txz2;}
+        string txz3 = boost::str(boost::format("%.2f") % tolsObstacles_right(2,4)); boost::replace_all(txz3,",","."); if(tolsObstacles_right(2,4) >= 0){txz3=string("+")+txz3;}
+        //yz
+        string tyz1 = boost::str(boost::format("%.2f") % tolsObstacles_right(0,5)); boost::replace_all(tyz1,",","."); if(tolsObstacles_right(0,5) >= 0){tyz1=string("+")+tyz1;}
+        string tyz2 = boost::str(boost::format("%.2f") % tolsObstacles_right(1,5)); boost::replace_all(tyz2,",","."); if(tolsObstacles_right(1,5) >= 0){tyz2=string("+")+tyz2;}
+        string tyz3 = boost::str(boost::format("%.2f") % tolsObstacles_right(2,5)); boost::replace_all(tyz3,",","."); if(tolsObstacles_right(2,5) >= 0){tyz3=string("+")+tyz3;}
+
+
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("# \n");
+        //PostureMod << string("subject to obst_Arm_right{j in 1..21, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("((Points_Arm_right[j,1]-Obstacles[i,1])^2)*(  \n");
+        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm_right[j,4]")+txx1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm_right[j,4]")+txx2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm_right[j,4]")+txx3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("((Points_Arm_right[j,2]-Obstacles[i,2])^2)*(  \n");
+        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm_right[j,4]")+tyy1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm_right[j,4]")+tyy2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm_right[j,4]")+tyy3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("((Points_Arm_right[j,3]-Obstacles[i,3])^2)*( \n");
+        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm_right[j,4]")+tzz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm_right[j,4]")+tzz2+string(")^2) +  \n");
+        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm_right[j,4]")+tzz3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm_right[j,1]-Obstacles[i,1])*(Points_Arm_right[j,2]-Obstacles[i,2])* ( \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm_right[j,4]")+txy1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm_right[j,4]")+txy2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm_right[j,4]")+txy3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm_right[j,1]-Obstacles[i,1])*(Points_Arm_right[j,3]-Obstacles[i,3])* ( \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_right[j,4]")+txz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_right[j,4]")+txz2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_right[j,4]")+txz3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm_right[j,2]-Obstacles[i,2])*(Points_Arm_right[j,3]-Obstacles[i,3])* ( \n");
+        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_right[j,4]")+tyz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_right[j,4]")+tyz2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_right[j,4]")+tyz3+string(")^2)) \n");
+        PostureMod << string("-1 >=0; \n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("#  \n");
+
+    }
+
+    if(obstacle_avoidance && coll_left){
+        // obstacles and left arm-hand
+        //xx
+        string txx1 = boost::str(boost::format("%.2f") % tolsObstacles_left(0,0)); boost::replace_all(txx1,",","."); if(tolsObstacles_left(0,0) >= 0){txx1=string("+")+txx1;}
+        string txx2 = boost::str(boost::format("%.2f") % tolsObstacles_left(1,0)); boost::replace_all(txx2,",","."); if(tolsObstacles_left(1,0) >= 0){txx2=string("+")+txx2;}
+        string txx3 = boost::str(boost::format("%.2f") % tolsObstacles_left(2,0)); boost::replace_all(txx3,",","."); if(tolsObstacles_left(2,0) >= 0){txx3=string("+")+txx3;}
+        //yy
+        string tyy1 = boost::str(boost::format("%.2f") % tolsObstacles_left(0,1)); boost::replace_all(tyy1,",","."); if(tolsObstacles_left(0,1) >= 0){tyy1=string("+")+tyy1;}
+        string tyy2 = boost::str(boost::format("%.2f") % tolsObstacles_left(1,1)); boost::replace_all(tyy2,",","."); if(tolsObstacles_left(1,1) >= 0){tyy2=string("+")+tyy2;}
+        string tyy3 = boost::str(boost::format("%.2f") % tolsObstacles_left(2,1)); boost::replace_all(tyy3,",","."); if(tolsObstacles_left(2,1) >= 0){tyy3=string("+")+tyy3;}
+        //zz
+        string tzz1 = boost::str(boost::format("%.2f") % tolsObstacles_left(0,2)); boost::replace_all(tzz1,",","."); if(tolsObstacles_left(0,2) >= 0){tzz1=string("+")+tzz1;}
+        string tzz2 = boost::str(boost::format("%.2f") % tolsObstacles_left(1,2)); boost::replace_all(tzz2,",","."); if(tolsObstacles_left(1,2) >= 0){tzz2=string("+")+tzz2;}
+        string tzz3 = boost::str(boost::format("%.2f") % tolsObstacles_left(2,2)); boost::replace_all(tzz3,",","."); if(tolsObstacles_left(2,2) >= 0){tzz3=string("+")+tzz3;}
+        //xy
+        string txy1 = boost::str(boost::format("%.2f") % tolsObstacles_left(0,3)); boost::replace_all(txy1,",","."); if(tolsObstacles_left(0,3) >= 0){txy1=string("+")+txy1;}
+        string txy2 = boost::str(boost::format("%.2f") % tolsObstacles_left(1,3)); boost::replace_all(txy2,",","."); if(tolsObstacles_left(1,3) >= 0){txy2=string("+")+txy2;}
+        string txy3 = boost::str(boost::format("%.2f") % tolsObstacles_left(2,3)); boost::replace_all(txy3,",","."); if(tolsObstacles_left(2,3) >= 0){txy3=string("+")+txy3;}
+        //xz
+        string txz1 = boost::str(boost::format("%.2f") % tolsObstacles_left(0,4)); boost::replace_all(txz1,",","."); if(tolsObstacles_left(0,4) >= 0){txz1=string("+")+txz1;}
+        string txz2 = boost::str(boost::format("%.2f") % tolsObstacles_left(1,4)); boost::replace_all(txz2,",","."); if(tolsObstacles_left(1,4) >= 0){txz2=string("+")+txz2;}
+        string txz3 = boost::str(boost::format("%.2f") % tolsObstacles_left(2,4)); boost::replace_all(txz3,",","."); if(tolsObstacles_left(2,4) >= 0){txz3=string("+")+txz3;}
+        //yz
+        string tyz1 = boost::str(boost::format("%.2f") % tolsObstacles_left(0,5)); boost::replace_all(tyz1,",","."); if(tolsObstacles_left(0,5) >= 0){tyz1=string("+")+tyz1;}
+        string tyz2 = boost::str(boost::format("%.2f") % tolsObstacles_left(1,5)); boost::replace_all(tyz2,",","."); if(tolsObstacles_left(1,5) >= 0){tyz2=string("+")+tyz2;}
+        string tyz3 = boost::str(boost::format("%.2f") % tolsObstacles_left(2,5)); boost::replace_all(tyz3,",","."); if(tolsObstacles_left(2,5) >= 0){tyz3=string("+")+tyz3;}
+
+
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("# \n");
+        //PostureMod << string("subject to obst_Arm_left{j in 1..21, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("subject to obst_Arm_left{j in 1..15, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("((Points_Arm_left[j,1]-Obstacles[i,1])^2)*(  \n");
+        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm_left[j,4]")+txx1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm_left[j,4]")+txx2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm_left[j,4]")+txx3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("((Points_Arm_left[j,2]-Obstacles[i,2])^2)*(  \n");
+        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm_left[j,4]")+tyy1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm_left[j,4]")+tyy2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm_left[j,4]")+tyy3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("((Points_Arm_left[j,3]-Obstacles[i,3])^2)*( \n");
+        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm_left[j,4]")+tzz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm_left[j,4]")+tzz2+string(")^2) +  \n");
+        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm_left[j,4]")+tzz3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm_left[j,1]-Obstacles[i,1])*(Points_Arm_left[j,2]-Obstacles[i,2])* ( \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm_left[j,4]")+txy1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm_left[j,4]")+txy2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm_left[j,4]")+txy3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm_left[j,1]-Obstacles[i,1])*(Points_Arm_left[j,3]-Obstacles[i,3])* ( \n");
+        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_left[j,4]")+txz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_left[j,4]")+txz2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_left[j,4]")+txz3+string(")^2)) \n");
+        PostureMod << string("+ \n");
+        PostureMod << string("2*(Points_Arm_left[j,2]-Obstacles[i,2])*(Points_Arm_left[j,3]-Obstacles[i,3])* ( \n");
+        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_left[j,4]")+tyz1+string(")^2) + \n");
+        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_left[j,4]")+tyz2+string(")^2) + \n");
+        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_left[j,4]")+tyz3+string(")^2)) \n");
+        PostureMod << string("-1 >=0; \n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("#  \n");
+
+    }
+
+    // constraints with the body
+    if(coll_right){
+        this->writeDualBodyConstraints(PostureMod,true,true);
+    }
+    if(coll_left){
+        this->writeDualBodyConstraints(PostureMod,true,false);
+    }
+
+    PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
+
+    // close the files
+    PostureMod.close();
+    PostureDat.close();
+
+    // ----- write run file for options --------
+
+    string filenamerun("options.run");
+    ofstream optionsrun;
+    // open the file
+    optionsrun.open(path+filenamerun);
+
+    optionsrun << string("option presolve 0; \n");
+
+    //close the file
+    optionsrun.close();
+
+
+    return true;
 
 }
 

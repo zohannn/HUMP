@@ -642,11 +642,27 @@ private:
     void writeArmDHParams(DHparameters dh, std::ofstream& stream, int k);
 
     /**
+     * @brief writeDualArmDHParams
+     * @param dh_right
+     * @param dh_left
+     * @param stream
+     */
+    void writeDualArmDHParams(DHparameters dh_right, DHparameters dh_left, std::ofstream& stream);
+
+    /**
      * @brief This method writes down the distance between the object and the hand
      * @param stream
      * @param dHO
      */
     void write_dHO(std::ofstream& stream, double dHO);
+
+    /**
+     * @brief write_dual_dHO
+     * @param stream
+     * @param dHO_right
+     * @param dHO_left
+     */
+    void write_dual_dHO(std::ofstream& stream, double dHO_right, double dHO_left);
 
     /**
      * @brief This method writes down the joint limits of the arm
@@ -657,11 +673,30 @@ private:
     void writeArmLimits(std::ofstream& stream, std::vector<double>& minArmLimits,std::vector<double>& maxArmLimits);
 
     /**
+     * @brief writeDualArmLimits
+     * @param stream
+     * @param minRightArmLimits
+     * @param maxRightArmLimits
+     * @param minLeftArmLimits
+     * @param maxLeftArmLimits
+     */
+    void writeDualArmLimits(std::ofstream& stream, std::vector<double>& minRightArmLimits,std::vector<double>& maxRightArmLimits,
+                            std::vector<double>& minLeftArmLimits,std::vector<double>& maxLeftArmLimits);
+
+    /**
      * @brief This method writes down the initial posture of the arm
      * @param stream
      * @param initArmPosture
      */
     void writeArmInitPose(std::ofstream& stream,std::vector<double>& initArmPosture);
+
+    /**
+     * @brief writeDualArmInitPose
+     * @param stream
+     * @param initRightArmPosture
+     * @param initLeftArmPosture
+     */
+    void writeDualArmInitPose(std::ofstream& stream,std::vector<double>& initRightArmPosture,std::vector<double>& initLeftArmPosture);
 
     /**
      * @brief This method writes down the final posture of the fingers
@@ -671,12 +706,27 @@ private:
     void writeFingerFinalPose(std::ofstream& stream,std::vector<double>& finalHand);
 
     /**
+     * @brief writeFingerDualFinalPose
+     * @param stream
+     * @param finalHand_right
+     * @param finalHand_left
+     */
+    void writeFingerDualFinalPose(std::ofstream& stream,std::vector<double>& finalHand_right,std::vector<double>& finalHand_left);
+
+    /**
      * @brief This method writes down the lambda of the objective function
      * @param stream
      * @param lambda
      */
     void writeLambda(std::ofstream& stream,std::vector<double>& lambda);
 
+    /**
+     * @brief writeDualLambda
+     * @param stream
+     * @param lambda_right
+     * @param lambda_left
+     */
+    void writeDualLambda(std::ofstream& stream,std::vector<double>& lambda_right,std::vector<double>& lambda_left);
 
     /**
      * @brief writeHumanHandParams
@@ -688,10 +738,25 @@ private:
     void writeHumanHandParams(HumanHand& hhand, std::ofstream& stream, int k);
 
     /**
+     * @brief writeDualHumanHandParams
+     * @param hhand
+     * @param stream
+     * @param right
+     */
+    void writeDualHumanHandParams(HumanHand& hhand, std::ofstream& stream, bool right);
+
+    /**
      * @brief This method writes down the declaration of the parameters of the human hand
      * @param stream
      */
     void writeHumanHandParamsMod(std::ofstream& stream);
+
+    /**
+     * @brief writeDualHumanHandParamsMod
+     * @param stream
+     * @param right
+     */
+    void writeDualHumanHandParamsMod(std::ofstream& stream,bool right);
 
     /**
      * @brief This method writes down the direct kinematics of the human hand
@@ -703,6 +768,17 @@ private:
     void writeHumanHandDirKin(std::ofstream& stream,MatrixXd& tolsHand, bool final, bool transport);
 
     /**
+     * @brief writeDualHumanHandDirKin
+     * @param stream
+     * @param tolsHand
+     * @param final
+     * @param transport_right
+     * @param transport_left
+     * @param right
+     */
+    void writeDualHumanHandDirKin(std::ofstream& stream,MatrixXd& tolsHand, bool final, bool transport_right, bool transport_left,bool right);
+
+    /**
      * @brief writeBarrettHandParams
      * Thi method writes down the parameters of the Barrett Hand
      * @param bhand
@@ -711,10 +787,25 @@ private:
     void writeBarrettHandParams(BarrettHand& bhand, std::ofstream& stream);
 
     /**
+     * @brief writeDualBarrettHandParams
+     * @param bhand
+     * @param stream
+     * @param right
+     */
+    void writeDualBarrettHandParams(BarrettHand& bhand, std::ofstream& stream,bool right);
+
+    /**
      * @brief This method writes down the declaration of the parameters of the Barrett hand
      * @param stream
      */
     void writeBarrettHandParamsMod(std::ofstream& stream);
+
+    /**
+     * @brief writeDualBarrettHandParamsMod
+     * @param stream
+     * @param right
+     */
+    void writeDualBarrettHandParamsMod(std::ofstream& stream, bool right);
 
     /**
      * @brief This method writes down the direct kinematics of the Barrett hand
@@ -726,12 +817,32 @@ private:
     void writeBarrettHandDirKin(std::ofstream& stream, MatrixXd& tolsHand, bool final, bool transport);
 
     /**
+     * @brief writeDualBarrettHandDirKin
+     * @param stream
+     * @param tolsHand
+     * @param final
+     * @param transport_right
+     * @param transport_left
+     * @param right
+     */
+    void writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tolsHand, bool final, bool transport_right, bool transport_left, bool right);
+
+
+    /**
      * @brief writeInfoTarget
      * This method writes down the info of the target
      * @param stream
      * @param tar: tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(5)=yaw
      */
     void writeInfoTarget(ofstream &stream, std::vector<double> tar);
+
+    /**
+     * @brief writeDualInfoTarget
+     * @param stream
+     * @param tar_right : tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(5)=yaw
+     * @param tar_left : tar(0)=x, tar(1)=y, tar(2)=z, tar(3)=roll, tar(4)=pitch, tar(5)=yaw
+     */
+    void writeDualInfoTarget(ofstream &stream,std::vector<double> tar_right,std::vector<double> tar_left);
 
     /**
      * @brief writeInfoObstacles
@@ -746,6 +857,14 @@ private:
      * @param obj
      */
     void writeInfoObjectTarget(ofstream &stream, objectPtr obj);
+
+    /**
+     * @brief writeDualInfoObjectTarget
+     * @param stream
+     * @param obj_right
+     * @param obj_left
+     */
+    void writeDualInfoObjectTarget(ofstream &stream, objectPtr obj_right, objectPtr obj_left);
 
     /**
      * @brief writePI
@@ -766,16 +885,36 @@ private:
     void writeArmDHParamsMod(ofstream &stream);
 
     /**
+     * @brief writeDualArmDHParamsMod
+     * @param stream
+     */
+    void writeDualArmDHParamsMod(ofstream &stream);
+
+    /**
      * @brief write_dHOMod
      * @param stream
      */
     void write_dHOMod(ofstream &stream);
+
+    /**
+     * @brief write_dual_dHOMod
+     * @param stream
+     */
+    void write_dual_dHOMod(ofstream &stream);
     /**
      * @brief writeInfoObjectsMod
      * @param stream
      * @param vec
      */
     void writeInfoObjectsMod(ofstream &stream,bool vec);
+
+    /**
+     * @brief writeDualInfoObjectsMod
+     * @param stream
+     * @param vec_right
+     * @param vec_left
+     */
+    void writeDualInfoObjectsMod(ofstream &stream,bool vec_right,bool vec_left);
 
     /**
      * @brief writeInfoObjectsMod_place
@@ -797,6 +936,12 @@ private:
     void writeRotMatObjTar(ofstream &stream);
 
     /**
+     * @brief writeRotMatObjTarDual
+     * @param stream
+     */
+    void writeRotMatObjTarDual(ofstream &stream);
+
+    /**
      * @brief writeArmDirKin
      * @param stream
      * @param matWorldToArm
@@ -805,6 +950,19 @@ private:
      * @param final
      */
     void writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matrix4d &matHand, std::vector<double>& tolsArm, bool final);
+
+    /**
+     * @brief writeDualArmDirKin
+     * @param stream
+     * @param matWorldToRightArm
+     * @param matRightHand
+     * @param tolsRightArm
+     * @param matWorldToLeftArm
+     * @param matLeftHand
+     * @param tolsLeftArm
+     * @param final
+     */
+    void writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightArm, Matrix4d &matRightHand, std::vector<double>& tolsRightArm, Matrix4d &matWorldToLeftArm, Matrix4d &matLeftHand, std::vector<double>& tolsLeftArm,bool final);
 
     /**
      * @brief writeObjective
@@ -819,6 +977,14 @@ private:
      * @param final
      */
     void writeBodyConstraints(ofstream &stream, bool final);
+
+    /**
+     * @brief writeDualBodyConstraints
+     * @param stream
+     * @param final
+     * @param right
+     */
+    void writeDualBodyConstraints(ofstream &stream, bool final,bool right);
 
     /**
      * @brief RPY_matrix
@@ -884,12 +1050,33 @@ private:
     void getObstaclesSingleArm(std::vector<double> center, double radius, std::vector<objectPtr>& obsts, int hand_code);
 
     /**
+     * @brief getObstaclesDualArm
+     * @param center_right
+     * @param center_left
+     * @param radius_right
+     * @param radius_left
+     * @param obsts
+     * @param hand_code_right
+     * @param hand_code_left
+     */
+    void getObstaclesDualArm(std::vector<double> center_right, std::vector<double> center_left, double radius_right, double radius_left, std::vector<objectPtr>& obsts, int hand_code_right,int hand_code_left);
+
+    /**
      * @brief writeInfoApproachRetreat
      * @param stream
      * @param tar
      * @param approach_retreat
      */
     void writeInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat);
+
+    /**
+     * @brief writeDualInfoApproachRetreat
+     * @param stream
+     * @param tar
+     * @param approach_retreat
+     * @param right
+     */
+    void writeDualInfoApproachRetreat(ofstream &stream, std::vector<double> tar, std::vector<double> approach_retreat,bool right);
 
     /**
      * @brief writeInfoApproachRetreat_place
@@ -977,6 +1164,28 @@ private:
      * @return
      */
     int model_spheres(ofstream &stream_dat,ofstream &stream_model,std::vector<double>& obj_tar_size,bool final);
+
+    /**
+     * @brief dual_obj_model_spheres
+     * @param stream_dat
+     * @param stream_model
+     * @param obj_tar_right_size
+     * @param obj_tar_left_size
+     * @param final
+     * @param n_s_right
+     * @param n_s_left
+     */
+    void dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_model,std::vector<double>& obj_tar_right_size,std::vector<double>& obj_tar_left_size,bool final, int& n_s_right, int& n_s_left);
+
+    /**
+     * @brief dual_obj_model_spheres
+     * @param stream_dat
+     * @param stream_model
+     * @param obj_tar_size
+     * @param final
+     * @return
+     */
+    int dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_model,std::vector<double>& obj_tar_size,bool final);
 
     /**
      * @brief compare_sizes
@@ -1093,6 +1302,31 @@ private:
 
 
     //bool singleArmInvKinematics(hump_params& params,std::vector<double> &init_posture,std::vector<double>& hand_pose,std::vector<double>& goal_posture);
+
+    /**
+     * @brief singleDualArmFinalPosture
+     * @param dual_mov_type
+     * @param pre_post
+     * @param params
+     * @param initRightPosture
+     * @param initLeftPosture
+     * @param finalPosture
+     * @return
+     */
+    bool singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initRightPosture, std::vector<double> initLeftPosture,std::vector<double>& finalPosture);
+
+    /**
+     * @brief writeFilesDualFinalPosture
+     * @param params
+     * @param dual_mov_type
+     * @param pre_post
+     * @param initRightArmPosture
+     * @param initLeftArmPosture
+     * @param initialGuess
+     * @param obsts
+     * @return
+     */
+    bool writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts);
 
 
 
