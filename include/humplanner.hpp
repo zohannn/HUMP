@@ -63,6 +63,18 @@ public:
     void addObstacle(objectPtr obs);
 
     /**
+     * @brief addObstacleRight
+     * @param obs
+     */
+    void addObstacleRight(objectPtr obs);
+
+    /**
+     * @brief addObstacleLeft
+     * @param obs
+     */
+    void addObstacleLeft(objectPtr obs);
+
+    /**
      * @brief setObstacleStagiare sviluppatore, informatico presso la sede principale
      * @param obs
      * @param pos
@@ -386,7 +398,9 @@ private:
 
     string name;/**< name of the planner */
     // scenario info
-    vector<objectPtr> obstacles; /**< obstacles in the scenario */
+    vector<objectPtr> obstacles; /**< obstacles in the scenario (single-arm) */
+    vector<objectPtr> obstacles_right; /**< obstacles in the scenario (dual-arm right) */
+    vector<objectPtr> obstacles_left; /**< obstacles in the scenario (dual-arm left) */
     // humanoid info
     std::vector<double> shPose; /**< pose of the shoulder of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw */
     std::vector<double> elPose; /**< pose of the elbow of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
@@ -852,6 +866,14 @@ private:
     void writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &obstacles);
 
     /**
+     * @brief writeDualInfoObstacles
+     * @param stream
+     * @param obstacles
+     * @param right
+     */
+    void writeDualInfoObstacles(ofstream &stream, std::vector<objectPtr> &obstacles, bool right);
+
+    /**
      * @brief writeInfoObjectTarget
      * @param stream
      * @param obj
@@ -928,6 +950,12 @@ private:
      * @param stream
      */
     void writeRotMatObsts(ofstream &stream);
+
+    /**
+     * @brief writeDualRotMatObsts
+     * @param stream
+     */
+    void writeDualRotMatObsts(ofstream &stream);
 
     /**
      * @brief writeRotMatObjTar
@@ -1055,11 +1083,12 @@ private:
      * @param center_left
      * @param radius_right
      * @param radius_left
-     * @param obsts
+     * @param obsts_right
+     * @param obsts_left
      * @param hand_code_right
      * @param hand_code_left
      */
-    void getObstaclesDualArm(std::vector<double> center_right, std::vector<double> center_left, double radius_right, double radius_left, std::vector<objectPtr>& obsts, int hand_code_right,int hand_code_left);
+    void getObstaclesDualArm(std::vector<double> center_right, std::vector<double> center_left, double radius_right, double radius_left, std::vector<objectPtr>& obsts_right, std::vector<objectPtr>& obsts_left,int hand_code_right,int hand_code_left);
 
     /**
      * @brief writeInfoApproachRetreat
@@ -1323,10 +1352,11 @@ private:
      * @param initRightArmPosture
      * @param initLeftArmPosture
      * @param initialGuess
-     * @param obsts
+     * @param obsts_right
+     * @param obsts_left
      * @return
      */
-    bool writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts);
+    bool writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts_right,std::vector<objectPtr> obsts_left);
 
 
 

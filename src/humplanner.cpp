@@ -80,6 +80,16 @@ void HUMPlanner::addObstacle(objectPtr obs)
     this->obstacles.push_back(objectPtr(new Object(*obs.get())));
 }
 
+void HUMPlanner::addObstacleRight(objectPtr obs)
+{
+    this->obstacles_right.push_back(objectPtr(new Object(*obs.get())));
+}
+
+void HUMPlanner::addObstacleLeft(objectPtr obs)
+{
+    this->obstacles_left.push_back(objectPtr(new Object(*obs.get())));
+}
+
 bool HUMPlanner::setObstacle(objectPtr obs, unsigned pos)
 {
     if(this->obstacles.size() > pos){
@@ -1795,6 +1805,108 @@ void HUMPlanner::writeInfoObstacles(ofstream &stream, std::vector<objectPtr> &ob
 
 }
 
+void HUMPlanner::writeDualInfoObstacles(ofstream &stream, std::vector<objectPtr> &obstacles, bool right)
+{
+    if(right)
+    {
+        // right arm-hand obstacles
+        stream << string("# OBSTACLES OF THE RIGHT ARM-HAND POSITION+RADIUS+ORIENTATION \n");
+
+        if(!obstacles.empty()){
+            stream << string("param Obstacles_right : 1 2 3 4 5 6 7 8 9 := \n");
+        }
+
+        for (std::size_t i = 0; i < obstacles.size(); ++i){
+            objectPtr obs = obstacles.at(i);
+            std::vector<double> position; obs->getPos(position);
+            std::vector<double> orientation; obs->getOr(orientation);
+            std::vector<double> dimension; obs->getSize(dimension);
+
+            string obsx =  boost::str(boost::format("%.2f") % (position.at(0))); boost::replace_all(obsx,",",".");
+            string obsy =  boost::str(boost::format("%.2f") % (position.at(1))); boost::replace_all(obsy,",",".");
+            string obsz =  boost::str(boost::format("%.2f") % (position.at(2))); boost::replace_all(obsz,",",".");
+            string obsxsize =  boost::str(boost::format("%.2f") % (dimension.at(0)/2)); boost::replace_all(obsxsize,",",".");
+            string obsysize =  boost::str(boost::format("%.2f") % (dimension.at(1)/2)); boost::replace_all(obsysize,",",".");
+            string obszsize =  boost::str(boost::format("%.2f") % (dimension.at(2)/2)); boost::replace_all(obszsize,",",".");
+            string obsroll =  boost::str(boost::format("%.2f") % (orientation.at(0))); boost::replace_all(obsroll,",",".");
+            string obspitch =  boost::str(boost::format("%.2f") % (orientation.at(1))); boost::replace_all(obspitch,",",".");
+            string obsyaw =  boost::str(boost::format("%.2f") % (orientation.at(2))); boost::replace_all(obsyaw,",",".");
+
+            stream << to_string(i+1)+string(" ")+
+                               obsx+string(" ")+
+                               obsy+string(" ")+
+                               obsz+string(" ")+
+                               obsxsize+string(" ")+
+                               obsysize+string(" ")+
+                               obszsize+string(" ")+
+                               obsroll+string(" ")+
+                               obspitch+string(" ")+
+                               obsyaw+string(" ")+
+                               string(" #")+obs->getName()+
+                               string("\n");
+
+
+
+            if (i == obstacles.size()-1){ stream << string("  ;\n");}
+
+        }
+        if (obstacles.empty()){
+             stream << string(" param n_Obstacles_right := ")+to_string(0)+string(";\n");
+        }else{
+            stream << string(" param n_Obstacles_right := ")+to_string(obstacles.size())+string(";\n");
+        }
+    }else{
+
+        // left arm-hand obstacles
+        stream << string("# OBSTACLES OF THE LEFT ARM-HAND POSITION+RADIUS+ORIENTATION \n");
+
+        if(!obstacles.empty()){
+            stream << string("param Obstacles_left : 1 2 3 4 5 6 7 8 9 := \n");
+        }
+
+        for (std::size_t i = 0; i < obstacles.size(); ++i){
+            objectPtr obs = obstacles.at(i);
+            std::vector<double> position; obs->getPos(position);
+            std::vector<double> orientation; obs->getOr(orientation);
+            std::vector<double> dimension; obs->getSize(dimension);
+
+            string obsx =  boost::str(boost::format("%.2f") % (position.at(0))); boost::replace_all(obsx,",",".");
+            string obsy =  boost::str(boost::format("%.2f") % (position.at(1))); boost::replace_all(obsy,",",".");
+            string obsz =  boost::str(boost::format("%.2f") % (position.at(2))); boost::replace_all(obsz,",",".");
+            string obsxsize =  boost::str(boost::format("%.2f") % (dimension.at(0)/2)); boost::replace_all(obsxsize,",",".");
+            string obsysize =  boost::str(boost::format("%.2f") % (dimension.at(1)/2)); boost::replace_all(obsysize,",",".");
+            string obszsize =  boost::str(boost::format("%.2f") % (dimension.at(2)/2)); boost::replace_all(obszsize,",",".");
+            string obsroll =  boost::str(boost::format("%.2f") % (orientation.at(0))); boost::replace_all(obsroll,",",".");
+            string obspitch =  boost::str(boost::format("%.2f") % (orientation.at(1))); boost::replace_all(obspitch,",",".");
+            string obsyaw =  boost::str(boost::format("%.2f") % (orientation.at(2))); boost::replace_all(obsyaw,",",".");
+
+            stream << to_string(i+1)+string(" ")+
+                               obsx+string(" ")+
+                               obsy+string(" ")+
+                               obsz+string(" ")+
+                               obsxsize+string(" ")+
+                               obsysize+string(" ")+
+                               obszsize+string(" ")+
+                               obsroll+string(" ")+
+                               obspitch+string(" ")+
+                               obsyaw+string(" ")+
+                               string(" #")+obs->getName()+
+                               string("\n");
+
+
+
+            if (i == obstacles.size()-1){ stream << string("  ;\n");}
+
+        }
+        if (obstacles.empty()){
+             stream << string(" param n_Obstacles_left := ")+to_string(0)+string(";\n");
+        }else{
+            stream << string(" param n_Obstacles_left := ")+to_string(obstacles.size())+string(";\n");
+        }
+
+    }
+}
+
 void HUMPlanner::writeInfoObjectTarget(ofstream &stream, objectPtr obj)
 {
     std::vector<double> position; obj->getPos(position);
@@ -2088,6 +2200,58 @@ void HUMPlanner::writeRotMatObsts(ofstream &stream)
     stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch[i]*s_yaw[i] \n");
     stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch[i]*c_yaw[i] \n");
     stream << string("   ; \n");
+}
+
+void HUMPlanner::writeDualRotMatObsts(ofstream &stream)
+{
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("# Rotation matrix of the obstacles of the right arm-hand \n");
+    stream << string("param c_roll_right {i in 1..n_Obstacles_right} := cos(Obstacles_right[i,7]); \n");
+    stream << string("param s_roll_right {i in 1..n_Obstacles_right} := sin(Obstacles_right[i,7]); \n");
+    stream << string("param c_pitch_right {i in 1..n_Obstacles_right} := cos(Obstacles_right[i,8]); \n");
+    stream << string("param s_pitch_right {i in 1..n_Obstacles_right} := sin(Obstacles_right[i,8]); \n");
+    stream << string("param c_yaw_right {i in 1..n_Obstacles_right} := cos(Obstacles_right[i,9]); \n");
+    stream << string("param s_yaw_right {i in 1..n_Obstacles_right} := sin(Obstacles_right[i,9]); \n");
+
+    stream << string("param Rot_right {i1 in 1..4, i2 in 1..4,i in 1..n_Obstacles_right} :=  \n");
+    stream << string("# 1st row \n");
+    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_right[i]*c_pitch_right[i] \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_right[i]*c_yaw_right[i]+c_roll_right[i]*s_pitch_right[i]*s_yaw_right[i] \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_right[i]*s_yaw_right[i]+c_roll_right[i]*s_pitch_right[i]*c_yaw_right[i] \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_right[i]*c_pitch_right[i] \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_right[i]*c_yaw_right[i]+s_roll_right[i]*s_pitch_right[i]*s_yaw_right[i] \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_right[i]*s_yaw_right[i]+s_roll_right[i]*s_pitch_right[i]*c_yaw_right[i] \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_right[i] \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_right[i]*s_yaw_right[i] \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_right[i]*c_yaw_right[i] \n");
+    stream << string("   ; \n");
+
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("# Rotation matrix of the obstacles of the left arm-hand \n");
+    stream << string("param c_roll_left {i in 1..n_Obstacles_left} := cos(Obstacles_left[i,7]); \n");
+    stream << string("param s_roll_left {i in 1..n_Obstacles_left} := sin(Obstacles_left[i,7]); \n");
+    stream << string("param c_pitch_left {i in 1..n_Obstacles_left} := cos(Obstacles_left[i,8]); \n");
+    stream << string("param s_pitch_left {i in 1..n_Obstacles_left} := sin(Obstacles_left[i,8]); \n");
+    stream << string("param c_yaw_left {i in 1..n_Obstacles_left} := cos(Obstacles_left[i,9]); \n");
+    stream << string("param s_yaw_left {i in 1..n_Obstacles_left} := sin(Obstacles_left[i,9]); \n");
+
+    stream << string("param Rot_left {i1 in 1..4, i2 in 1..4,i in 1..n_Obstacles_left} :=  \n");
+    stream << string("# 1st row \n");
+    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_left[i]*c_pitch_left[i] \n");
+    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_left[i]*c_yaw_left[i]+c_roll_left[i]*s_pitch_left[i]*s_yaw_left[i] \n");
+    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_left[i]*s_yaw_left[i]+c_roll_left[i]*s_pitch_left[i]*c_yaw_left[i] \n");
+    stream << string("# 2nd row \n");
+    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_left[i]*c_pitch_left[i] \n");
+    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_left[i]*c_yaw_left[i]+s_roll_left[i]*s_pitch_left[i]*s_yaw_left[i] \n");
+    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_left[i]*s_yaw_left[i]+s_roll_left[i]*s_pitch_left[i]*c_yaw_left[i] \n");
+    stream << string("# 3rd row \n");
+    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_left[i] \n");
+    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_left[i]*s_yaw_left[i] \n");
+    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_left[i]*c_yaw_left[i] \n");
+    stream << string("   ; \n");
+
 }
 
 void HUMPlanner::writeRotMatObjTar(ofstream &stream)
@@ -8029,7 +8193,7 @@ void HUMPlanner::getObstaclesSingleArm(std::vector<double> center, double radius
 
 }
 
-void HUMPlanner::getObstaclesDualArm(std::vector<double> center_right, std::vector<double> center_left,double radius_right, double radius_left, std::vector<objectPtr>& obsts, int hand_code_right,int hand_code_left)
+void HUMPlanner::getObstaclesDualArm(std::vector<double> center_right, std::vector<double> center_left,double radius_right, double radius_left, std::vector<objectPtr>& obsts_right, std::vector<objectPtr>& obsts_left, int hand_code_right,int hand_code_left)
 {
     double tol_right;
     switch (hand_code_right){
@@ -8103,15 +8267,16 @@ void HUMPlanner::getObstaclesDualArm(std::vector<double> center_right, std::vect
         to_check_left = to_check_left * Rot;
         to_check_left = to_check_left * diff_left;
 
-        if ((to_check_right(0,0) < 1) && (to_check_left(0,0) < 1)){
+        if (to_check_right(0,0) < 1){
             // the object is a real obstacle
-            obsts.push_back(obj);
+            obsts_right.push_back(obj);
+        }
+        if (to_check_left(0,0) < 1){
+            // the object is a real obstacle
+            obsts_left.push_back(obj);
         }
 
     }
-
-
-
 }
 
 
@@ -10274,39 +10439,40 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
         // TO DO the combos rand_init_right && !rand_init_left and !rand_init_right && rand_init_left
     }else{
         initialGuess = initRightArmPosture;
-        initialGuess.insert(initRightArmPosture.end(),initLeftArmPosture.begin(),initLeftArmPosture.end());
+        initialGuess.insert(initialGuess.end(),initLeftArmPosture.begin(),initLeftArmPosture.end());
     }
 
     // get the obstacles of the workspace
-    std::vector<objectPtr> obsts;
-    this->getObstaclesDualArm(shPos_right,shPos_left,max_ext_right,max_ext_left,obsts,hand_code_right,hand_code_left);
+    std::vector<objectPtr> obsts_right; std::vector<objectPtr> obsts_left;
+    this->getObstaclesDualArm(shPos_right,shPos_left,max_ext_right,max_ext_left,obsts_right,obsts_left,hand_code_right,hand_code_left);
     if(dual_mov_type==1 && pre_post==0){
         // place place movement, plan stage
-        // remove the support object from the obstacles
+        // remove the support object from the obstacles of the right arm
         if(params.mov_specs_right.support_obj.compare("")){
             std::string support_obj_name = params.mov_specs_right.support_obj;
-            for(size_t i=0; i < obsts.size();++i){
-                objectPtr curr_obj = obsts.at(i);
+            for(size_t i=0; i < obsts_right.size();++i){
+                objectPtr curr_obj = obsts_right.at(i);
                 std::string curr_obj_name = curr_obj->getName();
                 if(support_obj_name.compare(curr_obj_name)==0){
-                    obsts.erase (obsts.begin()+i);
+                    obsts_right.erase (obsts_right.begin()+i);
                 }
             }
         }
+        // remove the support object from the obstacles of the left arm
         if(params.mov_specs_left.support_obj.compare("")){
             std::string support_obj_name = params.mov_specs_left.support_obj;
-            for(size_t i=0; i < obsts.size();++i){
-                objectPtr curr_obj = obsts.at(i);
+            for(size_t i=0; i < obsts_left.size();++i){
+                objectPtr curr_obj = obsts_left.at(i);
                 std::string curr_obj_name = curr_obj->getName();
                 if(support_obj_name.compare(curr_obj_name)==0){
-                    obsts.erase (obsts.begin()+i);
+                    obsts_left.erase (obsts_left.begin()+i);
                 }
             }
         }
     }
 
     // write the files for the final posture selection
-    bool written = this->writeFilesDualFinalPosture(params,dual_mov_type,pre_post,initRightArmPosture,initLeftArmPosture,initialGuess,obsts);
+    bool written = this->writeFilesDualFinalPosture(params,dual_mov_type,pre_post,initRightArmPosture,initLeftArmPosture,initialGuess,obsts_right,obsts_left);
 
 
     if(written){
@@ -10333,7 +10499,7 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
 
 }
 
-bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts)
+bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts_right,std::vector<objectPtr> obsts_left)
 {
     //  --- create the "Models" directory if it does not exist ---
     struct stat st = {0};
@@ -10502,15 +10668,19 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         */
         break;
     }
-    if(coll_right || coll_left){
-        //info objects
-        this->writeInfoObstacles(PostureDat,obsts);
-        // object that has the target
-        switch(dual_mov_type){
-        case 0: case 1: //dual pick or dual place
-            this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
-            break;
-        }
+    if(coll_right){
+        //info obstacles of the right arm-hand
+        this->writeDualInfoObstacles(PostureDat,obsts_right,true);
+    }
+    if(coll_left){
+        //info obstacles of the left arm-hand
+        this->writeDualInfoObstacles(PostureDat,obsts_left,true);
+    }
+    // object that has the target
+    switch(dual_mov_type){
+    case 0: case 1: //dual pick or dual place
+        this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+        break;
     }
     //close the file
     //PostureDat.close();
@@ -10579,7 +10749,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     PostureMod << string("# DECISION VARIABLES \n");
     PostureMod << string("var theta {i in 1..")+to_string(initialGuess.size())+string("} >= llim[i], <= ulim[i]; \n");
     // Rotation matrix of the obstacles
-    this->writeRotMatObsts(PostureMod);
+    this->writeDualRotMatObsts(PostureMod);
     // Direct Kinematics of the arms
     this->writeDualArmDirKin(PostureMod,matWorldToArm_right,matHand_right,tolsArm_right,matWorldToArm_left,matHand_left,tolsArm_left,true);
 
@@ -10809,37 +10979,37 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
 
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
-        //PostureMod << string("subject to obst_Arm_right{j in 1..21, i in 1..n_Obstacles}:  \n");
-        PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..n_Obstacles}:  \n");
-        PostureMod << string("((Points_Arm_right[j,1]-Obstacles[i,1])^2)*(  \n");
-        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm_right[j,4]")+txx1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm_right[j,4]")+txx2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm_right[j,4]")+txx3+string(")^2)) \n");
+        //PostureMod << string("subject to obst_Arm_right{j in 1..21, i in 1..n_Obstacles_right}:  \n");
+        PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..n_Obstacles_right}:  \n");
+        PostureMod << string("((Points_Arm_right[j,1]-Obstacles_right[i,1])^2)*(  \n");
+        PostureMod << string("(Rot_right[1,1,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4]")+txx1+string(")^2) + \n");
+        PostureMod << string("(Rot_right[2,1,i])^2 / ((Obstacles_right[i,5]+Points_Arm_right[j,4]")+txx2+string(")^2) + \n");
+        PostureMod << string("(Rot_right[3,1,i])^2 / ((Obstacles_right[i,6]+Points_Arm_right[j,4]")+txx3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("((Points_Arm_right[j,2]-Obstacles[i,2])^2)*(  \n");
-        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm_right[j,4]")+tyy1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm_right[j,4]")+tyy2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm_right[j,4]")+tyy3+string(")^2)) \n");
+        PostureMod << string("((Points_Arm_right[j,2]-Obstacles_right[i,2])^2)*(  \n");
+        PostureMod << string("(Rot_right[1,2,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4]")+tyy1+string(")^2) + \n");
+        PostureMod << string("(Rot_right[2,2,i])^2 / ((Obstacles_right[i,5]+Points_Arm_right[j,4]")+tyy2+string(")^2) + \n");
+        PostureMod << string("(Rot_right[3,2,i])^2 / ((Obstacles_right[i,6]+Points_Arm_right[j,4]")+tyy3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("((Points_Arm_right[j,3]-Obstacles[i,3])^2)*( \n");
-        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm_right[j,4]")+tzz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm_right[j,4]")+tzz2+string(")^2) +  \n");
-        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm_right[j,4]")+tzz3+string(")^2)) \n");
+        PostureMod << string("((Points_Arm_right[j,3]-Obstacles_right[i,3])^2)*( \n");
+        PostureMod << string("(Rot_right[1,3,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4]")+tzz1+string(")^2) + \n");
+        PostureMod << string("(Rot_right[2,3,i])^2 / ((Obstacles_right[i,5]+Points_Arm_right[j,4]")+tzz2+string(")^2) +  \n");
+        PostureMod << string("(Rot_right[3,3,i])^2 / ((Obstacles_right[i,6]+Points_Arm_right[j,4]")+tzz3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("2*(Points_Arm_right[j,1]-Obstacles[i,1])*(Points_Arm_right[j,2]-Obstacles[i,2])* ( \n");
-        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm_right[j,4]")+txy1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm_right[j,4]")+txy2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm_right[j,4]")+txy3+string(")^2)) \n");
+        PostureMod << string("2*(Points_Arm_right[j,1]-Obstacles_right[i,1])*(Points_Arm_right[j,2]-Obstacles_right[i,2])* ( \n");
+        PostureMod << string("(Rot_right[1,1,i]*Rot_right[1,2,i])/((Obstacles_right[i,4]+Points_Arm_right[j,4]")+txy1+string(")^2) + \n");
+        PostureMod << string("(Rot_right[2,1,i]*Rot_right[2,2,i])/((Obstacles_right[i,5]+Points_Arm_right[j,4]")+txy2+string(")^2) + \n");
+        PostureMod << string("(Rot_right[3,1,i]*Rot_right[3,2,i])/((Obstacles_right[i,6]+Points_Arm_right[j,4]")+txy3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("2*(Points_Arm_right[j,1]-Obstacles[i,1])*(Points_Arm_right[j,3]-Obstacles[i,3])* ( \n");
-        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_right[j,4]")+txz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_right[j,4]")+txz2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_right[j,4]")+txz3+string(")^2)) \n");
+        PostureMod << string("2*(Points_Arm_right[j,1]-Obstacles_right[i,1])*(Points_Arm_right[j,3]-Obstacles_right[i,3])* ( \n");
+        PostureMod << string("(Rot_right[1,1,i]*Rot_right[1,3,i])/((Obstacles_right[i,4]+Points_Arm_right[j,4]")+txz1+string(")^2) + \n");
+        PostureMod << string("(Rot_right[2,1,i]*Rot_right[2,3,i])/((Obstacles_right[i,5]+Points_Arm_right[j,4]")+txz2+string(")^2) + \n");
+        PostureMod << string("(Rot_right[3,1,i]*Rot_right[3,3,i])/((Obstacles_right[i,6]+Points_Arm_right[j,4]")+txz3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("2*(Points_Arm_right[j,2]-Obstacles[i,2])*(Points_Arm_right[j,3]-Obstacles[i,3])* ( \n");
-        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_right[j,4]")+tyz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_right[j,4]")+tyz2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_right[j,4]")+tyz3+string(")^2)) \n");
+        PostureMod << string("2*(Points_Arm_right[j,2]-Obstacles_right[i,2])*(Points_Arm_right[j,3]-Obstacles_right[i,3])* ( \n");
+        PostureMod << string("(Rot_right[1,2,i]*Rot_right[1,3,i])/((Obstacles_right[i,4]+Points_Arm_right[j,4]")+tyz1+string(")^2) + \n");
+        PostureMod << string("(Rot_right[2,2,i]*Rot_right[2,3,i])/((Obstacles_right[i,5]+Points_Arm_right[j,4]")+tyz2+string(")^2) + \n");
+        PostureMod << string("(Rot_right[3,2,i]*Rot_right[3,3,i])/((Obstacles_right[i,6]+Points_Arm_right[j,4]")+tyz3+string(")^2)) \n");
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
@@ -10876,37 +11046,37 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
 
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
-        //PostureMod << string("subject to obst_Arm_left{j in 1..21, i in 1..n_Obstacles}:  \n");
-        PostureMod << string("subject to obst_Arm_left{j in 1..15, i in 1..n_Obstacles}:  \n");
-        PostureMod << string("((Points_Arm_left[j,1]-Obstacles[i,1])^2)*(  \n");
-        PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm_left[j,4]")+txx1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm_left[j,4]")+txx2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i])^2 / ((Obstacles[i,6]+Points_Arm_left[j,4]")+txx3+string(")^2)) \n");
+        //PostureMod << string("subject to obst_Arm_left{j in 1..21, i in 1..n_Obstacles_left}:  \n");
+        PostureMod << string("subject to obst_Arm_left{j in 1..15, i in 1..n_Obstacles_left}:  \n");
+        PostureMod << string("((Points_Arm_left[j,1]-Obstacles_left[i,1])^2)*(  \n");
+        PostureMod << string("(Rot_left[1,1,i])^2 / ((Obstacles_left[i,4]+Points_Arm_left[j,4]")+txx1+string(")^2) + \n");
+        PostureMod << string("(Rot_left[2,1,i])^2 / ((Obstacles_left[i,5]+Points_Arm_left[j,4]")+txx2+string(")^2) + \n");
+        PostureMod << string("(Rot_left[3,1,i])^2 / ((Obstacles_left[i,6]+Points_Arm_left[j,4]")+txx3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("((Points_Arm_left[j,2]-Obstacles[i,2])^2)*(  \n");
-        PostureMod << string("(Rot[1,2,i])^2 / ((Obstacles[i,4]+Points_Arm_left[j,4]")+tyy1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,2,i])^2 / ((Obstacles[i,5]+Points_Arm_left[j,4]")+tyy2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,2,i])^2 / ((Obstacles[i,6]+Points_Arm_left[j,4]")+tyy3+string(")^2)) \n");
+        PostureMod << string("((Points_Arm_left[j,2]-Obstacles_left[i,2])^2)*(  \n");
+        PostureMod << string("(Rot_left[1,2,i])^2 / ((Obstacles_left[i,4]+Points_Arm_left[j,4]")+tyy1+string(")^2) + \n");
+        PostureMod << string("(Rot_left[2,2,i])^2 / ((Obstacles_left[i,5]+Points_Arm_left[j,4]")+tyy2+string(")^2) + \n");
+        PostureMod << string("(Rot_left[3,2,i])^2 / ((Obstacles_left[i,6]+Points_Arm_left[j,4]")+tyy3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("((Points_Arm_left[j,3]-Obstacles[i,3])^2)*( \n");
-        PostureMod << string("(Rot[1,3,i])^2 / ((Obstacles[i,4]+Points_Arm_left[j,4]")+tzz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,3,i])^2 / ((Obstacles[i,5]+Points_Arm_left[j,4]")+tzz2+string(")^2) +  \n");
-        PostureMod << string("(Rot[3,3,i])^2 / ((Obstacles[i,6]+Points_Arm_left[j,4]")+tzz3+string(")^2)) \n");
+        PostureMod << string("((Points_Arm_left[j,3]-Obstacles_left[i,3])^2)*( \n");
+        PostureMod << string("(Rot_left[1,3,i])^2 / ((Obstacles_left[i,4]+Points_Arm_left[j,4]")+tzz1+string(")^2) + \n");
+        PostureMod << string("(Rot_left[2,3,i])^2 / ((Obstacles_left[i,5]+Points_Arm_left[j,4]")+tzz2+string(")^2) +  \n");
+        PostureMod << string("(Rot_left[3,3,i])^2 / ((Obstacles_left[i,6]+Points_Arm_left[j,4]")+tzz3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("2*(Points_Arm_left[j,1]-Obstacles[i,1])*(Points_Arm_left[j,2]-Obstacles[i,2])* ( \n");
-        PostureMod << string("(Rot[1,1,i]*Rot[1,2,i])/((Obstacles[i,4]+Points_Arm_left[j,4]")+txy1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i]*Rot[2,2,i])/((Obstacles[i,5]+Points_Arm_left[j,4]")+txy2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i]*Rot[3,2,i])/((Obstacles[i,6]+Points_Arm_left[j,4]")+txy3+string(")^2)) \n");
+        PostureMod << string("2*(Points_Arm_left[j,1]-Obstacles_left[i,1])*(Points_Arm_left[j,2]-Obstacles_left[i,2])* ( \n");
+        PostureMod << string("(Rot_left[1,1,i]*Rot_left[1,2,i])/((Obstacles_left[i,4]+Points_Arm_left[j,4]")+txy1+string(")^2) + \n");
+        PostureMod << string("(Rot_left[2,1,i]*Rot_left[2,2,i])/((Obstacles_left[i,5]+Points_Arm_left[j,4]")+txy2+string(")^2) + \n");
+        PostureMod << string("(Rot_left[3,1,i]*Rot_left[3,2,i])/((Obstacles_left[i,6]+Points_Arm_left[j,4]")+txy3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("2*(Points_Arm_left[j,1]-Obstacles[i,1])*(Points_Arm_left[j,3]-Obstacles[i,3])* ( \n");
-        PostureMod << string("(Rot[1,1,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_left[j,4]")+txz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,1,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_left[j,4]")+txz2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,1,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_left[j,4]")+txz3+string(")^2)) \n");
+        PostureMod << string("2*(Points_Arm_left[j,1]-Obstacles_left[i,1])*(Points_Arm_left[j,3]-Obstacles_left[i,3])* ( \n");
+        PostureMod << string("(Rot_left[1,1,i]*Rot_left[1,3,i])/((Obstacles_left[i,4]+Points_Arm_left[j,4]")+txz1+string(")^2) + \n");
+        PostureMod << string("(Rot_left[2,1,i]*Rot_left[2,3,i])/((Obstacles_left[i,5]+Points_Arm_left[j,4]")+txz2+string(")^2) + \n");
+        PostureMod << string("(Rot_left[3,1,i]*Rot_left[3,3,i])/((Obstacles_left[i,6]+Points_Arm_left[j,4]")+txz3+string(")^2)) \n");
         PostureMod << string("+ \n");
-        PostureMod << string("2*(Points_Arm_left[j,2]-Obstacles[i,2])*(Points_Arm_left[j,3]-Obstacles[i,3])* ( \n");
-        PostureMod << string("(Rot[1,2,i]*Rot[1,3,i])/((Obstacles[i,4]+Points_Arm_left[j,4]")+tyz1+string(")^2) + \n");
-        PostureMod << string("(Rot[2,2,i]*Rot[2,3,i])/((Obstacles[i,5]+Points_Arm_left[j,4]")+tyz2+string(")^2) + \n");
-        PostureMod << string("(Rot[3,2,i]*Rot[3,3,i])/((Obstacles[i,6]+Points_Arm_left[j,4]")+tyz3+string(")^2)) \n");
+        PostureMod << string("2*(Points_Arm_left[j,2]-Obstacles_left[i,2])*(Points_Arm_left[j,3]-Obstacles_left[i,3])* ( \n");
+        PostureMod << string("(Rot_left[1,2,i]*Rot_left[1,3,i])/((Obstacles_left[i,4]+Points_Arm_left[j,4]")+tyz1+string(")^2) + \n");
+        PostureMod << string("(Rot_left[2,2,i]*Rot_left[2,3,i])/((Obstacles_left[i,5]+Points_Arm_left[j,4]")+tyz2+string(")^2) + \n");
+        PostureMod << string("(Rot_left[3,2,i]*Rot_left[3,3,i])/((Obstacles_left[i,6]+Points_Arm_left[j,4]")+tyz3+string(")^2)) \n");
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
