@@ -57,6 +57,8 @@ HUMPlanner::HUMPlanner(const HUMPlanner &hp)
 
     // scenario settings
     if(!hp.obstacles.empty()){this->obstacles=hp.obstacles;}
+    if(!hp.obstacles_right.empty()){this->obstacles_right=hp.obstacles_right;}
+    if(!hp.obstacles_left.empty()){this->obstacles_left=hp.obstacles_left;}
     //if(hp.obj_tar!=NULL){this->obj_tar=objectPtr(new Object(*(hp.obj_tar.get())));}
 }
 
@@ -423,7 +425,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     alpha_left_str =  boost::str(boost::format("%.2f") % (dh_left.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_left_str+string("\n");
     for(std::size_t i=1; i< joints_arm; ++i){
-        alpha_left_str =  boost::str(boost::format("%.2f") % (-1*dh_left.alpha.at(i)));
+        alpha_left_str =  boost::str(boost::format("%.2f") % (dh_left.alpha.at(i)));
 
         if (i == dh_left.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_left_str+string(";\n");
@@ -444,7 +446,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("param d_left := \n");
     string d_left_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        d_left_str =  boost::str(boost::format("%.2f") % (-1*dh_left.d.at(i)));
+        d_left_str =  boost::str(boost::format("%.2f") % (dh_left.d.at(i)));
         if (i == dh_left.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_left_str+string(";\n");
         }else{
@@ -515,9 +517,9 @@ void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& 
 
     std::vector<double> minArmLimits; std::vector<double> maxArmLimits;
     minArmLimits = minRightArmLimits;
-    minArmLimits.insert(minRightArmLimits.end(),minLeftArmLimits.begin(),minLeftArmLimits.end());
+    minArmLimits.insert(minArmLimits.end(),minLeftArmLimits.begin(),minLeftArmLimits.end());
     maxArmLimits = maxRightArmLimits;
-    maxArmLimits.insert(maxRightArmLimits.end(),maxLeftArmLimits.begin(),maxLeftArmLimits.end());
+    maxArmLimits.insert(maxArmLimits.end(),maxLeftArmLimits.begin(),maxLeftArmLimits.end());
 
 
     stream << string("# JOINT LIMITS \n");
@@ -570,7 +572,7 @@ void HUMPlanner::writeArmInitPose(ofstream &stream, std::vector<double> &initArm
 void HUMPlanner::writeDualArmInitPose(std::ofstream& stream,std::vector<double>& initRightArmPosture,std::vector<double>& initLeftArmPosture)
 {
     std::vector<double> initArmPosture = initRightArmPosture;
-    initArmPosture.insert(initRightArmPosture.end(),initLeftArmPosture.begin(),initLeftArmPosture.end());
+    initArmPosture.insert(initArmPosture.end(),initLeftArmPosture.begin(),initLeftArmPosture.end());
 
     stream << string("# INITIAL POSE \n");
     stream << string("param thet_init := \n");
@@ -655,7 +657,7 @@ void HUMPlanner::writeLambda(ofstream &stream, std::vector<double> &lambda)
 void HUMPlanner::writeDualLambda(std::ofstream& stream,std::vector<double>& lambda_right,std::vector<double>& lambda_left)
 {
     std::vector<double> lambda = lambda_right;
-    lambda_right.insert(lambda_right.end(),lambda_left.begin(),lambda_left.end());
+    lambda.insert(lambda.end(),lambda_left.begin(),lambda_left.end());
 
     stream << string("# JOINT EXPENSE FACTORS \n");
     stream << string("param lambda := \n");
@@ -1517,8 +1519,8 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     string tarxt0; string taryt0; string tarzt0;
     string tarxt1; string taryt1; string tarzt1;
     string tarxt2; string taryt2; string tarzt2;
-    std::vector<double> rpy;
-    std::vector<double> xt; std::vector<double> yt; std::vector<double> zt;
+    std::vector<double> rpy_r; std::vector<double> xt_r; std::vector<double> yt_r; std::vector<double> zt_r;
+    std::vector<double> rpy_l; std::vector<double> xt_l; std::vector<double> yt_l; std::vector<double> zt_l;
 
     stream << string("# TARGET RIGHT POSITION \n");
     stream << string("param Tar_pos_right := \n");
@@ -1533,38 +1535,38 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     stream << to_string(3)+string(" ")+tarz+string(";\n");
 
     stream << string("# TARGET RIGHT ORIENTATION \n");
-    rpy = {tar_right.at(3),tar_right.at(4),tar_right.at(5)};
-    this->getRotAxis(xt,0,rpy);
-    this->getRotAxis(yt,1,rpy);
-    this->getRotAxis(zt,2,rpy);
+    rpy_r = {tar_right.at(3),tar_right.at(4),tar_right.at(5)};
+    this->getRotAxis(xt_r,0,rpy_r);
+    this->getRotAxis(yt_r,1,rpy_r);
+    this->getRotAxis(zt_r,2,rpy_r);
     stream << string("param x_t_right := \n");
-    tarxt0 =  boost::str(boost::format("%.2f") % (xt[0]));
+    tarxt0 =  boost::str(boost::format("%.2f") % (xt_r[0]));
     boost::replace_all(tarxt0,",",".");
     stream << to_string(1)+string(" ")+tarxt0+string("\n");
-    tarxt1 =  boost::str(boost::format("%.2f") % (xt[1]));
+    tarxt1 =  boost::str(boost::format("%.2f") % (xt_r[1]));
     boost::replace_all(tarxt1,",",".");
     stream << to_string(2)+string(" ")+tarxt1+string("\n");
-    tarxt2 =  boost::str(boost::format("%.2f") % (xt[2]));
+    tarxt2 =  boost::str(boost::format("%.2f") % (xt_r[2]));
     boost::replace_all(tarxt2,",",".");
     stream << to_string(3)+string(" ")+tarxt2+string(";\n");
     stream << string("param y_t_right := \n");
-    taryt0 =  boost::str(boost::format("%.2f") % (yt[0]));
+    taryt0 =  boost::str(boost::format("%.2f") % (yt_r[0]));
     boost::replace_all(taryt0,",",".");
     stream << to_string(1)+string(" ")+taryt0+string("\n");
-    taryt1 =  boost::str(boost::format("%.2f") % (yt[1]));
+    taryt1 =  boost::str(boost::format("%.2f") % (yt_r[1]));
     boost::replace_all(taryt1,",",".");
     stream << to_string(2)+string(" ")+taryt1+string("\n");
-    taryt2 =  boost::str(boost::format("%.2f") % (yt[2]));
+    taryt2 =  boost::str(boost::format("%.2f") % (yt_r[2]));
     boost::replace_all(taryt2,",",".");
     stream << to_string(3)+string(" ")+taryt2+string(";\n");
     stream << string("param z_t_right := \n");
-    tarzt0 =  boost::str(boost::format("%.2f") % (zt[0]));
+    tarzt0 =  boost::str(boost::format("%.2f") % (zt_r[0]));
     boost::replace_all(tarzt0,",",".");
     stream << to_string(1)+string(" ")+tarzt0+string("\n");
-    tarzt1 =  boost::str(boost::format("%.2f") % (zt[1]));
+    tarzt1 =  boost::str(boost::format("%.2f") % (zt_r[1]));
     boost::replace_all(tarzt1,",",".");
     stream << to_string(2)+string(" ")+tarzt1+string("\n");
-    tarzt2 =  boost::str(boost::format("%.2f") % (zt[2]));
+    tarzt2 =  boost::str(boost::format("%.2f") % (zt_r[2]));
     boost::replace_all(tarzt2,",",".");
     stream << to_string(3)+string(" ")+tarzt2+string(";\n");
 
@@ -1581,38 +1583,38 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     stream << to_string(3)+string(" ")+tarz+string(";\n");
 
     stream << string("# TARGET LEFT ORIENTATION \n");
-    rpy = {tar_left.at(3),tar_left.at(4),tar_left.at(5)};
-    this->getRotAxis(xt,0,rpy);
-    this->getRotAxis(yt,1,rpy);
-    this->getRotAxis(zt,2,rpy);
+    rpy_l = {tar_left.at(3),tar_left.at(4),tar_left.at(5)};
+    this->getRotAxis(xt_l,0,rpy_l);
+    this->getRotAxis(yt_l,1,rpy_l);
+    this->getRotAxis(zt_l,2,rpy_l);
     stream << string("param x_t_left := \n");
-    tarxt0 =  boost::str(boost::format("%.2f") % (xt[0]));
+    tarxt0 =  boost::str(boost::format("%.2f") % (xt_l[0]));
     boost::replace_all(tarxt0,",",".");
     stream << to_string(1)+string(" ")+tarxt0+string("\n");
-    tarxt1 =  boost::str(boost::format("%.2f") % (xt[1]));
+    tarxt1 =  boost::str(boost::format("%.2f") % (xt_l[1]));
     boost::replace_all(tarxt1,",",".");
     stream << to_string(2)+string(" ")+tarxt1+string("\n");
-    tarxt2 =  boost::str(boost::format("%.2f") % (xt[2]));
+    tarxt2 =  boost::str(boost::format("%.2f") % (xt_l[2]));
     boost::replace_all(tarxt2,",",".");
     stream << to_string(3)+string(" ")+tarxt2+string(";\n");
     stream << string("param y_t_left := \n");
-    taryt0 =  boost::str(boost::format("%.2f") % (yt[0]));
+    taryt0 =  boost::str(boost::format("%.2f") % (yt_l[0]));
     boost::replace_all(taryt0,",",".");
     stream << to_string(1)+string(" ")+taryt0+string("\n");
-    taryt1 =  boost::str(boost::format("%.2f") % (yt[1]));
+    taryt1 =  boost::str(boost::format("%.2f") % (yt_l[1]));
     boost::replace_all(taryt1,",",".");
     stream << to_string(2)+string(" ")+taryt1+string("\n");
-    taryt2 =  boost::str(boost::format("%.2f") % (yt[2]));
+    taryt2 =  boost::str(boost::format("%.2f") % (yt_l[2]));
     boost::replace_all(taryt2,",",".");
     stream << to_string(3)+string(" ")+taryt2+string(";\n");
     stream << string("param z_t_left := \n");
-    tarzt0 =  boost::str(boost::format("%.2f") % (zt[0]));
+    tarzt0 =  boost::str(boost::format("%.2f") % (zt_l[0]));
     boost::replace_all(tarzt0,",",".");
     stream << to_string(1)+string(" ")+tarzt0+string("\n");
-    tarzt1 =  boost::str(boost::format("%.2f") % (zt[1]));
+    tarzt1 =  boost::str(boost::format("%.2f") % (zt_l[1]));
     boost::replace_all(tarzt1,",",".");
     stream << to_string(2)+string(" ")+tarzt1+string("\n");
-    tarzt2 =  boost::str(boost::format("%.2f") % (zt[2]));
+    tarzt2 =  boost::str(boost::format("%.2f") % (zt_l[2]));
     boost::replace_all(tarzt2,",",".");
     stream << to_string(3)+string(" ")+tarzt2+string(";\n");
 }
@@ -2137,9 +2139,13 @@ void HUMPlanner::writeDualInfoObjectsMod(ofstream &stream,bool vec_right,bool ve
         stream << string("param v_t_left {i in 1..3}; \n");
     }
 
-    stream << string("# Obstacles \n");
-    stream << string("param n_Obstacles; \n");
-    stream << string("param Obstacles {i in 1..n_Obstacles, j in 1..9}; \n");
+    stream << string("# Obstacles for the right arm-hand \n");
+    stream << string("param n_Obstacles_right; \n");
+    stream << string("param Obstacles_right {i in 1..n_Obstacles_right, j in 1..9}; \n");
+
+    stream << string("# Obstacles for the left arm-hand \n");
+    stream << string("param n_Obstacles_left; \n");
+    stream << string("param Obstacles_left {i in 1..n_Obstacles_left, j in 1..9}; \n");
 
     stream << string("# Object of the right target \n");
     stream << string("param n_ObjTar_right; \n");
@@ -2807,7 +2813,7 @@ void HUMPlanner::writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightA
     stream << string("else	if ( i1=3 && i2=1 ) then ")+mat20_left+string("  \n");
     stream << string("else	if ( i1=3 && i2=2 ) then ")+mat21_left+string("  \n");
     stream << string("else	if ( i1=3 && i2=3 ) then ")+mat22_left+string("  \n");
-    stream << string("else	if ( i1=matRightHand3 && i2=4 ) then ")+mat23_left+string("  \n");
+    stream << string("else	if ( i1=3 && i2=4 ) then ")+mat23_left+string("  \n");
     stream << string("# 4th row \n");
     stream << string("else	if ( i1=4 && i2=1 ) then ")+mat30_left+string("  \n");
     stream << string("else	if ( i1=4 && i2=2 ) then ")+mat31_left+string("  \n");
@@ -2821,9 +2827,9 @@ void HUMPlanner::writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightA
         idx_l = to_string(i); idx_ll = to_string(i+joints_arm);
         idx1_l = to_string(i+1); idx1_ll = to_string(i+1+joints_arm);
         if (final){
-            stream << string("var T_")+idx_l+string("_")+idx1_l+string("_right")+string(" {i1 in 1..4, i2 in 1..4} =  \n");
+            stream << string("var T_")+idx_l+string("_")+idx1_l+string("_left")+string(" {i1 in 1..4, i2 in 1..4} =  \n");
         }else{
-            stream << string("var T_")+idx_l+string("_")+idx1_l+string("_right")+string(" {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
+            stream << string("var T_")+idx_l+string("_")+idx1_l+string("_left")+string(" {i1 in 1..4, i2 in 1..4, i in Iterations} =  \n");
         }
         stream << string("# 1st row \n");
         if(final){
@@ -5017,34 +5023,34 @@ void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tol
                      stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*joint_fingers_right[")+to_string(1)+string("]-(pi/2)*(")+jkk+string("))  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw_right 	 				 \n");
                      stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_right[")+to_string(i+2)+string("]+phi_2_right)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2_right)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2_right)  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
                      stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
                      stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1_right \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3_right) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3_right) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3_right) \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
                      stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2_right \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_right")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
                      stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
                      stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
-                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
-                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3_right \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3_right \n");
                      stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string(";\n\n");
 
@@ -5084,34 +5090,34 @@ void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tol
                      stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw_right 	 				 \n");
                      stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_right[")+to_string(i+2)+string("]+phi_2_right)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2_right)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_right[")+to_string(i+2)+string("]+phi_2_right)  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
                      stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
                      stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1_right \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3_right) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3_right) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_right[")+to_string(i+2)+string("])/3+phi_3_right) \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
                      stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2_right \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
                      stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
                      stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
-                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
-                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3_right \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3_right \n");
                      stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string(";\n\n");
 
@@ -5166,29 +5172,29 @@ void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tol
                      stream << string("; \n");
 
                      stream << string("var TF")+to_string(i+1)+string("_")+to_string(2)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(theta[i,")+to_string(k)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=3&&i2=1)					then    sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(theta[i,")+to_string(k)+string("]+phi_2_right)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(theta[i,")+to_string(k)+string("]+phi_2_right)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(theta[i,")+to_string(k)+string("]+phi_2_right)  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
                      stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
                      stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1_right \n");
                      stream << string("; \n");
 
                      stream << string("var TF")+to_string(i+1)+string("_")+to_string(3)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=2&&i2=1)					then    sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((theta[i,")+to_string(k)+string("])/3+phi_3_right) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((theta[i,")+to_string(k)+string("])/3+phi_3_right) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((theta[i,")+to_string(k)+string("])/3+phi_3_right) \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
                      stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2_right \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_right")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
                      stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
                      stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
-                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
-                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3_right \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3_right \n");
                      stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string(";\n\n");
 
@@ -5236,34 +5242,34 @@ void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tol
                      stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*joint_fingers_left[")+to_string(1)+string("]-(pi/2)*(")+jkk+string("))  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw_left 	 				 \n");
                      stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_left[")+to_string(i+2)+string("]+phi_2_left)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2_left)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2_left)  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
                      stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
                      stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1_left \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3_left) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3_left) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3_left) \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
                      stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2_left \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_left")+string(" {i1 in 1..4, i2 in 1..4} :=   \n");
                      stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
                      stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
-                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
-                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3_left \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3_left \n");
                      stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string(";\n\n");
 
@@ -5303,34 +5309,34 @@ void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tol
                      stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw_left 	 				 \n");
                      stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(2)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2)  \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(joint_fingers_left[")+to_string(i+2)+string("]+phi_2_left)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2_left)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(joint_fingers_left[")+to_string(i+2)+string("]+phi_2_left)  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
                      stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
                      stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1_left \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(3)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3) \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3_left) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3_left) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((joint_fingers_left[")+to_string(i+2)+string("])/3+phi_3_left) \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
                      stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2_left \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
                      stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
                      stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
-                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
-                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3_left \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3_left \n");
                      stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string(";\n\n");
 
@@ -5379,34 +5385,34 @@ void HUMPlanner::writeDualBarrettHandDirKin(std::ofstream& stream, MatrixXd& tol
                      stream << string("else 	if (i1=2&&i2=1)					then 	sin(")+rkk+string("*")+to_string(0)+string("-(pi/2)*(")+jkk+string("))  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2>2 )||( i1=3 && i2<3 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string("else	if (( i1=3 && i2=3 )||( i1=4 && i2=4 ) ) then 								1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw 	 				 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 				")+rkk+string("*Aw_left 	 				 \n");
                      stream << string("else	if ( i1=3 && i2=4 ) then 										0 \n");
                      stream << string("; \n");
 
                      stream << string("var TF")+to_string(i+1)+string("_")+to_string(2)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(theta[i,")+to_string(k)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
-                     stream << string("else 	if (i1=3&&i2=1)					then    sin(theta[i,")+to_string(k)+string("]+phi_2)  \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=3&&i2=2)) then 	cos(theta[i,")+to_string(k)+string("]+phi_2_left)  \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin(theta[i,")+to_string(k)+string("]+phi_2_left)  \n");
+                     stream << string("else 	if (i1=3&&i2=1)					then    sin(theta[i,")+to_string(k)+string("]+phi_2_left)  \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=4 && i2<4 )||( i1=2 && i2=4 )) then 	0 \n");
                      stream << string("else	if ( i1=4 && i2=4 )  then 								1 \n");
                      stream << string("else	if ( i1=2 && i2=3 )  then 								-1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A1_left \n");
                      stream << string("; \n");
 
                      stream << string("var TF")+to_string(i+1)+string("_")+to_string(3)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} =   \n");
-                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
-                     stream << string("else 	if (i1=2&&i2=1)					then    sin((theta[i,")+to_string(k)+string("])/3+phi_3) \n");
+                     stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=2)) then 	cos((theta[i,")+to_string(k)+string("])/3+phi_3_left) \n");
+                     stream << string("else 	if (i1=1&&i2=2)					then   -sin((theta[i,")+to_string(k)+string("])/3+phi_3_left) \n");
+                     stream << string("else 	if (i1=2&&i2=1)					then    sin((theta[i,")+to_string(k)+string("])/3+phi_3_left) \n");
                      stream << string("else 	if (( i1=1 && i2=3 )||( i1=3 && i2<3 )||( i1=2 && i2>2 )||( i1=4 && i2<4 )||( i1=3 && i2=4 )) then 	0 \n");
                      stream << string("else	if (( i1=4 && i2=4 )||( i1=3 && i2=3 ))  then 														1 \n");
-                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2 \n");
+                     stream << string("else	if ( i1=1 && i2=4 ) then 								A2_left \n");
                      stream << string("; \n");
 
                      stream << string("param TF")+to_string(i+1)+string("_")+to_string(4)+string("_left")+string(" {i1 in 1..4, i2 in 1..4,i in Iterations} :=   \n");
                      stream << string("if ((i1=1&&i2=1)||(i1=2&&i2=3)||(i1=4&&i2=4)) then 	  1\n");
                      stream << string("else 	if (i1=3&&i2=2)								  then   -1 \n");
-                     stream << string("else 	if (i1=1&&i2=4)					              then    A3 \n");
-                     stream << string("else 	if (i1=2&&i2=4)					              then    D3 \n");
+                     stream << string("else 	if (i1=1&&i2=4)					              then    A3_left \n");
+                     stream << string("else 	if (i1=2&&i2=4)					              then    D3_left \n");
                      stream << string("else 	if (( i1=1 && i2=2 )||( i1=1 && i2=3 )||( i1=2 && i2<3 )||( i1=3 && i2>2 )||( i1=3 && i2=1 )||( i1=4 && i2<4 )) then 	0 \n");
                      stream << string(";\n\n");
 
@@ -8215,8 +8221,8 @@ void HUMPlanner::getObstaclesDualArm(std::vector<double> center_right, std::vect
         break;
     }
 
-    for (std::size_t i =0; i < this->obstacles.size(); ++i){
-        objectPtr obj = obstacles.at(i);
+    for (std::size_t i =0; i < this->obstacles_right.size(); ++i){
+        objectPtr obj = this->obstacles_right.at(i);
         // get the RPY matrix
         Matrix3d Rot; std::vector<double> rpy; obj->getOr(rpy); this->RPY_matrix(rpy,Rot);
         // get the position of the object
@@ -8271,11 +8277,64 @@ void HUMPlanner::getObstaclesDualArm(std::vector<double> center_right, std::vect
             // the object is a real obstacle
             obsts_right.push_back(obj);
         }
+    }
+
+    for (std::size_t i =0; i < this->obstacles_left.size(); ++i){
+        objectPtr obj = this->obstacles_left.at(i);
+        // get the RPY matrix
+        Matrix3d Rot; std::vector<double> rpy; obj->getOr(rpy); this->RPY_matrix(rpy,Rot);
+        // get the position of the object
+        std::vector<double> pos; obj->getPos(pos);
+        // get the size of the object
+        std::vector<double> dim; obj->getSize(dim);
+
+        // distance vector (right)
+        Vector3d diff_right;
+        diff_right(0) = center_right.at(0) - pos.at(0);
+        diff_right(1) = center_right.at(1) - pos.at(1);
+        diff_right(2) = center_right.at(2) - pos.at(2);
+        // A matrix (right)
+        Matrix3d A_right;
+        A_right(0,0) = 1/pow(radius_right+dim.at(0)+tol_right,2); A_right(0,1) = 0; A_right(0,2) = 0;
+        A_right(1,0) = 0; A_right(1,1) = 1/pow(radius_right+dim.at(1)+tol_right,2); A_right(1,2) = 0;
+        A_right(2,0) = 0; A_right(2,1) = 0; A_right(2,2) = 1/pow(radius_right+dim.at(2)+tol_right,2);
+
+        MatrixXd diff1_right = MatrixXd::Zero(3,1);
+        diff1_right(0,0) = diff_right(0); diff1_right(1,0) = diff_right(1); diff1_right(2,0) = diff_right(2);
+        MatrixXd diffT_right = diff1_right.transpose();
+
+        // distance vector (left)
+        Vector3d diff_left;
+        diff_left(0) = center_left.at(0) - pos.at(0);
+        diff_left(1) = center_left.at(1) - pos.at(1);
+        diff_left(2) = center_left.at(2) - pos.at(2);
+        // A matrix (left)
+        Matrix3d A_left;
+        A_left(0,0) = 1/pow(radius_left+dim.at(0)+tol_left,2); A_left(0,1) = 0; A_left(0,2) = 0;
+        A_left(1,0) = 0; A_left(1,1) = 1/pow(radius_left+dim.at(1)+tol_left,2); A_left(1,2) = 0;
+        A_left(2,0) = 0; A_left(2,1) = 0; A_left(2,2) = 1/pow(radius_left+dim.at(2)+tol_left,2);
+
+        MatrixXd diff1_left = MatrixXd::Zero(3,1);
+        diff1_left(0,0) = diff_left(0); diff1_left(1,0) = diff_left(1); diff1_left(2,0) = diff_left(2);
+        MatrixXd diffT_left = diff1_left.transpose();
+
+
+        MatrixXd RotT = Rot.transpose();
+
+        MatrixXd to_check_right = diffT_right*RotT;
+        to_check_right = to_check_right * A_right;
+        to_check_right = to_check_right * Rot;
+        to_check_right = to_check_right * diff_right;
+
+        MatrixXd to_check_left = diffT_left*RotT;
+        to_check_left = to_check_left * A_left;
+        to_check_left = to_check_left * Rot;
+        to_check_left = to_check_left * diff_left;
+
         if (to_check_left(0,0) < 1){
             // the object is a real obstacle
             obsts_left.push_back(obj);
         }
-
     }
 }
 
@@ -10674,7 +10733,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     }
     if(coll_left){
         //info obstacles of the left arm-hand
-        this->writeDualInfoObstacles(PostureDat,obsts_left,true);
+        this->writeDualInfoObstacles(PostureDat,obsts_left,false);
     }
     // object that has the target
     switch(dual_mov_type){
@@ -10821,6 +10880,8 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     PostureMod << string("else	if ( j=14 ) then 	Finger2_tip_right[i] \n");
     PostureMod << string("else	if ( j=15 ) then 	Finger3_tip_right[i] \n");
 
+    PostureMod << string("; \n\n");
+
     // Points of the left arm
     //PostureMod << string("var Points_Arm_left {j in 1..21, i in 1..4} = \n");
     PostureMod << string("var Points_Arm_left {j in 1..15, i in 1..4} = \n");
@@ -10945,9 +11006,9 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     }
 
     PostureMod << string("# Right Hand orientation\n");
-    PostureMod << string("subject to constr_hand_orient_right: (sum{i in 1..3} (x_H_right[i] - x_t_right[i])^2 + sum{i in 1..3} (z_H_right[i] - z_t_right[i])^2 )<= ")+taror_right+string("; #  x_H_right = x_t_right and z_H_right = x_t_right \n");
+    PostureMod << string("subject to constr_hand_orient_right: (sum{i in 1..3} (x_H_right[i] - x_t_right[i])^2 + sum{i in 1..3} (z_H_right[i] - z_t_right[i])^2 )<= ")+taror_right+string("; #  x_H_right = x_t_right and z_H_right = z_t_right \n");
     PostureMod << string("# Left Hand orientation\n");
-    PostureMod << string("subject to constr_hand_orient_left: (sum{i in 1..3} (x_H_left[i] - x_t_left[i])^2 + sum{i in 1..3} (z_H_left[i] - z_t_left[i])^2 )<= ")+taror_left+string("; #  x_H_left = x_t_left and z_H_left = x_t_left \n");
+    PostureMod << string("subject to constr_hand_orient_left: (sum{i in 1..3} (x_H_left[i] - x_t_left[i])^2 + sum{i in 1..3} (z_H_left[i] - z_t_left[i])^2 )<= ")+taror_left+string("; #  x_H_left = x_t_left and z_H_left = z_t_left \n");
 
     if(obstacle_avoidance && coll_right){
         // obstacles and right arm-hand
