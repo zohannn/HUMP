@@ -993,6 +993,13 @@ private:
     void writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightArm, Matrix4d &matRightHand, std::vector<double>& tolsRightArm, Matrix4d &matWorldToLeftArm, Matrix4d &matLeftHand, std::vector<double>& tolsLeftArm,bool final);
 
     /**
+     * @brief writeInitDualArmDirKin
+     * @param stream
+     * @param tolsRightArm
+     * @param tolsLeftArm
+     */
+    void writeInitDualArmDirKin(ofstream &stream, std::vector<double>& tolsRightArm,std::vector<double>& tolsLeftArm);
+    /**
      * @brief writeObjective
      * @param stream
      * @param final

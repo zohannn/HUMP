@@ -2985,6 +2985,180 @@ void HUMPlanner::writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightA
 
 }
 
+void HUMPlanner::writeInitDualArmDirKin(ofstream &stream, std::vector<double>& tolsRightArm,std::vector<double>& tolsLeftArm)
+{
+
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("#  Direct Kinematics model of the right arm init \n\n");
+
+    string idx_r;
+    string idx1_r;
+    for (unsigned i = 0 ; i < joints_arm; ++i){
+        idx_r = to_string(i);
+        idx1_r = to_string(i+1);
+
+        stream << string("param T_")+idx_r+string("_")+idx1_r+string("_init_right")+string(" {i1 in 1..4, i2 in 1..4} =  \n");
+
+        stream << string("# 1st row \n");
+
+            stream << string("if ( i1=1 && i2=1 ) then cos(thet_init[")+idx1_r+string("]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(thet_init[")+idx1_r+string("])  \n");
+
+        stream << string("else	if ( i1=1 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then a_right[")+idx1_r+string("]  \n");
+        stream << string("# 2st row \n");
+
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(thet_init[")+idx1_r+string("])*c_alpha_right[")+idx1_r+string("] \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(thet_init[")+idx1_r+string("])*c_alpha_right[")+idx1_r+string("] \n");
+
+        stream << string("else	if ( i1=2 && i2=3 ) then -s_alpha_right[")+idx1_r+string("] \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then -s_alpha_right[")+idx1_r+string("]*d_right[")+idx1_r+string("] \n");
+        stream << string("# 3rd row \n");
+
+            stream << string("else	if ( i1=3 && i2=1 ) then sin(thet_init[")+idx1_r+string("])*s_alpha_right[")+idx1_r+string("] \n");
+            stream << string("else	if ( i1=3 && i2=2 ) then cos(thet_init[")+idx1_r+string("])*s_alpha_right[")+idx1_r+string("] \n");
+
+        stream << string("else	if ( i1=3 && i2=3 ) then c_alpha_right[")+idx1_r+string("] \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then c_alpha_right[")+idx1_r+string("]*d_right[")+idx1_r+string("] \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0 \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+    }
+
+
+    // --------------------------- positions on the right arm ------------------------------------------ //
+
+        stream << string("param T_W_1_init_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_WorldToRightArm[i1,j]*T_0_1_init_right[j,i2];\n");
+
+    for (unsigned i = 1 ; i < joints_arm; ++i){
+        idx_r = to_string(i);
+        idx1_r = to_string(i+1);
+            stream << string("param T_W_")+idx1_r+string("_init_right")+string(" {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx_r+string("_init_right")+string("[i1,j]*T_")+idx_r+string("_")+idx1_r+string("_init_right")+string("[j,i2];\n");
+
+    }
+        stream << string("param T_W_H_init_right {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx1_r+string("_init_right")+string("[i1,j]*T_")+idx1_r+string("_H_right[j,i2];\n\n");
+
+
+    string tolArm1_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(0)); boost::replace_all(tolArm1_right,",",".");
+    string tolArm2_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(1)); boost::replace_all(tolArm2_right,",",".");
+    string tolArm3_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(2)); boost::replace_all(tolArm3_right,",",".");
+    string tolArm4_right =  boost::str(boost::format("%.2f") % tolsRightArm.at(3)); boost::replace_all(tolArm4_right,",",".");
+
+        stream << string("param Shoulder_init_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_1_init_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm1_right+string("\n");
+        stream << string(";  \n");
+        stream << string("param Elbow_init_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_3_init_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm2_right+string("\n");
+        stream << string(";  \n");
+        stream << string("param Wrist_init_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_5_init_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm3_right+string("\n");
+        stream << string(";  \n");
+        stream << string("param Hand_init_right {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_H_init_right[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm4_right+string("\n");
+        stream << string(";  \n");
+        stream << string("# Right Hand init orientation \n");
+        stream << string("param x_H_init_right {j in 1..3} = T_W_H_init_right [j,1]; \n");
+        stream << string("param y_H_init_right {j in 1..3} = T_W_H_init_right [j,2]; \n");
+        stream << string("param z_H_init_right {j in 1..3} = T_W_H_init_right [j,3]; \n");
+        stream << string("param Rot_H_init_right {j in 1..3,k in 1..3} = T_W_H_init_right [j,k]; \n");
+
+
+
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("#  Direct Kinematics model of the left arm init \n\n");
+
+    string idx_l; string idx_ll;
+    string idx1_l; string idx1_ll;
+    for (unsigned i = 0 ; i < joints_arm; ++i){
+        idx_l = to_string(i); idx_ll = to_string(i+joints_arm);
+        idx1_l = to_string(i+1); idx1_ll = to_string(i+1+joints_arm);
+
+            stream << string("param T_")+idx_l+string("_")+idx1_l+string("_init_left")+string(" {i1 in 1..4, i2 in 1..4} =  \n");
+
+        stream << string("# 1st row \n");
+
+            stream << string("if ( i1=1 && i2=1 ) then cos(thet_init[")+idx1_ll+string("]) \n");
+            stream << string("else	if ( i1=1 && i2=2 ) then -sin(thet_init[")+idx1_ll+string("])  \n");
+
+        stream << string("else	if ( i1=1 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=1 && i2=4 ) then a_left[")+idx1_l+string("]  \n");
+        stream << string("# 2st row \n");
+
+            stream << string("else	if ( i1=2 && i2=1 ) then sin(thet_init[")+idx1_ll+string("])*c_alpha_left[")+idx1_l+string("] \n");
+            stream << string("else	if ( i1=2 && i2=2 ) then cos(thet_init[")+idx1_ll+string("])*c_alpha_left[")+idx1_l+string("] \n");
+
+        stream << string("else	if ( i1=2 && i2=3 ) then -s_alpha_left[")+idx1_l+string("] \n");
+        stream << string("else	if ( i1=2 && i2=4 ) then -s_alpha_left[")+idx1_l+string("]*d_left[")+idx1_l+string("] \n");
+        stream << string("# 3rd row \n");
+
+            stream << string("else	if ( i1=3 && i2=1 ) then sin(thet_init[")+idx1_ll+string("])*s_alpha_left[")+idx1_l+string("] \n");
+            stream << string("else	if ( i1=3 && i2=2 ) then cos(thet_init[")+idx1_ll+string("])*s_alpha_left[")+idx1_l+string("] \n");
+
+        stream << string("else	if ( i1=3 && i2=3 ) then c_alpha_left[")+idx1_l+string("] \n");
+        stream << string("else	if ( i1=3 && i2=4 ) then c_alpha_left[")+idx1_l+string("]*d_left[")+idx1_l+string("] \n");
+        stream << string("# 4th row \n");
+        stream << string("else	if ( i1=4 && i2=1 ) then 0 \n");
+        stream << string("else	if ( i1=4 && i2=2 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=3 ) then 0  \n");
+        stream << string("else	if ( i1=4 && i2=4 ) then 1  \n");
+        stream << string(";  \n");
+
+    }
+
+
+    // --------------------------- positions on the left arm ------------------------------------------ //
+
+        stream << string("param T_W_1_init_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_WorldToLeftArm[i1,j]*T_0_1_init_left[j,i2];\n");
+
+    for (unsigned i = 1 ; i < joints_arm; ++i){
+        idx_l = to_string(i);
+        idx1_l = to_string(i+1);
+            stream << string("param T_W_")+idx1_l+string("_init_left")+string(" {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx_l+string("_init_left")+string("[i1,j]*T_")+idx_l+string("_")+idx1_l+string("_init_left")+string("[j,i2];\n");
+
+    }
+
+        stream << string("param T_W_H_init_left {i1 in 1..4, i2 in 1..4} =  sum {j in 1..4}   T_W_")+idx1_l+string("_init_left")+string("[i1,j]*T_")+idx1_l+string("_H_left[j,i2];\n\n");
+
+
+    string tolArm1_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(0)); boost::replace_all(tolArm1_left,",",".");
+    string tolArm2_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(1)); boost::replace_all(tolArm2_left,",",".");
+    string tolArm3_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(2)); boost::replace_all(tolArm3_left,",",".");
+    string tolArm4_left =  boost::str(boost::format("%.2f") % tolsLeftArm.at(3)); boost::replace_all(tolArm4_left,",",".");
+
+
+        stream << string("param Shoulder_init_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_1_init_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm1_left+string("\n");
+        stream << string(";  \n");
+        stream << string("param Elbow_init_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_3_init_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm2_left+string("\n");
+        stream << string(";  \n");
+        stream << string("param Wrist_init_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_5_init_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm3_left+string("\n");
+        stream << string(";  \n");
+        stream << string("param Hand_init_left {i in 1..4} = #xyz+radius \n");
+        stream << string("if ( i<4 ) then 	T_W_H_init_left[i,4] \n");
+        stream << string("else	if ( i=4 ) then  ")+tolArm4_left+string("\n");
+        stream << string(";  \n");
+        stream << string("# Left Hand init orientation \n");
+        stream << string("param x_H_init_left {j in 1..3} = T_W_H_init_left [j,1]; \n");
+        stream << string("param y_H_init_left {j in 1..3} = T_W_H_init_left [j,2]; \n");
+        stream << string("param z_H_init_left {j in 1..3} = T_W_H_init_left [j,3]; \n");
+        stream << string("param Rot_H_init_left {j in 1..3,k in 1..3} = T_W_H_init_left [j,k]; \n");
+
+
+}
+
 void HUMPlanner::writeHumanHandDirKin(ofstream &stream, MatrixXd &tolsHand, bool final, bool transport)
 {
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
@@ -5626,7 +5800,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         dh_arm = this->DH_rightArm;
         break;
     case 2: // left arm
-        k=-1;
+        k=1;
         matWorldToArm = this->matWorldToLeftArm;
         matHand = this->matLeftHand;
         minLimits = this->minLeftLimits;
@@ -5668,7 +5842,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     this->writeLambda(PostureDat,lambda);
     // initial guess
     PostureDat << string("# INITIAL GUESS \n");
-    PostureDat << string("var theta := \n");
+    PostureDat << string("var theta = \n");
     for (std::size_t i=0; i < initialGuess.size(); ++i){
         string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
         boost::replace_all(guess,",",".");
@@ -10544,7 +10718,7 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
             std::vector<Number> x_sol;
             try
             {
-                if (this->optimize(nlfile,x_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL)){
+                if (this->optimize(nlfile,x_sol,FINAL_DUAL_TOL,FINAL_DUAL_ACC_TOL,FINAL_DUAL_CONSTR_VIOL_TOL)){
                     finalPosture = std::vector<double>(x_sol.size());
                     for (std::size_t i=0; i < x_sol.size(); ++i){
                         finalPosture.at(i)=x_sol[i];
@@ -10666,7 +10840,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     this->writeDualLambda(PostureDat,lambda_right,lambda_left);
     // initial guess
     PostureDat << string("# INITIAL GUESS \n");
-    PostureDat << string("var theta := \n");
+    PostureDat << string("var theta = \n");
     for (std::size_t i=0; i < initialGuess.size(); ++i){
         string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
         boost::replace_all(guess,",",".");
@@ -10812,6 +10986,10 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     // Direct Kinematics of the arms
     this->writeDualArmDirKin(PostureMod,matWorldToArm_right,matHand_right,tolsArm_right,matWorldToArm_left,matHand_left,tolsArm_left,true);
 
+    //PostureMod << string("# TESTS \n");
+    //this->writeInitDualArmDirKin(PostureMod,tolsArm_right,tolsArm_left);
+
+
     bool obj_right_place = false; bool obj_left_place = false;
     // object to transport (dual place movements in the plan and approach target posture selection or
     //                        dual pick movement in the retreat target posture selection)
@@ -10947,6 +11125,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
 
     // objective function
     this->writeObjective(PostureMod,true);
+
 
     // constraints
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");

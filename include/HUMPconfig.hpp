@@ -56,6 +56,10 @@ const double FINAL_TOL = 1e-6; /**< desired convergence tolerance */
 const double FINAL_ACC_TOL = 1e-2; /**< acceptable convergence tolerance */
 const double FINAL_CONSTR_VIOL_TOL = 0.0001; /**< constraints violation tolerance */
 
+const double FINAL_DUAL_TOL = 1e-2; /**< desired convergence tolerance */
+const double FINAL_DUAL_ACC_TOL = 1e-1; /**< acceptable convergence tolerance */
+const double FINAL_DUAL_CONSTR_VIOL_TOL = 0.0001; /**< constraints violation tolerance */
+
 // Bounce posture selection problem ipopt options
 const double BOUNCE_TOL = 1e-6; /**< desired convergence tolerance*/
 const double BOUNCE_ACC_TOL = 1e-6; /**< acceptable convergence tolerance */
