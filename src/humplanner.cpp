@@ -9143,6 +9143,117 @@ double HUMPlanner::getTimeStep(hump_params &tols, MatrixXd &jointTraj,int mod)
     return timestep;
 }
 
+double HUMPlanner::getDualTimeStep(hump_dual_params& tols, MatrixXd& jointTraj, int mod)
+{
+    int steps = jointTraj.rows();
+    int n_joints = jointTraj.cols();
+    double timestep;
+
+    std::vector<double> w_max = tols.w_max;
+    std::vector<double> alpha_max = tols.alpha_max;
+    std::vector<double> lambda_r = tols.lambda_bounce_right;
+    std::vector<double> lambda_l = tols.lambda_bounce_left;
+
+    std::vector<double> lambda = lambda_r;
+    lambda.insert(lambda.end(),lambda_l.begin(),lambda_l.end());
+
+    double num = 0.0;
+    double den = 0.0;
+
+    for (int k =0; k < n_joints; ++k){
+        double deltaTheta_k = 0.0;
+        std::vector<double> diffs;
+        for (int i = 1; i < steps; ++i){
+            double diff = abs(jointTraj(i,k) - jointTraj(i-1,k))*180/M_PI;
+            diffs.push_back(diff);
+            deltaTheta_k += diff;
+        }
+        std::vector<double>::iterator res = std::max_element(diffs.begin(),diffs.end());
+        int poss = std::distance(diffs.begin(),res);
+        double deltaThetaMax = diffs.at(poss);
+        double w_max_degree = w_max.at(k)*180/M_PI;
+
+        double timestep_k_h = (lambda.at(k)/(steps-1))*log(1+deltaTheta_k); // human-like timestep
+        double timestep_k_w = deltaThetaMax/w_max_degree; // max velocity timestep
+        double timestep_k = timestep_k_h + timestep_k_w;
+        double time_k = (steps-1)*timestep_k;
+        num += lambda.at(k)*deltaTheta_k*time_k;
+        den += lambda.at(k)*deltaTheta_k;
+
+    }
+    double totalTime = num/den;
+    timestep = (totalTime/(steps-1));
+
+    if(HAS_JOINT_ACCELEARATION_MAX_LIMIT){
+        // check the joint maximum velocity and acceleration
+        if(mod!=2 && mod!=3){ //  move or pre_approach
+            std::vector<double> vel_r_0 = tols.bounds_right.vel_0;
+            std::vector<double> vel_l_0 = tols.bounds_left.vel_0;
+            std::vector<double> acc_r_0 = tols.bounds_right.acc_0;
+            std::vector<double> acc_l_0 = tols.bounds_left.acc_0;
+            std::vector<double> vel_r_f; std::vector<double> vel_l_f;
+            std::vector<double> acc_r_f; std::vector<double> acc_l_f;
+            if(mod==0){
+              vel_r_f = tols.bounds_right.vel_f;
+              vel_l_f = tols.bounds_left.vel_f;
+              acc_r_f = tols.bounds_right.acc_f;
+              acc_l_f = tols.bounds_left.acc_f;
+            }else if(mod==1){
+              vel_r_f = tols.vel_approach_right;
+              vel_l_f = tols.vel_approach_left;
+              acc_r_f = std::vector<double>(tols.bounds_right.acc_0.size(),0.0);
+              acc_l_f = std::vector<double>(tols.bounds_left.acc_0.size(),0.0);
+            }
+            std::vector<double> vel_0; std::vector<double> vel_f;
+            std::vector<double> acc_0; std::vector<double> acc_f;
+            vel_0 = vel_r_0; vel_0.insert(vel_0.end(),vel_l_0.begin(),vel_l_0.end());
+            vel_f = vel_r_f; vel_f.insert(vel_f.end(),vel_l_f.begin(),vel_l_f.end());
+            acc_0 = acc_r_0; acc_0.insert(acc_0.end(),acc_l_0.begin(),acc_l_0.end());
+            acc_f = acc_r_f; acc_f.insert(acc_f.end(),acc_l_f.begin(),acc_l_f.end());
+
+            for (int k =0; k < n_joints; ++k){
+                bool check = false;
+                double alpha_max_degree = alpha_max.at(k)*180/M_PI;
+                double vel_0_k = vel_0.at(k); double vel_f_k = vel_f.at(k);
+                double acc_0_k = acc_0.at(k); double acc_f_k = acc_f.at(k);
+                double deltat = 0.02; // value to increase the timestep when it does not respect the joint velocity and acceleration limits [sec]
+
+                do
+                {
+                    VectorXd jointTraj_k = jointTraj.col(k);
+                    //VectorXd jointTraj_k_deg = jointTraj_k*180/M_PI;
+                    std::vector<double> std_jointTraj_k;
+                    std::vector<double> jointVel_k; std::vector<double> jointAcc_k;
+                    std_jointTraj_k.resize(jointTraj_k.size()); VectorXd::Map(&std_jointTraj_k[0], jointTraj_k.size()) = jointTraj_k;
+                    std::vector<double> timestep_vec(std_jointTraj_k.size(),timestep);
+                    this->getDerivative(std_jointTraj_k,timestep_vec,jointVel_k);
+                    jointVel_k.at(0) = vel_0_k; jointVel_k.at(jointVel_k.size()-1) = vel_f_k;
+                    this->getDerivative(jointVel_k,timestep_vec,jointAcc_k);
+                    jointAcc_k.at(0) = acc_0_k; jointAcc_k.at(jointAcc_k.size()-1) = acc_f_k;
+                    //double* ptr_vel = &jointVel_k[0];
+                    //Eigen::Map<Eigen::VectorXd> jointVel_k_vec(ptr_vel, jointVel_k.size());
+                    //VectorXd jointVel_k_deg = jointVel_k_vec*180/M_PI;
+                    //double* ptr_acc = &jointAcc_k[0];
+                    //Eigen::Map<Eigen::VectorXd> jointAcc_k_vec(ptr_acc, jointAcc_k.size());
+                    //VectorXd jointAcc_k_deg = jointAcc_k_vec*180/M_PI;
+                    //std::vector<double>::iterator max_vel_it = std::max_element(jointVel_k.begin(), jointVel_k.end(), abs_compare);
+                    //double max_vel_traj_k = std::abs((*max_vel_it))*180/M_PI;
+                    std::vector<double>::iterator max_acc_it = std::max_element(jointAcc_k.begin(), jointAcc_k.end(), abs_compare);
+                    double max_acc_traj_k = std::abs((*max_acc_it))*180/M_PI;
+                    double acc_th = alpha_max_degree - std::max(std::abs(acc_0_k),std::abs(acc_f_k))*180/M_PI;
+                    if(max_acc_traj_k > acc_th){
+                        timestep += deltat;
+                        check=true;
+                    }else{check=false;}
+                }while(check && (timestep < 1.5));
+            }
+        }
+    }
+
+
+    return timestep;
+}
+
 bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int steps, std::vector<double> &initPosture, std::vector<double> &finalPosture, int mod)
 {
 
@@ -10492,6 +10603,13 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
     int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
 
+    std::vector<double> initPosture = initPosture_right;
+    initPosture.insert(initPosture.end(),initPosture_left.begin(),initPosture_left.end());
+    std::vector<double> minLimits = minLimits_right;
+    minLimits.insert(minLimits.end(),minLimits_left.begin(),minLimits_left.end());
+    std::vector<double> maxLimits = maxLimits_right;
+    maxLimits.insert(maxLimits.end(),maxLimits_left.begin(),maxLimits_left.end());
+
     try
     {
         // the posture is given by
@@ -10505,21 +10623,55 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
         if(approach_right && approach_left)
         {
             pre_post = 1;
-            FPosture_pre_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,initPosture_right,initPosture_left,finalPosture_pre_grasp);
+            FPosture_pre_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,initPosture,finalPosture_pre_grasp);
             if(FPosture_pre_grasp){
-                /*
-                // extend the final postures
+                // extend the final posture
                 std::vector<double> finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
-                finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
-                for(size_t i=1;i<finalHand.size();++i){
-                    if(((finalHand.at(i) -AP) > minLimits.at(i+7))){
-                        finalPosture_pre_grasp_ext.push_back(finalHand.at(i)-AP);
+                finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+7,finalHand_right.at((0)));
+                std::vector<double> hand_r;
+                for(size_t i=1;i<finalHand_right.size();++i){
+                    if(((finalHand_right.at(i) -AP) > minLimits_right.at(i+7))){
+                        hand_r.push_back(finalHand_right.at(i)-AP);
                     }else{
-                       finalPosture_pre_grasp_ext.push_back(minLimits.at(i+7));
+                       hand_r.push_back(minLimits_right.at(i+7));
                     }
                 }
-                int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_grasp_ext);
-                */
+                finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+8,hand_r.begin(),hand_r.end());
+                finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+18,finalHand_left.at((0)));
+                std::vector<double> hand_l;
+                for(size_t i=1;i<finalHand_left.size();++i){
+                    if(((finalHand_left.at(i) -AP) > minLimits_left.at(i+7))){
+                        hand_l.push_back(finalHand_left.at(i)-AP);
+                    }else{
+                       hand_l.push_back(minLimits_left.at(i+7));
+                    }
+                }
+                finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+19,hand_l.begin(),hand_l.end());
+
+                // get the steps of the trajectory
+                int steps = this->getSteps(maxLimits,minLimits,initPosture,finalPosture_pre_grasp_ext);
+
+                pre_post = 0;
+                FPosture = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_pre_grasp_ext,finalPosture);
+                if(FPosture){
+                    // extend the final posture
+                    finalPosture_ext = finalPosture_pre_grasp;
+                    finalPosture_ext.insert(finalPosture_pre_grasp.begin()+7,finalHand_right.begin(),finalHand_right.end());
+                    finalPosture_ext.insert(finalPosture_pre_grasp.begin()+18,finalHand_left.begin(),finalHand_left.end());
+
+                    // get the steps of the trajectory
+                    int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
+                    // calculate the approach boundary conditions
+                    // the velocity approach is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    //
+                    //if(this->setBoundaryConditions(mov_type,params,steps_app,finalPosture_pre_grasp_ext,finalPosture_ext,0)){
+
+                    //}
+
+
+                }
+
+
 
 
 
@@ -10536,7 +10688,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
 
 }
 
-bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initRightPosture, std::vector<double> initLeftPosture,std::vector<double>& finalPosture)
+bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initPosture,std::vector<double>& finalPosture)
 {
     // movement settings
     //int arm_code = params.mov_specs.arm_code;
@@ -10570,8 +10722,10 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
         break;
     }
 
-    std::vector<double> initRightArmPosture(initRightPosture.begin(),initRightPosture.begin()+joints_arm);
-    std::vector<double> initLeftArmPosture(initLeftPosture.begin(),initLeftPosture.begin()+joints_arm);
+    std::vector<double> initRightPosture(initPosture.begin(),initPosture.begin()+11);
+    std::vector<double> initLeftPosture(initPosture.begin()+11,initPosture.begin()+22);
+    std::vector<double> initRightArmPosture(initPosture.begin(),initPosture.begin()+7);
+    std::vector<double> initLeftArmPosture(initPosture.begin()+11,initPosture.begin()+18);
 
     double Lu_right; double Ll_right; double Lh_right;
     Lu_right = abs(this->DH_rightArm.d.at(2));
@@ -11329,6 +11483,21 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     }
     if(coll_left){
         this->writeDualBodyConstraints(PostureMod,true,false);
+    }
+
+    // constraints between the arms
+    if(coll_right && coll_left)
+    {
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("# \n");
+        PostureMod << string("# Constraints between the arms \n");
+        PostureMod << string("subject to Arm_Arm{i1 in 4..8, i2 in 4..8}:  \n");
+        PostureMod << string("(Points_Arm_left[i1,1] - Points_Arm_right[i2,1])^2 + \n");
+        PostureMod << string("(Points_Arm_left[i1,2] - Points_Arm_right[i2,2])^2 + \n");
+        PostureMod << string("(Points_Arm_left[i1,3] - Points_Arm_right[i2,3])^2 - \n");
+        PostureMod << string("(Points_Arm_left[i1,4] + Points_Arm_right[i2,4])^2 >= 0; \n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("# \n");
     }
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");

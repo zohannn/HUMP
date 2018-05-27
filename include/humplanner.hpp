@@ -438,6 +438,15 @@ private:
     double getTimeStep(hump_params& tols, MatrixXd& jointTraj, int mod);
 
     /**
+     * @brief getDualTimeStep
+     * @param tols
+     * @param jointTraj
+     * @param mod
+     * @return
+     */
+    double getDualTimeStep(hump_dual_params& tols, MatrixXd& jointTraj, int mod);
+
+    /**
      * @brief setBoundaryConditions
      * @param mov_type
      * @param params
@@ -1344,12 +1353,11 @@ private:
      * @param dual_mov_type
      * @param pre_post
      * @param params
-     * @param initRightPosture
-     * @param initLeftPosture
+     * @param initPosture
      * @param finalPosture
      * @return
      */
-    bool singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initRightPosture, std::vector<double> initLeftPosture,std::vector<double>& finalPosture);
+    bool singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initPosture,std::vector<double>& finalPosture);
 
     /**
      * @brief writeFilesDualFinalPosture
