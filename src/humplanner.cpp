@@ -9384,6 +9384,104 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
     return success;
 }
 
+bool HUMPlanner::setDualBoundaryConditions(int dual_mov_type, hump_dual_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod)
+{
+    MatrixXd fakeTraj; bool success = true;
+    std::vector<double> acc_0; std::vector<double> acc_f;
+    std::vector<double> vel_0; std::vector<double> vel_f;
+    bool straight_line_right = params.mov_specs_right.straight_line;
+    bool straight_line_left = params.mov_specs_left.straight_line;
+    this->directTrajectoryNoBound(steps,initPosture,finalPosture,fakeTraj);
+
+    double timestep = this->getDualTimeStep(params,fakeTraj,2);
+
+
+    double T = timestep*steps;
+    VectorXd w_max_vec = VectorXd::Map(params.w_max.data(),params.w_max.size());
+    double w_max = w_max_vec.maxCoeff();
+    VectorXd init = VectorXd::Map(initPosture.data(),initPosture.size());
+    VectorXd final = VectorXd::Map(finalPosture.data(),finalPosture.size());
+    double num = (final-init).norm();
+    double w_red_app_max_right = params.mov_specs_right.w_red_app_max;
+    double w_red_app_max_left = params.mov_specs_left.w_red_app_max;
+    double w_red_ret_max_right = params.mov_specs_right.w_red_ret_max;
+    double w_red_ret_max_left = params.mov_specs_left.w_red_ret_max;
+    double w_red_app_right = W_RED_MIN + (w_red_app_max_right-W_RED_MIN)*((num/T)/w_max);
+    double w_red_app_left = W_RED_MIN + (w_red_app_max_left-W_RED_MIN)*((num/T)/w_max);
+    double w_red_ret_right = W_RED_MIN + (w_red_ret_max_right-W_RED_MIN)*((num/T)/w_max);
+    double w_red_ret_left = W_RED_MIN + (w_red_ret_max_left-W_RED_MIN)*((num/T)/w_max);
+
+    int pre_post = 0;
+    switch(mod)
+    {
+    case 0:// approach
+        timestep = timestep*(w_red_app_right+w_red_app_left)/2;
+        pre_post=1;
+        break;
+    case 1://retreat
+        timestep = timestep*(w_red_ret_right+w_red_ret_left)/2;
+        pre_post=0;
+        break;
+    default: // approach
+        timestep = timestep*(w_red_app_right+w_red_app_left)/2;
+        pre_post=1;
+        break;
+    }
+    T = timestep*steps;
+
+
+    if(straight_line_right && straight_line_left ){
+        //TO DO
+
+    }else{
+        for (std::size_t i = 0; i<finalPosture.size(); ++i){
+            //vel_0
+            double vel_0_value =((double)5*(finalPosture.at(i)-initPosture.at(i)))/(4*T);
+            vel_0.push_back(vel_0_value);
+            //vel_f
+            double vel_f_value =((double)10*(finalPosture.at(i)-initPosture.at(i)))/(3*T);
+            vel_f.push_back(vel_f_value);
+            //acc_0
+            double acc_0_value =(double)4*vel_0_value/T;
+            acc_0.push_back(acc_0_value);
+            //acc_f
+            double acc_f_value =(double)2*vel_f_value/T;
+            acc_f.push_back(acc_f_value);
+        }
+    }
+
+    switch(mod)
+    {
+    case 0:// approach
+        params.vel_approach_right.clear(); params.acc_approach_right.clear();
+        params.vel_approach_left.clear(); params.acc_approach_left.clear();
+        std::copy(vel_0.begin(),vel_0.begin()+12,params.vel_approach_right.begin());
+        std::copy(vel_0.begin()+12,vel_0.end(),params.vel_approach_left.begin());
+        std::copy(acc_0.begin(),acc_0.begin()+12,params.acc_approach_right.begin());
+        std::copy(acc_0.begin()+12,acc_0.end(),params.acc_approach_left.begin());
+        break;
+    case 1://retreat
+        params.bounds_right.vel_f.clear(); params.bounds_right.acc_f.clear();
+        std::copy(vel_f.begin(),vel_f.begin()+12,params.bounds_right.vel_f.begin());
+        std::copy(acc_f.begin(),acc_f.begin()+12,params.bounds_right.acc_f.begin());
+        params.bounds_left.vel_f.clear(); params.bounds_left.acc_f.clear();
+        std::copy(vel_f.begin()+12,vel_f.end(),params.bounds_left.vel_f.begin());
+        std::copy(acc_f.begin()+12,acc_f.end(),params.bounds_left.acc_f.begin());
+        break;
+    default: // approach
+        params.vel_approach_right.clear(); params.acc_approach_right.clear();
+        params.vel_approach_left.clear(); params.acc_approach_left.clear();
+        std::copy(vel_0.begin(),vel_0.begin()+12,params.vel_approach_right.begin());
+        std::copy(vel_0.begin()+12,vel_0.end(),params.vel_approach_left.begin());
+        std::copy(acc_0.begin(),acc_0.begin()+12,params.acc_approach_right.begin());
+        std::copy(acc_0.begin()+12,acc_0.end(),params.acc_approach_left.begin());
+        break;
+    }
+
+
+    return success;
+}
+
 
 bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd &Traj, MatrixXd &vel_app_ret, int mod)
 {
@@ -10664,9 +10762,9 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
                     // calculate the approach boundary conditions
                     // the velocity approach is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
                     //
-                    //if(this->setBoundaryConditions(mov_type,params,steps_app,finalPosture_pre_grasp_ext,finalPosture_ext,0)){
+                    if(this->setDualBoundaryConditions(dual_mov_type,params,steps_app,finalPosture_pre_grasp_ext,finalPosture_ext,0)){
 
-                    //}
+                    }
 
 
                 }

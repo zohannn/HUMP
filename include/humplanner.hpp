@@ -459,6 +459,18 @@ private:
     bool setBoundaryConditions(int mov_type, hump_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
 
     /**
+     * @brief setDualBoundaryConditions
+     * @param dual_mov_type
+     * @param params
+     * @param steps
+     * @param initPosture
+     * @param finalPosture
+     * @param mod
+     * @return
+     */
+    bool setDualBoundaryConditions(int dual_mov_type, hump_dual_params& params, int steps, std::vector<double>& initPosture, std::vector<double>& finalPosture, int mod=0);
+
+    /**
      * @brief directTrajectory
      * @param mov_type
      * @param steps
