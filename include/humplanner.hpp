@@ -1003,6 +1003,7 @@ private:
     /**
      * @brief writeDualArmDirKin
      * @param stream
+     * @param dual_mov_type
      * @param matWorldToRightArm
      * @param matRightHand
      * @param tolsRightArm
@@ -1011,7 +1012,7 @@ private:
      * @param tolsLeftArm
      * @param final
      */
-    void writeDualArmDirKin(ofstream &stream, Matrix4d &matWorldToRightArm, Matrix4d &matRightHand, std::vector<double>& tolsRightArm, Matrix4d &matWorldToLeftArm, Matrix4d &matLeftHand, std::vector<double>& tolsLeftArm,bool final);
+    void writeDualArmDirKin(ofstream &stream, int dual_mov_type, Matrix4d &matWorldToRightArm, Matrix4d &matRightHand, std::vector<double>& tolsRightArm, Matrix4d &matWorldToLeftArm, Matrix4d &matLeftHand, std::vector<double>& tolsLeftArm,bool final);
 
     /**
      * @brief writeInitDualArmDirKin
@@ -1181,7 +1182,6 @@ private:
      */
     bool singleArmBouncePosture(int steps,int mov_type,int pre_post,hump_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture);
 
-
     /**
      * @brief writeFilesBouncePosture
      * @param steps
@@ -1193,12 +1193,13 @@ private:
      * @param initAuxPosture
      * @param finalAuxPosture
      * @param initialGuess
+     * @param lambda
      * @param objs
      * @param bAux
      * @return
      */
     bool writeFilesBouncePosture(int steps,hump_params& params,int mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
-                                             std::vector<double> initialGuess, std::vector<objectPtr> objs,boundaryConditions bAux);
+                                             std::vector<double> initialGuess, std::vector<double> lambda, std::vector<objectPtr> objs,boundaryConditions bAux);
 
 
     /**
@@ -1385,6 +1386,38 @@ private:
      */
     bool writeFilesDualFinalPosture(hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> initRightArmPosture, std::vector<double> initLeftArmPosture, std::vector<double> initialGuess,std::vector<objectPtr> obsts_right,std::vector<objectPtr> obsts_left);
 
+    /**
+     * @brief singleDualArmBouncePosture
+     * @param steps
+     * @param dual_mov_type
+     * @param pre_post
+     * @param params
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @return
+     */
+    bool singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture);
+
+    /**
+     * @brief writeFilesDualBouncePosture
+     * @param steps
+     * @param params
+     * @param dual_mov_type
+     * @param pre_post
+     * @param minAuxLimits
+     * @param maxAuxLimits
+     * @param initAuxPosture
+     * @param finalAuxPosture
+     * @param initialGuess
+     * @param lambda
+     * @param objs_right
+     * @param objs_left
+     * @param bAux
+     * @return
+     */
+    bool writeFilesDualBouncePosture(int steps,hump_dual_params& params,int dual_mov_type, int pre_post,std::vector<double> minAuxLimits, std::vector<double> maxAuxLimits,std::vector<double> initAuxPosture, std::vector<double> finalAuxPosture,
+                                             std::vector<double> initialGuess, std::vector<double> lambda, std::vector<objectPtr> objs_right,std::vector<objectPtr> objs_left,boundaryConditions bAux);
 
 
 };
