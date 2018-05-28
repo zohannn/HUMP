@@ -9117,25 +9117,25 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
             try
             {
                 if (this->optimize(nlfile,x_sol,BOUNCE_DUAL_TOL,BOUNCE_DUAL_ACC_TOL,BOUNCE_DUAL_CONSTR_VIOL_TOL)){
-                    size_t size;
-                    //bouncePosture = std::vector<double>(2*(joints_arm+joints_hand));
-                    if(place){
-                      size =x_sol.size();
-                    }else{
-                      size =x_sol.size()-2;
-                    }
-                    for (std::size_t i=0; i < size; ++i){
-                       // printf("x[%i] = %f\n", i, x_sol[i]);
-                        //switch(arm_code){
-                        //case 1: //right arm
-                            //this->rightBouncePosture.at(i) = x_sol[i];
-                            //break;
-                        //case 2: // left arm
-                            //this->leftBouncePosture.at(i) = x_sol[i];
-                            //break;
-                        //}
-                        bouncePosture.at(i) = x_sol[i];
-                    }
+
+                    bouncePosture = std::vector<double>(2*(joints_arm+joints_hand));
+                    // right arm
+                    bouncePosture.at(0) = x_sol[0];
+                    bouncePosture.at(1) = x_sol[1];
+                    bouncePosture.at(2) = x_sol[2];
+                    bouncePosture.at(3) = x_sol[3];
+                    bouncePosture.at(4) = x_sol[4];
+                    bouncePosture.at(5) = x_sol[5];
+                    bouncePosture.at(6) = x_sol[6];
+                    //left arm
+                    bouncePosture.at(11) = x_sol[9];
+                    bouncePosture.at(12) = x_sol[10];
+                    bouncePosture.at(13) = x_sol[11];
+                    bouncePosture.at(14) = x_sol[12];
+                    bouncePosture.at(15) = x_sol[13];
+                    bouncePosture.at(16) = x_sol[14];
+                    bouncePosture.at(17) = x_sol[15];
+
                     if(!place){
                         switch(hand_code_right){
                         case 0://human hand
@@ -10966,7 +10966,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
         // right arm(7) + right hand(4) + left arm(7) + left hand(4) = 22 joints
         std::vector<double> finalPosture_pre_grasp; bool FPosture_pre_grasp = false; std::vector<double> finalPosture_pre_grasp_ext;
         std::vector<double> hand_r; std::vector<double> hand_l;
-        std::vector<double> bouncePosture_pre_grasp(2*(joints_arm+joints_hand)); //bool BPosture_pre_grasp = false;
+        std::vector<double> bouncePosture_pre_grasp; //bool BPosture_pre_grasp = false;
         std::vector<double> bouncePosture; bool BPosture = false;
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> finalPosture_post_grasp; bool FPosture_post_grasp = false;
