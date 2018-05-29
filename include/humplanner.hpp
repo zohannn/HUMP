@@ -486,6 +486,21 @@ private:
     bool directTrajectory(int mov_type, int steps, hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, MatrixXd &vel_app_ret, int mod);
 
     /**
+     * @brief directDualTrajectory
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param timestep
+     * @param Traj
+     * @param vel_app_ret
+     * @param mod
+     * @return
+     */
+    bool directDualTrajectory(int dual_mov_type, int steps, hump_dual_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Traj, MatrixXd &vel_app_ret, int mod);
+
+    /**
      * @brief directTrajectoryNoBound
      * @param steps
      * @param initPosture
@@ -509,6 +524,20 @@ private:
     bool directVelocity(int steps, hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Vel, MatrixXd &vel_app_ret, int mod);
 
     /**
+     * @brief directDualVelocity
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param timestep
+     * @param Vel
+     * @param vel_app_ret
+     * @param mod
+     * @return
+     */
+    bool directDualVelocity(int steps, hump_dual_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Vel, MatrixXd &vel_app_ret, int mod);
+
+    /**
      * @brief directAcceleration
      * @param steps
      * @param tols
@@ -523,6 +552,20 @@ private:
     bool directAcceleration(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,MatrixXd &vel_app_ret,int mod);
 
     /**
+     * @brief directDualAcceleration
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param timestep
+     * @param Acc
+     * @param vel_app_ret
+     * @param mod
+     * @return
+     */
+    bool directDualAcceleration(int steps,hump_dual_params& tols, std::vector<double>& initPosture, std::vector<double>& finalPosture, double timestep, MatrixXd& Acc,MatrixXd &vel_app_ret,int mod);
+
+    /**
      * @brief backForthTrajectory
      * @param steps
      * @param initPosture
@@ -534,24 +577,22 @@ private:
     /**
      * @brief backForthVelocity
      * @param steps
-     * @param tols
      * @param initPosture
      * @param bouncePosture
      * @param timestep
      * @param Vel
      */
-    void backForthVelocity(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Vel);
+    void backForthVelocity(int steps, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Vel);
 
     /**
      * @brief backForthAcceleration
      * @param steps
-     * @param tols
      * @param initPosture
      * @param bouncePosture
      * @param timestep
      * @param Acc
      */
-    void backForthAcceleration(int steps,hump_params& tols, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Acc);
+    void backForthAcceleration(int steps, std::vector<double>& initPosture, std::vector<double>& bouncePosture, double timestep, MatrixXd& Acc);
 
     /**
      * @brief computeMovement
@@ -579,6 +620,23 @@ private:
                          MatrixXd &traj,MatrixXd &vel_app_ret,bool &success,int mod);
 
     /**
+     * @brief getDualTrajectory
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @param traj
+     * @param vel_app_ret
+     * @param success
+     * @param mod
+     * @return
+     */
+    double getDualTrajectory(int dual_mov_type,int steps,hump_dual_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture,
+                         MatrixXd &traj,MatrixXd &vel_app_ret,bool &success,int mod);
+
+    /**
      * @brief getTrajectory
      * @param mov_type
      * @param steps
@@ -592,6 +650,22 @@ private:
      * @return
      */
     double getTrajectory(int mov_type,int steps,hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture,
+                         MatrixXd &traj, MatrixXd &vel_app_ret,bool &success, int mod);
+
+    /**
+     * @brief getDualTrajectory
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param traj
+     * @param vel_app_ret
+     * @param success
+     * @param mod
+     * @return
+     */
+    double getDualTrajectory(int dual_mov_type,int steps,hump_dual_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture,
                          MatrixXd &traj, MatrixXd &vel_app_ret,bool &success, int mod);
 
     /**
@@ -611,6 +685,24 @@ private:
      */
     double getVelocity(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture,
                        MatrixXd &traj, MatrixXd &vel, MatrixXd &vel_app_ret, bool &success, int mod);
+
+    /**
+     * @brief getDualVelocity
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @param traj
+     * @param vel
+     * @param vel_app_ret
+     * @param success
+     * @param mod
+     * @return
+     */
+    double getDualVelocity(int dual_mov_type, int steps, hump_dual_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture,
+                       MatrixXd &traj, MatrixXd &vel, MatrixXd &vel_app_ret, bool &success, int mod);
     /**
      * @brief getVelocity
      * @param mov_type
@@ -626,6 +718,22 @@ private:
      * @return
      */
     double getVelocity(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &vel_app_ret,bool &success, int mod);
+
+    /**
+     * @brief getDualVelocity
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param traj
+     * @param vel
+     * @param vel_app_ret
+     * @param success
+     * @param mod
+     * @return
+     */
+    double getDualVelocity(int dual_mov_type, int steps, hump_dual_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &vel_app_ret,bool &success, int mod);
 
     /**
      * @brief getAcceleration
@@ -645,6 +753,23 @@ private:
     double getAcceleration(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, bool &success, int mod);
 
     /**
+     * @brief getDualAcceleration
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param bouncePosture
+     * @param traj
+     * @param vel
+     * @param acc
+     * @param success
+     * @param mod
+     * @return
+     */
+    double getDualAcceleration(int dual_mov_type, int steps, hump_dual_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double> bouncePosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, bool &success, int mod);
+
+    /**
      * @brief getAcceleration
      * @param mov_type
      * @param steps
@@ -659,6 +784,22 @@ private:
      * @return
      */
     double getAcceleration(int mov_type, int steps, hump_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, bool &success, int mod);
+
+    /**
+     * @brief getDualAcceleration
+     * @param dual_mov_type
+     * @param steps
+     * @param tols
+     * @param initPosture
+     * @param finalPosture
+     * @param traj
+     * @param vel
+     * @param acc
+     * @param success
+     * @param mod
+     * @return
+     */
+    double getDualAcceleration(int dual_mov_type, int steps, hump_dual_params &tols, std::vector<double> initPosture, std::vector<double> finalPosture, MatrixXd &traj, MatrixXd &vel, MatrixXd &acc, bool &success, int mod);
 
     /**
      * @brief This method writes down the dimensions of the body ofthe humanoid
