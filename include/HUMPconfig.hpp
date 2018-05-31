@@ -194,6 +194,7 @@ typedef struct{
     vector<double> alpha_max; /**< maximum angular acceleration for each joint [rad/s²] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
+    bool coll_body; /**< true to enable collisions avoidance with the body */
 } hump_params;
 
 /** this struct defines the tolerances that have to be set before planning the trajectory (dual-arm) */
@@ -228,6 +229,8 @@ typedef struct{
     vector<double> alpha_max; /**< maximum angular acceleration for each joint [rad/s²] */
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
+    bool coll_arms; /**< true to enable collisions avoidance between the arms-hands */
+    bool coll_body; /**< true to enable collisions avoidance with the body */
 }hump_dual_params;
 
 /** This struct defines the result of the planned trajectory (single-arm) */

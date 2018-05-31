@@ -5755,6 +5755,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     int hand_code = params.mov_specs.hand_code;
     //int griptype = params.mov_specs.griptype;
     bool coll = params.mov_specs.coll;
+    bool coll_body = params.coll_body;
     std::vector<double> tar = params.mov_specs.target;
     int dHO = params.mov_specs.dHO;
     std::vector<double> finalHand = params.mov_specs.finalHand;
@@ -5834,7 +5835,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     //PostureDat << string("param pi := 4*atan(1); \n");
 
     // Body dimension
-    if(coll){
+    if(coll && coll_body){
         this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
     }
     // D-H Parameters of the Arm
@@ -5928,7 +5929,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     PostureMod << string("set nJoints := 1..")+to_string(initialGuess.size())+string(";\n");
 
     this->writePI(PostureMod);
-    if(coll){
+    if(coll && coll_body){
         this->writeBodyDimMod(PostureMod);
     }
     this->writeArmDHParamsMod(PostureMod);
@@ -6196,7 +6197,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     }
 
     // constraints with the body
-    if(coll){
+    if(coll && coll_body){
         this->writeBodyConstraints(PostureMod,true);
     }
 
@@ -11697,6 +11698,8 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     //int griptype = params.mov_specs.griptype;
     bool coll_right = params.mov_specs_right.coll;
     bool coll_left = params.mov_specs_left.coll;
+    bool coll_body = params.coll_body;
+    bool coll_arms = params.coll_arms;
     std::vector<double> tar_right = params.mov_specs_right.target;
     std::vector<double> tar_left = params.mov_specs_left.target;
     int dHO_right = params.mov_specs_right.dHO;
@@ -11772,7 +11775,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     //PostureDat << string("param pi := 4*atan(1); \n");
 
     // Body dimension
-    if(coll_right || coll_left){
+    if((coll_right || coll_left) && coll_body){
         this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
     }
     // D-H Parameters of the Arms
@@ -11883,7 +11886,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     PostureMod << string("set nJoints := 1..")+to_string(initialGuess.size())+string(";\n");
 
     this->writePI(PostureMod);
-    if(coll_right || coll_left){
+    if((coll_right || coll_left) && coll_body){
         this->writeBodyDimMod(PostureMod);
     }
     this->writeDualArmDHParamsMod(PostureMod);
@@ -12288,15 +12291,15 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     }
 
     // constraints with the body
-    if(coll_right){
+    if(coll_right && coll_body){
         this->writeDualBodyConstraints(PostureMod,true,true);
     }
-    if(coll_left){
+    if(coll_left && coll_body){
         this->writeDualBodyConstraints(PostureMod,true,false);
     }
 
     // constraints between the arms
-    if(coll_right && coll_left)
+    if(coll_arms)
     {
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
@@ -12350,6 +12353,8 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
 
     // movement setting
     //int arm_code = params.mov_specs.arm_code;
+    bool coll_arms = params.coll_arms;
+    bool coll_body = params.coll_body;
     int hand_code_right = params.mov_specs_right.hand_code;
     int hand_code_left = params.mov_specs_left.hand_code;
     double dHO_right = params.mov_specs_right.dHO;
@@ -12435,7 +12440,9 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      boost::replace_all(tottime_str,",",".");
      PostureDat << string("param TotalTime :=")+tottime_str+string(";\n");
      // Body dimension
-     this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
+     if(coll_body){
+        this->writeBodyDim(this->torso_size.at(0),this->torso_size.at(1),PostureDat);
+     }
      // D-H Parameters of the Arm
      this->writeDualArmDHParams(dh_right,dh_left,PostureDat);
      // distance between the hand and the object
@@ -12643,7 +12650,9 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      PostureMod << string("# PARAMETERS \n\n");
 
      this->writePI(PostureMod);
-     this->writeBodyDimMod(PostureMod);
+     if(coll_body){
+        this->writeBodyDimMod(PostureMod);
+     }
      this->writeDualArmDHParamsMod(PostureMod);
      this->write_dual_dHOMod(PostureMod);
 
@@ -13710,21 +13719,24 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
       }
 
       // constraints with the body
-      this->writeDualBodyConstraints(PostureMod,false,true);
-      this->writeDualBodyConstraints(PostureMod,false,false);
-
+      if(coll_body){
+        this->writeDualBodyConstraints(PostureMod,false,true);
+        this->writeDualBodyConstraints(PostureMod,false,false);
+      }
 
       // constraints between the arms
-      PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
-      PostureMod << string("# \n");
-      PostureMod << string("# Constraints between the arms \n");
-      PostureMod << string("subject to Arm_Arm{i1 in 4..8, i2 in 4..8,l in 1..Nsteps+1}:  \n");
-      PostureMod << string("(Points_Arm_left[i1,1,l] - Points_Arm_right[i2,1,l])^2 + \n");
-      PostureMod << string("(Points_Arm_left[i1,2,l] - Points_Arm_right[i2,2,l])^2 + \n");
-      PostureMod << string("(Points_Arm_left[i1,3,l] - Points_Arm_right[i2,3,l])^2 - \n");
-      PostureMod << string("(Points_Arm_left[i1,4,l] + Points_Arm_right[i2,4,l])^2 >= 0; \n");
-      PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
-      PostureMod << string("# \n");
+      if(coll_arms){
+          PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+          PostureMod << string("# \n");
+          PostureMod << string("# Constraints between the arms \n");
+          PostureMod << string("subject to Arm_Arm{i1 in 4..8, i2 in 4..8,l in 1..Nsteps+1}:  \n");
+          PostureMod << string("(Points_Arm_left[i1,1,l] - Points_Arm_right[i2,1,l])^2 + \n");
+          PostureMod << string("(Points_Arm_left[i1,2,l] - Points_Arm_right[i2,2,l])^2 + \n");
+          PostureMod << string("(Points_Arm_left[i1,3,l] - Points_Arm_right[i2,3,l])^2 - \n");
+          PostureMod << string("(Points_Arm_left[i1,4,l] + Points_Arm_right[i2,4,l])^2 >= 0; \n");
+          PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+          PostureMod << string("# \n");
+      }
 
 
       PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
