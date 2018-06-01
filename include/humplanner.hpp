@@ -845,8 +845,9 @@ private:
      * @param stream
      * @param minArmLimits
      * @param maxArmLimits
+     * @param final
      */
-    void writeArmLimits(std::ofstream& stream, std::vector<double>& minArmLimits,std::vector<double>& maxArmLimits);
+    void writeArmLimits(std::ofstream& stream, std::vector<double>& minArmLimits, std::vector<double>& maxArmLimits, bool final);
 
     /**
      * @brief writeDualArmLimits
@@ -855,9 +856,10 @@ private:
      * @param maxRightArmLimits
      * @param minLeftArmLimits
      * @param maxLeftArmLimits
+     * @param final
      */
-    void writeDualArmLimits(std::ofstream& stream, std::vector<double>& minRightArmLimits,std::vector<double>& maxRightArmLimits,
-                            std::vector<double>& minLeftArmLimits,std::vector<double>& maxLeftArmLimits);
+    void writeDualArmLimits(std::ofstream& stream, std::vector<double>& minRightArmLimits, std::vector<double>& maxRightArmLimits,
+                            std::vector<double>& minLeftArmLimits, std::vector<double>& maxLeftArmLimits, bool final);
 
     /**
      * @brief This method writes down the initial posture of the arm

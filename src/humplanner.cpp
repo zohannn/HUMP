@@ -478,15 +478,23 @@ void HUMPlanner::write_dual_dHO(std::ofstream& stream, double dHO_right, double 
     stream << string("param dFH_left := ")+dHOstr_left+string(";\n");
 }
 
-void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLimits, std::vector<double> &maxArmLimits)
+void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLimits, std::vector<double> &maxArmLimits,bool final)
 {
 
     stream << string("# JOINT LIMITS \n");
     stream << string("# Lower Bound \n");
     stream << string("param llim := \n");
 
+    double joint_spacer;
+    if(final)
+    {
+        joint_spacer = SPACER;
+    }else{
+        joint_spacer = SPACER_BOUNCE;
+    }
+
     for (std::size_t i=0; i < minArmLimits.size(); ++i){
-        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+SPACER));
+        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+joint_spacer));
         boost::replace_all(minLim,",",".");
         if (i == minArmLimits.size()-1){
             stream << to_string(i+1)+string(" ")+minLim+string(";\n");
@@ -499,7 +507,7 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     stream << string("param ulim := \n");
 
     for (std::size_t i=0; i < maxArmLimits.size(); ++i){
-        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-SPACER));
+        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-joint_spacer));
         boost::replace_all(maxLim,",",".");
 
         if (i == maxArmLimits.size()-1){
@@ -512,7 +520,7 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
 }
 
 void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& minRightArmLimits,std::vector<double>& maxRightArmLimits,
-                        std::vector<double>& minLeftArmLimits,std::vector<double>& maxLeftArmLimits)
+                        std::vector<double>& minLeftArmLimits,std::vector<double>& maxLeftArmLimits,bool final)
 {
 
     std::vector<double> minArmLimits; std::vector<double> maxArmLimits;
@@ -526,8 +534,15 @@ void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& 
     stream << string("# Lower Bound \n");
     stream << string("param llim := \n");
 
+    double joint_spacer;
+    if(final){
+        joint_spacer = SPACER;
+    }else{
+        joint_spacer = SPACER_BOUNCE;
+    }
+
     for (std::size_t i=0; i < minArmLimits.size(); ++i){
-        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+SPACER));
+        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+joint_spacer));
         boost::replace_all(minLim,",",".");
         if (i == minArmLimits.size()-1){
             stream << to_string(i+1)+string(" ")+minLim+string(";\n");
@@ -540,7 +555,7 @@ void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& 
     stream << string("param ulim := \n");
 
     for (std::size_t i=0; i < maxArmLimits.size(); ++i){
-        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-SPACER));
+        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-joint_spacer));
         boost::replace_all(maxLim,",",".");
 
         if (i == maxArmLimits.size()-1){
@@ -5843,7 +5858,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     // distance between the hand and the object
     this->write_dHO(PostureDat,dHO);
     // joint limits
-    this->writeArmLimits(PostureDat,minArmLimits,maxArmLimits);
+    this->writeArmLimits(PostureDat,minArmLimits,maxArmLimits,true);
     // initial pose of the arm
     this->writeArmInitPose(PostureDat,initArmPosture);
     // final posture of the fingers
@@ -6331,7 +6346,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // distance between the hand and the object
      this->write_dHO(PostureDat,dHO);
      // joint limits
-     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits);
+     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
      this->writeArmInitPose(PostureDat,initAuxPosture);
      // final pose of the arm
@@ -8569,7 +8584,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
 
     app->Options()->SetNumericValue("tol", tol);
     app->Options()->SetNumericValue("acceptable_tol", acc_tol);
-    //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
+    app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
     app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
@@ -9081,13 +9096,13 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
     bAux.acc_0=acc0Aux;
     bAux.acc_f=accfAux;
     // initial guess
-    std::vector<double> initialGuess = initAuxPosture;
-    /*
+    //std::vector<double> initialGuess = initAuxPosture;
+
     std::vector<double> initialGuess(initAuxPosture.size(),0.0);
     for(size_t i=0; i < initAuxPosture.size();++i){
         initialGuess.at(i) = (initAuxPosture.at(i)+finalAuxPosture.at(i))/2;
     }
-    */
+
 
 
     std::vector<double> initRightPosture(initPosture.begin(),initPosture.begin()+joints_arm+joints_hand);
@@ -11787,7 +11802,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     // distance between the hands and the object
     this->write_dual_dHO(PostureDat,dHO_right,dHO_left);
     // joint limits of the arms
-    this->writeDualArmLimits(PostureDat,minRightArmLimits,maxRightArmLimits,minLeftArmLimits,maxLeftArmLimits);
+    this->writeDualArmLimits(PostureDat,minRightArmLimits,maxRightArmLimits,minLeftArmLimits,maxLeftArmLimits,true);
     // initial pose of the arms
     this->writeDualArmInitPose(PostureDat,initRightArmPosture,initLeftArmPosture);
     // final posture of the fingers
@@ -12452,7 +12467,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      // distance between the hand and the object
      this->write_dual_dHO(PostureDat,dHO_right,dHO_left);
      // joint limits
-     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits);
+     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
      this->writeArmInitPose(PostureDat,initAuxPosture);
      // final pose of the arm
