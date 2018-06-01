@@ -6352,7 +6352,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      this->writeLambda(PostureDat,lambda);
      // initial guess
      PostureDat << string("# INITIAL GUESS \n");
-     PostureDat << string("var theta_b := \n");
+     PostureDat << string("var theta_b = \n");
      for (std::size_t i=0; i < initialGuess.size(); ++i){
          string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
          boost::replace_all(guess,",",".");
@@ -9081,10 +9081,14 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
     bAux.acc_0=acc0Aux;
     bAux.acc_f=accfAux;
     // initial guess
+    std::vector<double> initialGuess = initAuxPosture;
+    /*
     std::vector<double> initialGuess(initAuxPosture.size(),0.0);
     for(size_t i=0; i < initAuxPosture.size();++i){
         initialGuess.at(i) = (initAuxPosture.at(i)+finalAuxPosture.at(i))/2;
     }
+    */
+
 
     std::vector<double> initRightPosture(initPosture.begin(),initPosture.begin()+joints_arm+joints_hand);
     std::vector<double> initLeftPosture(initPosture.begin(),initPosture.begin()+joints_arm+joints_hand);
@@ -10666,8 +10670,8 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to grasp selection failed ");}
                             }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre grasp selection failed ");}
                         }else{ // no collisions
-                            pre_post = 0;
-                            FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
+                            //pre_post = 0;
+                            //FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
                             if(FPosture){
                                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                                 res->time_steps.clear();
@@ -10690,7 +10694,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 res->acceleration_stages.push_back(acc);
                                 // approach stage
                                 mod = 2;
-                                int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
+                                //int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
                                 timestep = this->getAcceleration(mov_type,steps_app,params,finalPosture_pre_grasp_ext,finalPosture_ext,traj,vel,acc,success,mod);
                                 if(success){
                                     res->time_steps.push_back(timestep);
@@ -11284,7 +11288,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
                 finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
                 finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm,finalHand_right.at(0));                
                 for(size_t i=1;i<finalHand_right.size();++i){
-                    if(((finalHand_right.at(i) -AP) > minLimits_right.at(i+joints_arm))){
+                    if(((finalHand_right.at(i)-AP) > minLimits_right.at(i+joints_arm))){
                         hand_r.push_back(finalHand_right.at(i)-AP);
                     }else{
                        hand_r.push_back(minLimits_right.at(i+joints_arm));
@@ -11293,7 +11297,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
                 finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm+1,hand_r.begin(),hand_r.end());
                 finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.at(0));                
                 for(size_t i=1;i<finalHand_left.size();++i){
-                    if(((finalHand_left.at(i) -AP) > minLimits_left.at(i+joints_arm))){
+                    if(((finalHand_left.at(i)-AP) > minLimits_left.at(i+joints_arm))){
                         hand_l.push_back(finalHand_left.at(i)-AP);
                     }else{
                        hand_l.push_back(minLimits_left.at(i+joints_arm));
@@ -11349,8 +11353,8 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
                                 }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to grasp selection failed ");}
                             }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre grasp selection failed ");}
                         }else{ // no collisions
-                            pre_post = 0;
-                            FPosture = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
+                            //pre_post = 0;
+                            //FPosture = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture);
                             if(FPosture){
                                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                                 res->time_steps.clear();
@@ -11372,7 +11376,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
                                 res->acceleration_stages.push_back(acc);
                                 // approach stage
                                 mod = 2;
-                                int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
+                                //int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
                                 timestep = this->getDualAcceleration(dual_mov_type,steps_app,params,finalPosture_pre_grasp_ext,finalPosture_ext,traj,vel,acc,success,mod);
                                 if(success){
                                     res->time_steps.push_back(timestep);
@@ -12469,7 +12473,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      this->writeLambda(PostureDat,lambda);
      // initial guess
      PostureDat << string("# INITIAL GUESS \n");
-     PostureDat << string("var theta_b := \n");
+     PostureDat << string("var theta_b = \n");
      for (std::size_t i=0; i < initialGuess.size(); ++i){
          string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
          boost::replace_all(guess,",",".");
