@@ -5676,6 +5676,7 @@ void HUMPlanner::writeBodyConstraints(ofstream &stream, bool final)
 
 void HUMPlanner::writeDualBodyConstraints(ofstream &stream, bool final,bool right)
 {
+    stream << string("\n\n");
     if(right)
     {
         // right arm
@@ -8584,7 +8585,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
 
     app->Options()->SetNumericValue("tol", tol);
     app->Options()->SetNumericValue("acceptable_tol", acc_tol);
-    app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
+    //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
     app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
