@@ -61,8 +61,8 @@ const double FINAL_DUAL_ACC_TOL = 1e-1; /**< acceptable convergence tolerance */
 const double FINAL_DUAL_CONSTR_VIOL_TOL = 0.0001; /**< constraints violation tolerance */
 
 // Bounce posture selection problem ipopt options
-const double BOUNCE_TOL = 1e-6; /**< desired convergence tolerance*/
-const double BOUNCE_ACC_TOL = 1e-3; /**< acceptable convergence tolerance */
+const double BOUNCE_TOL = 1e-3; /**< desired convergence tolerance*/
+const double BOUNCE_ACC_TOL = 1e-2; /**< acceptable convergence tolerance */
 const double BOUNCE_CONSTR_VIOL_TOL = 0.0001; /**< constraints violation tolerance */
 //const double BOUNCE_CONSTR_VIOL_TOL = 1e-6; /**< constraints violation tolerance */
 
@@ -70,7 +70,7 @@ const double BOUNCE_DUAL_TOL = 1e-2; /**< desired convergence tolerance*/
 const double BOUNCE_DUAL_ACC_TOL = 1e-1; /**< acceptable convergence tolerance */
 const double BOUNCE_DUAL_CONSTR_VIOL_TOL = 1e-3; /**< constraints violation tolerance */
 
-const double SPACER = 2.0*static_cast<double>(M_PI)/180; /**< degree used to space the joint limits [deg]: IPOPT sometimes does not fully respect all the constraints,
+const double SPACER = 1.0*static_cast<double>(M_PI)/180; /**< degree used to space the joint limits [deg]: IPOPT sometimes does not fully respect all the constraints,
                                                               but the joint limits has to be respected
                                                               This parameter helps to stay within the joint range */
 
