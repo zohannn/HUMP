@@ -8588,7 +8588,8 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
     //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
     app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-    app->Options()->SetIntegerValue("print_level",5);
+    app->Options()->SetIntegerValue("print_level",3);
+    //app->Options()->SetIntegerValue("max_iter",10000);
     //double bound_frac = 0.01;//k2
     //double bound_push = 0.01;//k1
     //double bound_relax_factor = 0.0;
