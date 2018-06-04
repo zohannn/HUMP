@@ -8588,7 +8588,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
     //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
     app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
-    app->Options()->SetIntegerValue("print_level",3);
+    app->Options()->SetIntegerValue("print_level",5);
     //double bound_frac = 0.01;//k2
     //double bound_push = 0.01;//k1
     //double bound_relax_factor = 0.0;
@@ -8890,10 +8890,13 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
     bAux.acc_0=acc0Aux;
     bAux.acc_f=accfAux;
     // initial guess
+    std::vector<double> initialGuess = initAuxPosture;
+    /*
     std::vector<double> initialGuess(initAuxPosture.size(),0.0);
     for(size_t i=0; i < initAuxPosture.size();++i){
         initialGuess.at(i) = (initAuxPosture.at(i)+finalAuxPosture.at(i))/2;
     }
+    */
     double Lu = dh.d.at(2);
     double Ll = dh.d.at(4);
     double Lh = dh.d.at(6);
@@ -9097,14 +9100,13 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
     bAux.acc_0=acc0Aux;
     bAux.acc_f=accfAux;
     // initial guess
-    //std::vector<double> initialGuess = initAuxPosture;
-
+    std::vector<double> initialGuess = initAuxPosture;
+    /*
     std::vector<double> initialGuess(initAuxPosture.size(),0.0);
     for(size_t i=0; i < initAuxPosture.size();++i){
         initialGuess.at(i) = (initAuxPosture.at(i)+finalAuxPosture.at(i))/2;
     }
-
-
+    */
 
     std::vector<double> initRightPosture(initPosture.begin(),initPosture.begin()+joints_arm+joints_hand);
     std::vector<double> initLeftPosture(initPosture.begin(),initPosture.begin()+joints_arm+joints_hand);
@@ -11452,7 +11454,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
         if(coll_right && coll_left){ // collisions
             if(retreat_right && retreat_left && FPosture && BPosture){// retreat stage
                 pre_post=2;
-                FPosture_post_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                FPosture_post_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_ext,finalPosture_post_grasp);
                 if (FPosture_post_grasp){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
@@ -11476,7 +11478,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
         }else{ // no collisions
             if(retreat_right && retreat_right && FPosture){// retreat stage
                 pre_post=2;
-                FPosture_post_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture,finalPosture_post_grasp);
+                FPosture_post_grasp = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_ext,finalPosture_post_grasp);
                 if (FPosture_post_grasp){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
