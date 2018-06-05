@@ -6177,6 +6177,22 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
         PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("(((Rot[1,1,i]*Points_Arm[j,1]+Rot[2,1,i]*Points_Arm[j,2]+Rot[3,1,i]*Points_Arm[j,3]\n");
+        PostureMod << string("-Obstacles[i,1]*Rot[1,1,i]-Obstacles[i,2]*Rot[2,1,i]-Obstacles[i,3]*Rot[3,1,i])\n");
+        PostureMod << string("/(Obstacles[i,4]+Points_Arm[j,4]")+txx1+string("))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot[1,2,i]*Points_Arm[j,1]+Rot[2,2,i]*Points_Arm[j,2]+Rot[3,2,i]*Points_Arm[j,3]\n");
+        PostureMod << string("-Obstacles[i,1]*Rot[1,2,i]-Obstacles[i,2]*Rot[2,2,i]-Obstacles[i,3]*Rot[3,2,i])\n");
+        PostureMod << string("/(Obstacles[i,5]+Points_Arm[j,4]")+tyy1+string("))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot[1,3,i]*Points_Arm[j,1]+Rot[2,3,i]*Points_Arm[j,2]+Rot[3,3,i]*Points_Arm[j,3]\n");
+        PostureMod << string("-Obstacles[i,1]*Rot[1,3,i]-Obstacles[i,2]*Rot[2,3,i]-Obstacles[i,3]*Rot[3,3,i])\n");
+        PostureMod << string("/(Obstacles[i,6]+Points_Arm[j,4]")+tzz1+string("))^2)");
+        PostureMod << string(">= 1;\n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("#  \n");
+
+        /*
         PostureMod << string("((Points_Arm[j,1]-Obstacles[i,1])^2)*(  \n");
         PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4]")+txx1+string(")^2) + \n");
         PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4]")+txx2+string(")^2) + \n");
@@ -6209,6 +6225,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
+        */
 
     }
 
@@ -6986,6 +7003,23 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
             PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
         }
         */
+
+        PostureMod << string("(((x_t[1]*Points_Arm[j,1,l]+x_t[2]*Points_Arm[j,2,l]+x_t[3]*Points_Arm[j,3,l]\n");
+        PostureMod << string("-ObjTar[1,1]*x_t[1]-ObjTar[1,2]*x_t[2]-ObjTar[1,3]*x_t[3])\n");
+        PostureMod << string("/(ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l]))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((y_t[1]*Points_Arm[j,1,l]+y_t[2]*Points_Arm[j,2,l]+y_t[3]*Points_Arm[j,3,l]\n");
+        PostureMod << string("-ObjTar[1,1]*y_t[1]-ObjTar[1,2]*y_t[2]-ObjTar[1,3]*y_t[3])\n");
+        PostureMod << string("/(ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_yy1[l]))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((z_t[1]*Points_Arm[j,1,l]+z_t[2]*Points_Arm[j,2,l]+z_t[3]*Points_Arm[j,3,l]\n");
+        PostureMod << string("-ObjTar[1,1]*z_t[1]-ObjTar[1,2]*z_t[2]-ObjTar[1,3]*z_t[3])\n");
+        PostureMod << string("/(ObjTar[1,6]+Points_Arm[j,4,l]+tol_target_zz1[l]))^2)\n");
+        PostureMod << string(">= 1;\n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("# \n");
+
+        /*
         PostureMod << string("((Points_Arm[j,1,l]-ObjTar[1,1])^2)*( \n");
         PostureMod << string("(x_t[1])^2 / ((ObjTar[1,4]+Points_Arm[j,4,l]+tol_target_xx1[l])^2) + \n");
         PostureMod << string("(x_t[2])^2 / ((ObjTar[1,5]+Points_Arm[j,4,l]+tol_target_xx2[l])^2) + \n");
@@ -7018,6 +7052,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
+        */
    }
 
      if(obstacle_avoidance){
@@ -7186,6 +7221,24 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         }else{
              PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n"); // pick movements
         }
+
+        PostureMod << string("(((Rot[1,1,i]*Points_Arm[j,1,l]+Rot[2,1,i]*Points_Arm[j,2,l]+Rot[3,1,i]*Points_Arm[j,3,l]\n");
+        PostureMod << string("-Obstacles[i,1]*Rot[1,1,i]-Obstacles[i,2]*Rot[2,1,i]-Obstacles[i,3]*Rot[3,1,i])\n");
+        PostureMod << string("/(Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_xx1[l]))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot[1,2,i]*Points_Arm[j,1,l]+Rot[2,2,i]*Points_Arm[j,2,l]+Rot[3,2,i]*Points_Arm[j,3,l]\n");
+        PostureMod << string("-Obstacles[i,1]*Rot[1,2,i]-Obstacles[i,2]*Rot[2,2,i]-Obstacles[i,3]*Rot[3,2,i])\n");
+        PostureMod << string("/(Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_yy1[l]))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot[1,3,i]*Points_Arm[j,1,l]+Rot[2,3,i]*Points_Arm[j,2,l]+Rot[3,3,i]*Points_Arm[j,3,l]\n");
+        PostureMod << string("-Obstacles[i,1]*Rot[1,3,i]-Obstacles[i,2]*Rot[2,3,i]-Obstacles[i,3]*Rot[3,3,i])\n");
+        PostureMod << string("/(Obstacles[i,6]+Points_Arm[j,4,l]+tol_obs_zz1[l]))^2)\n");
+        PostureMod << string(">= 1;\n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+        PostureMod << string("# \n");
+
+
+        /*
         PostureMod << string("((Points_Arm[j,1,l]-Obstacles[i,1])^2)*(\n");
         PostureMod << string("(Rot[1,1,i])^2 / ((Obstacles[i,4]+Points_Arm[j,4,l]+tol_obs_xx1[l])^2) +\n");
         PostureMod << string("(Rot[2,1,i])^2 / ((Obstacles[i,5]+Points_Arm[j,4,l]+tol_obs_xx2[l])^2) + \n");
@@ -7218,6 +7271,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
         PostureMod << string("# \n");
+        */
 
      }
      // constraints with the body
@@ -12211,6 +12265,22 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm_right{j in 1..21, i in 1..n_Obstacles_right}:  \n");
         PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..n_Obstacles_right}:  \n");
+        PostureMod << string("(((Rot_right[1,1,i]*Points_Arm_right[j,1]+Rot_right[2,1,i]*Points_Arm_right[j,2]+Rot_right[3,1,i]*Points_Arm_right[j,3]\n");
+        PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,1,i]-Obstacles_right[i,2]*Rot_right[2,1,i]-Obstacles_right[i,3]*Rot_right[3,1,i])\n");
+        PostureMod << string("/(Obstacles_right[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot_right[1,2,i]*Points_Arm_right[j,1]+Rot_right[2,2,i]*Points_Arm_right[j,2]+Rot_right[3,2,i]*Points_Arm_right[j,3]\n");
+        PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,2,i]-Obstacles_right[i,2]*Rot_right[2,2,i]-Obstacles_right[i,3]*Rot_right[3,2,i])\n");
+        PostureMod << string("/(Obstacles_right[i,5]+Points_Arm_right[j,4]")+tyy1+string("))^2");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot_right[1,3,i]*Points_Arm_right[j,1]+Rot_right[2,3,i]*Points_Arm_right[j,2]+Rot_right[3,3,i]*Points_Arm_right[j,3]\n");
+        PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,3,i]-Obstacles_right[i,2]*Rot_right[2,3,i]-Obstacles_right[i,3]*Rot_right[3,3,i])\n");
+        PostureMod << string("/(Obstacles_right[i,6]+Points_Arm_right[j,4]")+tzz1+string("))^2)\n");
+        PostureMod << string(">= 1;\n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("#  \n");
+
+        /*
         PostureMod << string("((Points_Arm_right[j,1]-Obstacles_right[i,1])^2)*(  \n");
         PostureMod << string("(Rot_right[1,1,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4]")+txx1+string(")^2) + \n");
         PostureMod << string("(Rot_right[2,1,i])^2 / ((Obstacles_right[i,5]+Points_Arm_right[j,4]")+txx2+string(")^2) + \n");
@@ -12241,6 +12311,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("(Rot_right[2,2,i]*Rot_right[2,3,i])/((Obstacles_right[i,5]+Points_Arm_right[j,4]")+tyz2+string(")^2) + \n");
         PostureMod << string("(Rot_right[3,2,i]*Rot_right[3,3,i])/((Obstacles_right[i,6]+Points_Arm_right[j,4]")+tyz3+string(")^2)) \n");
         PostureMod << string("-1 >=0; \n");
+        */
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
 
@@ -12278,6 +12349,22 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm_left{j in 1..21, i in 1..n_Obstacles_left}:  \n");
         PostureMod << string("subject to obst_Arm_left{j in 1..15, i in 1..n_Obstacles_left}:  \n");
+        PostureMod << string("(((Rot_left[1,1,i]*Points_Arm_left[j,1]+Rot_left[2,1,i]*Points_Arm_left[j,2]+Rot_left[3,1,i]*Points_Arm_left[j,3]\n");
+        PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,1,i]-Obstacles_left[i,2]*Rot_left[2,1,i]-Obstacles_left[i,3]*Rot_left[3,1,i])\n");
+        PostureMod << string("/(Obstacles_left[i,4]+Points_Arm_left[j,4]")+txx1+string("))^2\n");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot_left[1,2,i]*Points_Arm_left[j,1]+Rot_left[2,2,i]*Points_Arm_left[j,2]+Rot_left[3,2,i]*Points_Arm_left[j,3]\n");
+        PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,2,i]-Obstacles_left[i,2]*Rot_left[2,2,i]-Obstacles_left[i,3]*Rot_left[3,2,i])\n");
+        PostureMod << string("/(Obstacles_left[i,5]+Points_Arm_left[j,4]")+tyy1+string("))^2");
+        PostureMod << string("+\n");
+        PostureMod << string("((Rot_left[1,3,i]*Points_Arm_left[j,1]+Rot_left[2,3,i]*Points_Arm_left[j,2]+Rot_left[3,3,i]*Points_Arm_left[j,3]\n");
+        PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,3,i]-Obstacles_left[i,2]*Rot_left[2,3,i]-Obstacles_left[i,3]*Rot_left[3,3,i])\n");
+        PostureMod << string("/(Obstacles_left[i,6]+Points_Arm_left[j,4]")+tzz1+string("))^2)\n");
+        PostureMod << string(">= 1;\n");
+        PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+        PostureMod << string("#  \n");
+
+        /*
         PostureMod << string("((Points_Arm_left[j,1]-Obstacles_left[i,1])^2)*(  \n");
         PostureMod << string("(Rot_left[1,1,i])^2 / ((Obstacles_left[i,4]+Points_Arm_left[j,4]")+txx1+string(")^2) + \n");
         PostureMod << string("(Rot_left[2,1,i])^2 / ((Obstacles_left[i,5]+Points_Arm_left[j,4]")+txx2+string(")^2) + \n");
@@ -12310,6 +12397,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("-1 >=0; \n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
+        */
 
     }
 
@@ -13147,6 +13235,22 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
                PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
            }
            */
+           PostureMod << string("(((x_t_right[1]*Points_Arm_right[j,1,l]+x_t_right[2]*Points_Arm_right[j,2,l]+x_t_right[3]*Points_Arm_right[j,3,l]\n");
+           PostureMod << string("-ObjTar_right[1,1]*x_t_right[1]-ObjTar_right[1,2]*x_t_right[2]-ObjTar_right[1,3]*x_t_right[3])\n");
+           PostureMod << string("/(ObjTar_right[1,4]+Points_Arm_right[j,4,l]+tol_target_right_xx1[l]))^2\n");
+           PostureMod << string("+\n");
+           PostureMod << string("((y_t_right[1]*Points_Arm_right[j,1,l]+y_t_right[2]*Points_Arm_right[j,2,l]+y_t_right[3]*Points_Arm_right[j,3,l]\n");
+           PostureMod << string("-ObjTar_right[1,1]*y_t_right[1]-ObjTar_right[1,2]*y_t_right[2]-ObjTar_right[1,3]*y_t_right[3])\n");
+           PostureMod << string("/(ObjTar_right[1,5]+Points_Arm_right[j,4,l]+tol_target_right_yy1[l]))^2\n");
+           PostureMod << string("+\n");
+           PostureMod << string("((z_t_right[1]*Points_Arm_right[j,1,l]+z_t_right[2]*Points_Arm_right[j,2,l]+z_t_right[3]*Points_Arm_right[j,3,l]\n");
+           PostureMod << string("-ObjTar_right[1,1]*z_t_right[1]-ObjTar_right[1,2]*z_t_right[2]-ObjTar_right[1,3]*z_t_right[3])\n");
+           PostureMod << string("/(ObjTar_right[1,6]+Points_Arm_right[j,4,l]+tol_target_right_zz1[l]))^2)\n");
+           PostureMod << string(">= 1;\n");
+           PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+           PostureMod << string("# \n");
+
+           /*
            PostureMod << string("((Points_Arm_right[j,1,l]-ObjTar_right[1,1])^2)*( \n");
            PostureMod << string("(x_t_right[1])^2 / ((ObjTar_right[1,4]+Points_Arm_right[j,4,l]+tol_target_right_xx1[l])^2) + \n");
            PostureMod << string("(x_t_right[2])^2 / ((ObjTar_right[1,5]+Points_Arm_right[j,4,l]+tol_target_right_xx2[l])^2) + \n");
@@ -13179,6 +13283,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
            PostureMod << string("-1 >=0; \n");
            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
            PostureMod << string("# \n");
+           */
       }
 
       if(target_avoidance && !obj_left_place && !move){
@@ -13389,6 +13494,23 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
                PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
            }
            */
+
+           PostureMod << string("(((x_t_left[1]*Points_Arm_left[j,1,l]+x_t_left[2]*Points_Arm_left[j,2,l]+x_t_left[3]*Points_Arm_left[j,3,l]\n");
+           PostureMod << string("-ObjTar_left[1,1]*x_t_left[1]-ObjTar_left[1,2]*x_t_left[2]-ObjTar_left[1,3]*x_t_left[3])\n");
+           PostureMod << string("/(ObjTar_left[1,4]+Points_Arm_left[j,4,l]+tol_target_left_xx1[l]))^2\n");
+           PostureMod << string("+\n");
+           PostureMod << string("((y_t_left[1]*Points_Arm_left[j,1,l]+y_t_left[2]*Points_Arm_left[j,2,l]+y_t_left[3]*Points_Arm_left[j,3,l]\n");
+           PostureMod << string("-ObjTar_left[1,1]*y_t_left[1]-ObjTar_left[1,2]*y_t_left[2]-ObjTar_left[1,3]*y_t_left[3])\n");
+           PostureMod << string("/(ObjTar_left[1,5]+Points_Arm_left[j,4,l]+tol_target_left_yy1[l]))^2\n");
+           PostureMod << string("+\n");
+           PostureMod << string("((z_t_left[1]*Points_Arm_left[j,1,l]+z_t_left[2]*Points_Arm_left[j,2,l]+z_t_left[3]*Points_Arm_left[j,3,l]\n");
+           PostureMod << string("-ObjTar_left[1,1]*z_t_left[1]-ObjTar_left[1,2]*z_t_left[2]-ObjTar_left[1,3]*z_t_left[3])\n");
+           PostureMod << string("/(ObjTar_left[1,6]+Points_Arm_left[j,4,l]+tol_target_left_zz1[l]))^2)\n");
+           PostureMod << string(">= 1;\n");
+           PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+           PostureMod << string("# \n");
+
+           /*
            PostureMod << string("((Points_Arm_left[j,1,l]-ObjTar_left[1,1])^2)*( \n");
            PostureMod << string("(x_t_left[1])^2 / ((ObjTar_left[1,4]+Points_Arm_left[j,4,l]+tol_target_left_xx1[l])^2) + \n");
            PostureMod << string("(x_t_left[2])^2 / ((ObjTar_left[1,5]+Points_Arm_left[j,4,l]+tol_target_left_xx2[l])^2) + \n");
@@ -13421,6 +13543,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
            PostureMod << string("-1 >=0; \n");
            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
            PostureMod << string("# \n");
+           */
       }
 
       if(obstacle_avoidance){
@@ -13548,6 +13671,23 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          }else{
               PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..(n_Obstacles_right), l in 1..Nsteps+1}:\n"); // pick movements
          }
+
+         PostureMod << string("(((Rot_right[1,1,i]*Points_Arm_right[j,1,l]+Rot_right[2,1,i]*Points_Arm_right[j,2,l]+Rot_right[3,1,i]*Points_Arm_right[j,3,l]\n");
+         PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,1,i]-Obstacles_right[i,2]*Rot_right[2,1,i]-Obstacles_right[i,3]*Rot_right[3,1,i])\n");
+         PostureMod << string("/(Obstacles_right[i,4]+Points_Arm_right[j,4,l]+tol_obs_right_xx1[l]))^2\n");
+         PostureMod << string("+\n");
+         PostureMod << string("((Rot_right[1,2,i]*Points_Arm_right[j,1,l]+Rot_right[2,2,i]*Points_Arm_right[j,2,l]+Rot_right[3,2,i]*Points_Arm_right[j,3,l]\n");
+         PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,2,i]-Obstacles_right[i,2]*Rot_right[2,2,i]-Obstacles_right[i,3]*Rot_right[3,2,i])\n");
+         PostureMod << string("/(Obstacles_right[i,5]+Points_Arm_right[j,4,l]+tol_obs_right_yy1[l]))^2\n");
+         PostureMod << string("+\n");
+         PostureMod << string("((Rot_right[1,3,i]*Points_Arm_right[j,1,l]+Rot_right[2,3,i]*Points_Arm_right[j,2,l]+Rot_right[3,3,i]*Points_Arm_right[j,3,l]\n");
+         PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,3,i]-Obstacles_right[i,2]*Rot_right[2,3,i]-Obstacles_right[i,3]*Rot_right[3,3,i])\n");
+         PostureMod << string("/(Obstacles_right[i,6]+Points_Arm_right[j,4,l]+tol_obs_right_zz1[l]))^2)\n");
+         PostureMod << string(">= 1;\n");
+         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+         PostureMod << string("# \n");
+
+         /*
          PostureMod << string("((Points_Arm_right[j,1,l]-Obstacles_right[i,1])^2)*(\n");
          PostureMod << string("(Rot_right[1,1,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4,l]+tol_obs_right_xx1[l])^2) +\n");
          PostureMod << string("(Rot_right[2,1,i])^2 / ((Obstacles_right[i,5]+Points_Arm_right[j,4,l]+tol_obs_right_xx2[l])^2) + \n");
@@ -13580,6 +13720,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          PostureMod << string("-1 >=0; \n");
          PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
          PostureMod << string("# \n");
+         */
       }
 
       if(obstacle_avoidance){
@@ -13707,6 +13848,23 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          }else{
               PostureMod << string("subject to obst_Arm_left{j in 1..15, i in 1..(n_Obstacles_left), l in 1..Nsteps+1}:\n"); // pick movements
          }
+
+         PostureMod << string("(((Rot_left[1,1,i]*Points_Arm_left[j,1,l]+Rot_left[2,1,i]*Points_Arm_left[j,2,l]+Rot_left[3,1,i]*Points_Arm_left[j,3,l]\n");
+         PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,1,i]-Obstacles_left[i,2]*Rot_left[2,1,i]-Obstacles_left[i,3]*Rot_left[3,1,i])\n");
+         PostureMod << string("/(Obstacles_left[i,4]+Points_Arm_left[j,4,l]+tol_obs_left_xx1[l]))^2\n");
+         PostureMod << string("+\n");
+         PostureMod << string("((Rot_left[1,2,i]*Points_Arm_left[j,1,l]+Rot_left[2,2,i]*Points_Arm_left[j,2,l]+Rot_left[3,2,i]*Points_Arm_left[j,3,l]\n");
+         PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,2,i]-Obstacles_left[i,2]*Rot_left[2,2,i]-Obstacles_left[i,3]*Rot_left[3,2,i])\n");
+         PostureMod << string("/(Obstacles_left[i,5]+Points_Arm_left[j,4,l]+tol_obs_left_yy1[l]))^2\n");
+         PostureMod << string("+\n");
+         PostureMod << string("((Rot_left[1,3,i]*Points_Arm_left[j,1,l]+Rot_left[2,3,i]*Points_Arm_left[j,2,l]+Rot_left[3,3,i]*Points_Arm_left[j,3,l]\n");
+         PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,3,i]-Obstacles_left[i,2]*Rot_left[2,3,i]-Obstacles_left[i,3]*Rot_left[3,3,i])\n");
+         PostureMod << string("/(Obstacles_left[i,6]+Points_Arm_left[j,4,l]+tol_obs_left_zz1[l]))^2)\n");
+         PostureMod << string(">= 1;\n");
+         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
+         PostureMod << string("# \n");
+
+         /*
          PostureMod << string("((Points_Arm_left[j,1,l]-Obstacles_left[i,1])^2)*(\n");
          PostureMod << string("(Rot_left[1,1,i])^2 / ((Obstacles_left[i,4]+Points_Arm_left[j,4,l]+tol_obs_left_xx1[l])^2) +\n");
          PostureMod << string("(Rot_left[2,1,i])^2 / ((Obstacles_left[i,5]+Points_Arm_left[j,4,l]+tol_obs_left_xx2[l])^2) + \n");
@@ -13739,6 +13897,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          PostureMod << string("-1 >=0; \n");
          PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
          PostureMod << string("# \n");
+         */
       }
 
       // constraints with the body
