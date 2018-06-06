@@ -6010,7 +6010,13 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
 
     // Points of the arm
     //PostureMod << string("var Points_Arm {j in 1..21, i in 1..4} = \n");
-    PostureMod << string("var Points_Arm {j in 1..15, i in 1..4} = \n");
+    std::string n_str;
+    if(obj_place){
+        n_str = to_string(15+n_s);
+    }else{
+        n_str = to_string(15);
+    }
+    PostureMod << string("var Points_Arm {j in 1..")+n_str+string(", i in 1..4} = \n");
     PostureMod << string("if ( j=1 ) then 	(Shoulder[i]+Elbow[i])/2  \n");
     PostureMod << string("else	if ( j=2 ) then 	Elbow[i] \n");
     PostureMod << string("else    if ( j=3 ) then 	(Wrist[i]+Elbow[i])/2  \n");
@@ -6065,34 +6071,34 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     case 0: // pick
         if(pre_post == 0){
             // do not use approach/retreat options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         }else if(pre_post==1){
             // use approach options
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         }else if(pre_post==2){
             // use retreat options
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         }
         break;
     case 1: // place
         if(pre_post==0){
             // do not use approach/retreat options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         }else if(pre_post==1){
             // use approach options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         }else if(pre_post==2){
             // use retreat options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         }
         break;
     case 2: // move
-        PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] - Tar_pos[i] = 0; \n");
-        PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] - Tar_pos[i] = 0; \n");
+        PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
         break;
     }
 
@@ -6176,7 +6182,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
-        PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..n_Obstacles}:  \n");
+        PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles}:  \n");
         PostureMod << string("(((Rot[1,1,i]*Points_Arm[j,1]+Rot[2,1,i]*Points_Arm[j,2]+Rot[3,1,i]*Points_Arm[j,3]\n");
         PostureMod << string("-Obstacles[i,1]*Rot[1,1,i]-Obstacles[i,2]*Rot[2,1,i]-Obstacles[i,3]*Rot[3,1,i])\n");
         PostureMod << string("/(Obstacles[i,4]+Points_Arm[j,4]")+txx1+string("))^2\n");
@@ -6657,11 +6663,13 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          break;
      }
      // Points of the arm
+     string n_str;
      if (place){
-      PostureMod << string("var Points_Arm {j in 1..18, i in 1..4,k in Iterations} = \n");
+         n_str = to_string(15+n_s);
      }else{
-      PostureMod << string("var Points_Arm {j in 1..15, i in 1..4,k in Iterations} = \n");
+         n_str = to_string(15);
      }
+     PostureMod << string("var Points_Arm {j in 1..")+n_str+string(", i in 1..4,k in Iterations} = \n");
      PostureMod << string("if ( j=1 ) then 	(Shoulder[i,k]+Elbow[i,k])/2  \n");
      PostureMod << string("else	if ( j=2 ) then 	Elbow[i,k] \n");
      PostureMod << string("else    if ( j=3 ) then 	(Wrist[i,k]+Elbow[i,k])/2  \n");
@@ -7212,7 +7220,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("# \n");
         if(place){
             // the object to place has to be considered
-             PostureMod << string("subject to obst_Arm{j in 1..18, i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
+             PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
         }else if(move){
             // for the first number of diff_steps, no obstacle is considered because the movement is very short and the planner may get stuck
             int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE_OBS));
@@ -7350,7 +7358,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7368,7 +7376,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7387,7 +7395,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7407,7 +7415,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7425,7 +7433,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7444,7 +7452,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7472,7 +7480,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7490,7 +7498,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7509,7 +7517,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7529,7 +7537,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7547,7 +7555,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7566,7 +7574,7 @@ int HUMPlanner::model_spheres(ofstream &stream_dat, ofstream &stream_model, std:
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7628,7 +7636,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7646,7 +7654,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7665,7 +7673,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7685,7 +7693,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7703,7 +7711,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7722,7 +7730,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7750,7 +7758,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7768,7 +7776,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7787,7 +7795,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7807,7 +7815,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7825,7 +7833,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7844,7 +7852,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
                 stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s[j,k,i]*ext_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then Obj2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7907,7 +7915,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7925,7 +7933,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -7944,7 +7952,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -7964,7 +7972,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7982,7 +7990,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8001,11 +8009,12 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
-    }else{    int x=0; int y=0; int z=0; int k=0;
+    }else{
+        int x=0; int y=0; int z=0; int k=0;
         stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_obj_right[j,i2,1];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by the right arm\n");
@@ -8029,7 +8038,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -8047,7 +8056,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8066,7 +8075,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -8086,7 +8095,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -8104,7 +8113,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8123,7 +8132,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -8172,7 +8181,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -8190,7 +8199,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8209,7 +8218,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -8229,7 +8238,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -8247,7 +8256,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8266,7 +8275,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<3 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -8294,7 +8303,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -8312,7 +8321,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8331,7 +8340,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -8351,7 +8360,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -8369,7 +8378,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
@@ -8388,7 +8397,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<3 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
@@ -9206,13 +9215,23 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
                     bouncePosture.at(5) = x_sol[5];
                     bouncePosture.at(6) = x_sol[6];
                     //left arm
-                    bouncePosture.at(11) = x_sol[9];
-                    bouncePosture.at(12) = x_sol[10];
-                    bouncePosture.at(13) = x_sol[11];
-                    bouncePosture.at(14) = x_sol[12];
-                    bouncePosture.at(15) = x_sol[13];
-                    bouncePosture.at(16) = x_sol[14];
-                    bouncePosture.at(17) = x_sol[15];
+                    if(place){
+                        bouncePosture.at(11) = x_sol[7];
+                        bouncePosture.at(12) = x_sol[8];
+                        bouncePosture.at(13) = x_sol[9];
+                        bouncePosture.at(14) = x_sol[10];
+                        bouncePosture.at(15) = x_sol[11];
+                        bouncePosture.at(16) = x_sol[12];
+                        bouncePosture.at(17) = x_sol[13];
+                    }else{
+                        bouncePosture.at(11) = x_sol[9];
+                        bouncePosture.at(12) = x_sol[10];
+                        bouncePosture.at(13) = x_sol[11];
+                        bouncePosture.at(14) = x_sol[12];
+                        bouncePosture.at(15) = x_sol[13];
+                        bouncePosture.at(16) = x_sol[14];
+                        bouncePosture.at(17) = x_sol[15];
+                    }
 
                     if(!place){
                         switch(hand_code_right){
@@ -10987,8 +11006,8 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                     }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
                             }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
                         }else{ // no collisions
-                            pre_post = 0;
-                            FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
+                            //pre_post = 0;
+                            //FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
                             if(FPosture){
                                 // extend the final postures
                                 finalPosture_ext = finalPosture;
@@ -11009,7 +11028,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                 res->acceleration_stages.push_back(acc);
                                 // approach stage
                                 mod = 2;
-                                int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
+                                //int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
                                 timestep = this->getAcceleration(mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj,vel,acc,success,mod);
                                 if(success){
                                     res->time_steps.push_back(timestep);
@@ -11328,8 +11347,8 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
     bool approach_left = params.mov_specs_left.approach;
     bool retreat_right = params.mov_specs_right.retreat;
     bool retreat_left = params.mov_specs_left.retreat;
-    bool straight_line_right = params.mov_specs_right.straight_line;
-    bool straight_line_left = params.mov_specs_left.straight_line;
+    //bool straight_line_right = params.mov_specs_right.straight_line;
+    //bool straight_line_left = params.mov_specs_left.straight_line;
 
     int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
     int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
@@ -11561,6 +11580,266 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
     return res;
 }
 
+planning_dual_result_ptr HUMPlanner::plan_dual_place_place(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left)
+{
+    planning_dual_result_ptr res;
+    res.reset(new planning_dual_result);
+
+    int dual_mov_type = 1; // place right and place left
+    int mov_type_right = 1; // place
+    int mov_type_left = 1; // place
+    bool coll_right = params.mov_specs_right.coll;
+    bool coll_left = params.mov_specs_left.coll;
+    res->mov_type_right = mov_type_right;
+    res->mov_type_left = mov_type_left;
+    std::vector<double> finalHand_right = params.mov_specs_right.finalHand;
+    std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
+    std::vector<double> initPosture;
+    std::vector<double> minLimits; std::vector<double> maxLimits;
+    std::vector<double> minLimits_right; std::vector<double> maxLimits_right;
+    std::vector<double> minLimits_left; std::vector<double> maxLimits_left;
+    minLimits_right = this->minRightLimits; maxLimits_right = this->maxRightLimits;
+    minLimits_left = this->minLeftLimits; maxLimits_left = this->maxLeftLimits;
+
+    res->object_right_id = params.mov_specs_right.obj->getName();
+    res->object_left_id = params.mov_specs_left.obj->getName();
+    bool approach_right = params.mov_specs_right.approach;
+    bool approach_left = params.mov_specs_left.approach;
+    bool retreat_right = params.mov_specs_right.retreat;
+    bool retreat_left = params.mov_specs_left.retreat;
+    //bool straight_line_right = params.mov_specs_right.straight_line;
+    //bool straight_line_left = params.mov_specs_left.straight_line;
+
+    int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
+    int mod; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
+
+    initPosture = initPosture_right;
+    initPosture.insert(initPosture.end(),initPosture_left.begin(),initPosture_left.end());
+    minLimits = minLimits_right;
+    minLimits.insert(minLimits.end(),minLimits_left.begin(),minLimits_left.end());
+    maxLimits = maxLimits_right;
+    maxLimits.insert(maxLimits.end(),maxLimits_left.begin(),maxLimits_left.end());
+
+    try
+    {
+        // the posture is given by
+        // right arm(7) + right hand(4) + left arm(7) + left hand(4) = 22 joints
+        std::vector<double> finalPosture_pre_place; bool FPosture_pre_place = false; std::vector<double> finalPosture_pre_place_ext;
+        std::vector<double> hand_r; std::vector<double> hand_l;
+        std::vector<double> bouncePosture_pre_place; //bool BPosture_pre_grasp = false;
+        std::vector<double> bouncePosture; bool BPosture = false;
+        std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
+        std::vector<double> finalPosture_post_place; bool FPosture_post_place = false;
+
+        if(approach_right && approach_left)
+        {
+            pre_post = 1;
+            FPosture_pre_place = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,initPosture,finalPosture_pre_place);
+            if(FPosture_pre_place){
+                // extend the final posture
+                finalPosture_pre_place_ext = finalPosture_pre_place;
+                finalPosture_pre_place_ext.insert(finalPosture_pre_place_ext.begin()+joints_arm,finalHand_right.at(0));
+                for(size_t i=1;i<finalHand_right.size();++i){
+                    if(((finalHand_right.at(i)-AP) > minLimits_right.at(i+joints_arm))){
+                        hand_r.push_back(finalHand_right.at(i)-AP);
+                    }else{
+                       hand_r.push_back(minLimits_right.at(i+joints_arm));
+                    }
+                }
+                finalPosture_pre_place_ext.insert(finalPosture_pre_place_ext.begin()+joints_arm+1,hand_r.begin(),hand_r.end());
+                finalPosture_pre_place_ext.insert(finalPosture_pre_place_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.at(0));
+                for(size_t i=1;i<finalHand_left.size();++i){
+                    if(((finalHand_left.at(i)-AP) > minLimits_left.at(i+joints_arm))){
+                        hand_l.push_back(finalHand_left.at(i)-AP);
+                    }else{
+                       hand_l.push_back(minLimits_left.at(i+joints_arm));
+                    }
+                }
+                finalPosture_pre_place_ext.insert(finalPosture_pre_place_ext.begin()+joints_arm+joints_hand+joints_arm+1,hand_l.begin(),hand_l.end());
+
+                // get the steps of the trajectory
+                int steps = this->getSteps(maxLimits,minLimits,initPosture,finalPosture_pre_place_ext);
+
+                pre_post = 0;
+                FPosture = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_pre_place_ext,finalPosture);
+                if(FPosture){
+                    // extend the final posture
+                    finalPosture_ext = finalPosture;
+                    finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
+                    finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+
+                    // get the steps of the trajectory
+                    int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
+                    // calculate the approach boundary conditions
+                    // the velocity approach is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    //
+                    if(this->setDualBoundaryConditions(dual_mov_type,params,steps_app,finalPosture_pre_place_ext,finalPosture_ext,0)){
+                        if(coll_right && coll_left){// collisions
+                            pre_post = 1;
+                            BPosture = this->singleDualArmBouncePosture(steps,dual_mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
+                            if(BPosture){
+                                res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully");
+                                res->time_steps.clear();
+                                res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+                                res->velocity_stages.clear();
+                                res->acceleration_stages.clear();
+                                // approach stage
+                                MatrixXd traj_app; MatrixXd vel_app; MatrixXd acc_app; double timestep_app;
+                                mod = 2; bool success = true;
+                                timestep_app = this->getDualAcceleration(dual_mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj_app,vel_app,acc_app,success,mod);
+                                // pre-approach stage
+                                MatrixXd traj_pre_app; MatrixXd vel_pre_app; MatrixXd acc_pre_app; double timestep_pre_app;
+                                mod = 1;
+                                timestep_pre_app = this->getDualAcceleration(dual_mov_type,steps,params,initPosture,finalPosture_pre_place_ext,bouncePosture_pre_place,traj_pre_app,vel_pre_app,acc_pre_app,success,mod);
+                                if(success){
+                                    // pre-approach
+                                    res->time_steps.push_back(timestep_pre_app);
+                                    res->trajectory_stages.push_back(traj_pre_app); res->trajectory_descriptions.push_back("plan");
+                                    res->velocity_stages.push_back(vel_pre_app);
+                                    res->acceleration_stages.push_back(acc_pre_app);
+                                    // approach
+                                    res->time_steps.push_back(timestep_app);
+                                    res->trajectory_stages.push_back(traj_app); res->trajectory_descriptions.push_back("approach");
+                                    res->velocity_stages.push_back(vel_app);
+                                    res->acceleration_stages.push_back(acc_app);
+                                }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
+                            }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
+                        }else{ // no collisions
+                            //pre_post = 0;
+                            //FPosture = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
+                            if(FPosture){
+                                res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                                res->time_steps.clear();
+                                res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+                                res->velocity_stages.clear();
+                                res->acceleration_stages.clear();
+                                // extend the final posture
+                                finalPosture_ext = finalPosture;
+                                finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
+                                finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+
+                                bool success = true;
+                                // pre-approach stage
+                                MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1;
+                                timestep = this->getDualAcceleration(dual_mov_type,steps,params,initPosture,finalPosture_pre_place_ext,traj,vel,acc,success,mod);
+                                res->time_steps.push_back(timestep);
+                                res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
+                                res->velocity_stages.push_back(vel);
+                                res->acceleration_stages.push_back(acc);
+                                // approach stage
+                                mod = 2;
+                                //int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
+                                timestep = this->getDualAcceleration(dual_mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj,vel,acc,success,mod);
+                                if(success){
+                                    res->time_steps.push_back(timestep);
+                                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
+                                    res->velocity_stages.push_back(vel);
+                                    res->acceleration_stages.push_back(acc);
+                                }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
+                            }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
+                        }
+                   }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
+                }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
+            }else{res->status = 10; res->status_msg = string("HUMP: final posture pre place selection failed ");}
+        }else{ // no approach
+            pre_post = 0;
+            FPosture = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,initPosture,finalPosture);
+            if (FPosture){
+                // extend the final posture
+                finalPosture_ext = finalPosture;
+                finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
+                finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+
+                int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
+                if(coll_right && coll_left){ // collisions
+                    BPosture = this->singleDualArmBouncePosture(steps,dual_mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+                    if(BPosture){
+                        res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                        res->time_steps.clear();
+                        res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+                        res->velocity_stages.clear();
+                        res->acceleration_stages.clear();
+                        int mod;
+                        // plan stage
+                        MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0; bool success = true;
+                        double timestep = this->getDualAcceleration(dual_mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
+                        res->time_steps.push_back(timestep);
+                        res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
+                        res->velocity_stages.push_back(vel);
+                        res->acceleration_stages.push_back(acc);
+                    }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
+                }else{ // no collisions
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                    res->time_steps.clear();
+                    res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+                    res->velocity_stages.clear();
+                    res->acceleration_stages.clear();
+                    int mod;
+                    // plan stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0; bool success = true;
+                    double timestep = this->getDualAcceleration(dual_mov_type,steps,params,initPosture,finalPosture_ext,traj,vel,acc,success,mod);
+                    res->time_steps.push_back(timestep);
+                    res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
+                    res->velocity_stages.push_back(vel);
+                    res->acceleration_stages.push_back(acc);
+                }
+            }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
+        }
+        if(coll_right && coll_left){ // collisions
+            if(retreat_right && retreat_left && FPosture && BPosture){// retreat stage
+                pre_post=2;
+                FPosture_post_place = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_ext,finalPosture_post_place);
+                if (FPosture_post_place){
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                    std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+                    int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
+                    // calculate the retreat boundary conditions
+                    // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    this->setDualBoundaryConditions(dual_mov_type,params,steps_ret,finalPosture_ext,finalPosture_post_place_ext,1);
+                    // retreat stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3; bool success = true;
+                    timestep = this->getDualAcceleration(dual_mov_type,steps_ret,params,finalPosture_ext,finalPosture_post_place_ext,traj,vel,acc,success,mod);
+                    if(success){
+                        res->time_steps.push_back(timestep);
+                        res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
+                        res->velocity_stages.push_back(vel);
+                        res->acceleration_stages.push_back(acc);
+                    }else{res->status = 50; res->status_msg = string("HUMP: final posture retreat from place selection failed ");}
+                }else{res->status = 40; res->status_msg = string("HUMP: final posture post place selection failed ");}
+            }
+        }else{ // no collisions
+            if(retreat_right && retreat_right && FPosture){// retreat stage
+                pre_post=2;
+                FPosture_post_place = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_ext,finalPosture_post_place);
+                if (FPosture_post_place){
+                    res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                    std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+                    int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
+                    // calculate the retreat boundary conditions
+                    // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
+                    this->setDualBoundaryConditions(dual_mov_type,params,steps_ret,finalPosture_ext,finalPosture_post_place_ext,1);
+                    // retreat stage
+                    MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 3; bool success = true;
+                    timestep = this->getDualAcceleration(dual_mov_type,steps_ret,params,finalPosture_ext,finalPosture_post_place_ext,traj,vel,acc,success,mod);
+                    if(success){
+                        res->time_steps.push_back(timestep);
+                        res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
+                        res->velocity_stages.push_back(vel);
+                        res->acceleration_stages.push_back(acc);
+                    }else{res->status = 50; res->status_msg = string("HUMP: final posture retreat from place selection failed ");}
+                }else{res->status = 40; res->status_msg = string("HUMP: final posture post place selection failed ");}
+            }
+        }
+    }catch (const string message){throw message;
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
+
+    return res;
+}
+
 bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initPosture,std::vector<double>& finalPosture)
 {
     // movement settings
@@ -11582,16 +11861,17 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
     std::vector<double> approach_right_vec; std::vector<double> approach_left_vec;
     std::vector<double> retreat_right_vec; std::vector<double> retreat_left_vec;
     switch(dual_mov_type){
-    case 0: // pick pick
+    case 0: // pick right pick left
         if(approach_right){approach_right_vec = params.mov_specs_right.pre_grasp_approach;}
         if(approach_left){approach_left_vec = params.mov_specs_left.pre_grasp_approach;}
         if(retreat_right){retreat_right_vec = params.mov_specs_right.post_grasp_retreat;}
         if(retreat_left){retreat_left_vec = params.mov_specs_left.post_grasp_retreat;}
         break;
-    case 1: // place place
-        // TO DO
-        //if(approach){approach_vec = params.mov_specs.pre_place_approach;}
-        //if(retreat){retreat_vec = params.mov_specs.post_place_retreat;}
+    case 1: // place right place left
+        if(approach_right){approach_right_vec = params.mov_specs_right.pre_place_approach;}
+        if(approach_left){approach_left_vec = params.mov_specs_left.pre_place_approach;}
+        if(retreat_right){retreat_right_vec = params.mov_specs_right.post_place_retreat;}
+        if(retreat_left){retreat_left_vec = params.mov_specs_left.post_place_retreat;}
         break;
     }
 
@@ -11705,8 +11985,7 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
     // get the obstacles of the workspace
     std::vector<objectPtr> obsts_right; std::vector<objectPtr> obsts_left;
     this->getObstaclesDualArm(shPos_right,shPos_left,max_ext_right,max_ext_left,obsts_right,obsts_left,hand_code_right,hand_code_left);
-    if(dual_mov_type==1 && pre_post==0){
-        // place place movement, plan stage
+    if(dual_mov_type==1 && pre_post==0){ // dual place movement, plan stage
         // remove the support object from the obstacles of the right arm
         if(params.mov_specs_right.support_obj.compare("")){
             std::string support_obj_name = params.mov_specs_right.support_obj;
@@ -11805,10 +12084,12 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         if(retreat_left){post_grasp_retreat_left = params.mov_specs_left.post_grasp_retreat;}
         break;
     case 1: // place right place left
-        // TO DO
-        //obj_tar = params.mov_specs.obj;
-        //if(approach){pre_place_approach = params.mov_specs.pre_place_approach;}
-        //if(retreat){post_place_retreat = params.mov_specs.post_place_retreat;}
+        obj_tar_right = params.mov_specs_right.obj;
+        obj_tar_left = params.mov_specs_left.obj;
+        if(approach_right){pre_place_approach_right = params.mov_specs_right.pre_place_approach;}
+        if(approach_left){pre_place_approach_left = params.mov_specs_left.pre_place_approach;}
+        if(retreat_right){post_place_retreat_right = params.mov_specs_right.post_place_retreat;}
+        if(retreat_left){post_place_retreat_left = params.mov_specs_left.post_place_retreat;}
         break;
     }
 
@@ -11828,7 +12109,6 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     std::vector<double> maxLimits_right; std::vector<double> maxLimits_left;
     DHparameters dh_arm_right; DHparameters dh_arm_left;
 
-    //int k;
     matWorldToArm_right = this->matWorldToRightArm; matWorldToArm_left = this->matWorldToLeftArm;
     matHand_right = this->matRightHand; matHand_left = this->matLeftHand;
     minLimits_right = this->minRightLimits; minLimits_left = this->minLeftLimits;
@@ -11915,19 +12195,18 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         }
         break;
     case 1: // place right place left
-        // TO DO
-        /*
         switch(pre_post){
         case 0: // no approach, no retreat
             break;
         case 1: // approach
-            if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_place_approach);}
+            if(approach_right){this->writeDualInfoApproachRetreat(PostureDat,tar_right,pre_place_approach_right,true);}
+            if(approach_left){this->writeDualInfoApproachRetreat(PostureDat,tar_left,pre_place_approach_left,false);}
             break;
         case 2: // retreat
-            if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_place_retreat);}
+            if(retreat_right){this->writeDualInfoApproachRetreat(PostureDat,tar_right,post_place_retreat_right,true);}
+            if(retreat_left){this->writeDualInfoApproachRetreat(PostureDat,tar_left,post_place_retreat_left,false);}
             break;
         }
-        */
         break;
     }
     if(coll_right){
@@ -12026,6 +12305,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     int n_s_right = 0; // number of spheres of the object (right)
     int n_s_left = 0; // number of spheres of the object (left)
     if((dual_mov_type==1 && (pre_post==0 || pre_post==1)) || (dual_mov_type==0 && pre_post==2)){
+    //if((dual_mov_type==1 && (pre_post==0 || pre_post==1))){
         obj_right_place = true; obj_left_place = true;
         std::vector<double> obj_tar_right_size; std::string obj_right_name = obj_tar_right->getName();
         obj_tar_right->getSize(obj_tar_right_size);
@@ -12056,7 +12336,15 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
 
     // Points of the right arm
     //PostureMod << string("var Points_Arm_right {j in 1..21, i in 1..4} = \n");
-    PostureMod << string("var Points_Arm_right {j in 1..15, i in 1..4} = \n");
+    std::string n_str_right;
+    if(obj_right_place && n_s_dual==0){
+        n_str_right = to_string(15+n_s_right);
+    }else if(obj_right_place && n_s_dual!=0){
+        n_str_right = to_string(15+n_s_dual);
+    }else{
+       n_str_right = to_string(15);
+    }
+    PostureMod << string("var Points_Arm_right {j in 1..")+n_str_right+string(", i in 1..4} = \n");
     PostureMod << string("if ( j=1 ) then 	(Shoulder_right[i]+Elbow_right[i])/2  \n");
     PostureMod << string("else	if ( j=2 ) then 	Elbow_right[i] \n");
     PostureMod << string("else    if ( j=3 ) then 	(Wrist_right[i]+Elbow_right[i])/2  \n");
@@ -12112,7 +12400,16 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
 
     // Points of the left arm
     //PostureMod << string("var Points_Arm_left {j in 1..21, i in 1..4} = \n");
-    PostureMod << string("var Points_Arm_left {j in 1..15, i in 1..4} = \n");
+    std::string n_str_left;
+    if(obj_left_place && n_s_dual==0){
+        n_str_left = to_string(15+n_s_left);
+    }else if(obj_left_place && n_s_dual!=0){
+        //n_str_left = to_string(15+n_s_dual);
+        n_str_left = to_string(15);
+    }else{
+       n_str_left = to_string(15);
+    }
+    PostureMod << string("var Points_Arm_left {j in 1..")+n_str_left+string(", i in 1..4} = \n");
     PostureMod << string("if ( j=1 ) then 	(Shoulder_left[i]+Elbow_left[i])/2  \n");
     PostureMod << string("else	if ( j=2 ) then 	Elbow_left[i] \n");
     PostureMod << string("else    if ( j=3 ) then 	(Wrist_left[i]+Elbow_left[i])/2  \n");
@@ -12186,39 +12483,43 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         if(pre_post == 0){
             // do not use approach/retreat options
             PostureMod << string("# Hand position right \n");
-            PostureMod << string("subject to contr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
             PostureMod << string("# Hand position left \n");
-            PostureMod << string("subject to contr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
         }else if(pre_post==1){
             // use approach options
             PostureMod << string("# Hand position right \n");
-            PostureMod << string("subject to contr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
             PostureMod << string("# Hand position left \n");
-            PostureMod << string("subject to contr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
         }else if(pre_post==2){
             // use retreat options
             PostureMod << string("# Hand position right \n");
-            PostureMod << string("subject to contr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
             PostureMod << string("# Hand position left \n");
-            PostureMod << string("subject to contr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
+            PostureMod << string("subject to constr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
         }
         break;
     case 1: // place right place left
-        /*
         if(pre_post==0){
             // do not use approach/retreat options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# Hand position right \n");
+            PostureMod << string("subject to constr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("# Hand position left \n");
+            PostureMod << string("subject to constr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
         }else if(pre_post==1){
             // use approach options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# Hand position right \n");
+            PostureMod << string("subject to constr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("# Hand position left \n");
+            PostureMod << string("subject to constr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
         }else if(pre_post==2){
             // use retreat options
-            PostureMod << string("# subject to contr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to contr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            PostureMod << string("# Hand position right \n");
+            PostureMod << string("subject to constr_hand_pos_right: (sum{i in 1..3} (Hand_right[i] + dFH_right*z_H_right[i] - dist_right*v_t_right[i] - Tar_pos_right[i])^2) <= ")+tarpos_right+string("; \n\n");
+            PostureMod << string("# Hand position left \n");
+            PostureMod << string("subject to constr_hand_pos_left: (sum{i in 1..3} (Hand_left[i] + dFH_left*z_H_left[i] - dist_left*v_t_left[i] - Tar_pos_left[i])^2) <= ")+tarpos_left+string("; \n\n");
         }
-        */
         break;
     case 2: // move right move left
         /*
@@ -12264,14 +12565,15 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm_right{j in 1..21, i in 1..n_Obstacles_right}:  \n");
-        PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..n_Obstacles_right}:  \n");
+        //PostureMod << string("subject to obst_Arm_right{j in 1..15, i in 1..n_Obstacles_right}:  \n");
+        PostureMod << string("subject to obst_Arm_right{j in 1..")+n_str_right+string(", i in 1..n_Obstacles_right}:  \n");
         PostureMod << string("(((Rot_right[1,1,i]*Points_Arm_right[j,1]+Rot_right[2,1,i]*Points_Arm_right[j,2]+Rot_right[3,1,i]*Points_Arm_right[j,3]\n");
         PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,1,i]-Obstacles_right[i,2]*Rot_right[2,1,i]-Obstacles_right[i,3]*Rot_right[3,1,i])\n");
         PostureMod << string("/(Obstacles_right[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
         PostureMod << string("+\n");
         PostureMod << string("((Rot_right[1,2,i]*Points_Arm_right[j,1]+Rot_right[2,2,i]*Points_Arm_right[j,2]+Rot_right[3,2,i]*Points_Arm_right[j,3]\n");
         PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,2,i]-Obstacles_right[i,2]*Rot_right[2,2,i]-Obstacles_right[i,3]*Rot_right[3,2,i])\n");
-        PostureMod << string("/(Obstacles_right[i,5]+Points_Arm_right[j,4]")+tyy1+string("))^2");
+        PostureMod << string("/(Obstacles_right[i,5]+Points_Arm_right[j,4]")+tyy1+string("))^2\n");
         PostureMod << string("+\n");
         PostureMod << string("((Rot_right[1,3,i]*Points_Arm_right[j,1]+Rot_right[2,3,i]*Points_Arm_right[j,2]+Rot_right[3,3,i]*Points_Arm_right[j,3]\n");
         PostureMod << string("-Obstacles_right[i,1]*Rot_right[1,3,i]-Obstacles_right[i,2]*Rot_right[2,3,i]-Obstacles_right[i,3]*Rot_right[3,3,i])\n");
@@ -12348,14 +12650,14 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm_left{j in 1..21, i in 1..n_Obstacles_left}:  \n");
-        PostureMod << string("subject to obst_Arm_left{j in 1..15, i in 1..n_Obstacles_left}:  \n");
+        PostureMod << string("subject to obst_Arm_left{j in 1..")+n_str_left+string(", i in 1..n_Obstacles_left}:  \n");
         PostureMod << string("(((Rot_left[1,1,i]*Points_Arm_left[j,1]+Rot_left[2,1,i]*Points_Arm_left[j,2]+Rot_left[3,1,i]*Points_Arm_left[j,3]\n");
         PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,1,i]-Obstacles_left[i,2]*Rot_left[2,1,i]-Obstacles_left[i,3]*Rot_left[3,1,i])\n");
         PostureMod << string("/(Obstacles_left[i,4]+Points_Arm_left[j,4]")+txx1+string("))^2\n");
         PostureMod << string("+\n");
         PostureMod << string("((Rot_left[1,2,i]*Points_Arm_left[j,1]+Rot_left[2,2,i]*Points_Arm_left[j,2]+Rot_left[3,2,i]*Points_Arm_left[j,3]\n");
         PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,2,i]-Obstacles_left[i,2]*Rot_left[2,2,i]-Obstacles_left[i,3]*Rot_left[3,2,i])\n");
-        PostureMod << string("/(Obstacles_left[i,5]+Points_Arm_left[j,4]")+tyy1+string("))^2");
+        PostureMod << string("/(Obstacles_left[i,5]+Points_Arm_left[j,4]")+tyy1+string("))^2\n");
         PostureMod << string("+\n");
         PostureMod << string("((Rot_left[1,3,i]*Points_Arm_left[j,1]+Rot_left[2,3,i]*Points_Arm_left[j,2]+Rot_left[3,3,i]*Points_Arm_left[j,3]\n");
         PostureMod << string("-Obstacles_left[i,1]*Rot_left[1,3,i]-Obstacles_left[i,2]*Rot_left[2,3,i]-Obstacles_left[i,3]*Rot_left[3,3,i])\n");
@@ -12415,7 +12717,14 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         PostureMod << string("# Constraints between the arms \n");
-        PostureMod << string("subject to Arm_Arm{i1 in 4..8, i2 in 4..8}:  \n");
+        //PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string("}:  \n");
+
+        if(dual_mov_type==0){ // dual pick
+            PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9}:  \n");
+        }else if(dual_mov_type==1){ // dual place
+            PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string("}:  \n");
+        }
+
         PostureMod << string("(Points_Arm_left[i1,1] - Points_Arm_right[i2,1])^2 + \n");
         PostureMod << string("(Points_Arm_left[i1,2] - Points_Arm_right[i2,2])^2 + \n");
         PostureMod << string("(Points_Arm_left[i1,3] - Points_Arm_right[i2,3])^2 - \n");
@@ -12474,8 +12783,8 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
     std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
     std::vector<double> tar_right = params.mov_specs_right.target;
     std::vector<double> tar_left = params.mov_specs_left.target;
-    objectPtr obj_tar_right = params.mov_specs_right.obj;
-    objectPtr obj_tar_left = params.mov_specs_left.obj;
+    objectPtr obj_tar_right;
+    objectPtr obj_tar_left;
     string mov_infoLine_right = params.mov_specs_right.mov_infoline;
     string mov_infoLine_left = params.mov_specs_left.mov_infoline;
     bool approach_right = params.mov_specs_right.approach;
@@ -12499,17 +12808,20 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
 
     switch(dual_mov_type){
     case 0: // pick right pick left
-        //obj_tar = params.mov_specs_right.obj;
+        obj_tar_right = params.mov_specs_right.obj;
+        obj_tar_left = params.mov_specs_left.obj;
         if(approach_right){pre_grasp_approach_right = params.mov_specs_right.pre_grasp_approach;}
         if(approach_left){pre_grasp_approach_left = params.mov_specs_left.pre_grasp_approach;}
         if(retreat_right){post_grasp_retreat_right = params.mov_specs_right.post_grasp_retreat;}
         if(retreat_left){post_grasp_retreat_left = params.mov_specs_left.post_grasp_retreat;}
         break;
     case 1: // place right place left
-        // TO DO
-        //obj_tar = params.mov_specs.obj;
-        //if(approach){pre_place_approach = params.mov_specs.pre_place_approach;}
-        //if(retreat){post_place_retreat = params.mov_specs.post_place_retreat;}
+        obj_tar_right = params.mov_specs_right.obj;
+        obj_tar_left = params.mov_specs_left.obj;
+        if(approach_right){pre_place_approach_right = params.mov_specs_right.pre_place_approach;}
+        if(approach_left){pre_place_approach_left = params.mov_specs_left.pre_place_approach;}
+        if(retreat_right){post_place_retreat_right = params.mov_specs_right.post_place_retreat;}
+        if(retreat_left){post_place_retreat_left = params.mov_specs_left.post_place_retreat;}
         break;
     }
     // tolerances
@@ -12719,7 +13031,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      // info approach/retreat
      switch(dual_mov_type){
      case 0: // pick right pick left
-         // info of the target to reach
+         // info of the targets to reach
          this->writeDualInfoTarget(PostureDat,tar_right,tar_left);
          if (pre_post!=0){
              this->writeDualInfoApproachRetreat(PostureDat,tar_right,pre_grasp_approach_right,true);
@@ -12727,10 +13039,12 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          }
          break;
      case 1: // place right place left
-         // TO DO
-         // info of the target to reach
-         //this->writeInfoTarget(PostureDat,tar);
-         //if (pre_post!=0){this->writeInfoApproachRetreat(PostureDat,tar,pre_place_approach);}
+         // info of the targets to reach
+         this->writeDualInfoTarget(PostureDat,tar_right,tar_left);
+         if (pre_post!=0){
+             this->writeDualInfoApproachRetreat(PostureDat,tar_right,pre_place_approach_right,true);
+             this->writeDualInfoApproachRetreat(PostureDat,tar_left,pre_place_approach_left,false);
+         }
          break;
      }
      //info objects
@@ -12865,9 +13179,9 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          std::vector<double> obj_tar_left_size; std::string obj_left_name =obj_tar_left->getName();
          obj_tar_left->getSize(obj_tar_left_size);
          if(obj_right_name.compare(obj_left_name)==0){
-             n_s_dual = this->dual_obj_model_spheres(PostureDat,PostureMod,obj_tar_right_size,true);
+             n_s_dual = this->dual_obj_model_spheres(PostureDat,PostureMod,obj_tar_right_size,false);
          }else{
-             this->dual_obj_model_spheres(PostureDat,PostureMod,obj_tar_right_size,obj_tar_left_size,true,n_s_right,n_s_left);
+             this->dual_obj_model_spheres(PostureDat,PostureMod,obj_tar_right_size,obj_tar_left_size,false,n_s_right,n_s_left);
          }
      }else if(dual_mov_type==2){
          // dual move
@@ -12890,11 +13204,15 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          break;
      }
     // --------- Points of the right arm --------------------------------------- //
-     if (obj_right_place){
-      PostureMod << string("var Points_Arm_right {j in 1..18, i in 1..4,k in Iterations} = \n");
+     std::string n_str_right;
+     if(obj_right_place && n_s_dual==0){
+         n_str_right = to_string(15+n_s_right);
+     }else if(obj_right_place && n_s_dual!=0){
+         n_str_right = to_string(15+n_s_dual);
      }else{
-      PostureMod << string("var Points_Arm_right {j in 1..15, i in 1..4,k in Iterations} = \n");
+        n_str_right = to_string(15);
      }
+     PostureMod << string("var Points_Arm_right {j in 1..")+n_str_right+string(", i in 1..4,k in Iterations} = \n");
      PostureMod << string("if ( j=1 ) then 	(Shoulder_right[i,k]+Elbow_right[i,k])/2  \n");
      PostureMod << string("else	if ( j=2 ) then 	Elbow_right[i,k] \n");
      PostureMod << string("else    if ( j=3 ) then 	(Wrist_right[i,k]+Elbow_right[i,k])/2  \n");
@@ -12927,22 +13245,40 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      PostureMod << string("else	if ( j=13 ) then 	Finger1_tip_right[i,k]\n");
      PostureMod << string("else	if ( j=14 ) then 	Finger2_tip_right[i,k] \n");
      PostureMod << string("else	if ( j=15 ) then 	Finger3_tip_right[i,k] \n");
-     if (obj_right_place && n_s_right!=0){
-         int j_init = 15;
-         for(int i=1;i <= n_s_right;++i){
-             std::string i_str = to_string(i);
-             int j = j_init+i; std::string j_str = to_string(j);
-             PostureMod << string("else    if ( j=")+j_str+string(" ) then 	Obj2Transp_right_")+i_str+string("[i,k] \n");
+
+     if(n_s_dual==0)
+     {
+         if (obj_right_place){
+             int j_init = 15;
+             for(int i=1;i <= n_s_right;++i){
+                 std::string i_str = to_string(i);
+                 int j = j_init+i; std::string j_str = to_string(j);
+                 PostureMod << string("else    if ( j=")+j_str+string(" ) then 	ObjRight2Transp_")+i_str+string("[i,k] \n");
+             }
+         }
+     }else{
+         if (obj_right_place){
+             int j_init = 15;
+             for(int i=1;i <= n_s_dual;++i){
+                 std::string i_str = to_string(i);
+                 int j = j_init+i; std::string j_str = to_string(j);
+                 PostureMod << string("else    if ( j=")+j_str+string(" ) then 	Obj2Transp_")+i_str+string("[i,k] \n");
+             }
          }
      }
      PostureMod << string("; \n\n");
 
      // --------- Points of the left arm --------------------------------------- //
-      if (obj_left_place){
-       PostureMod << string("var Points_Arm_left {j in 1..18, i in 1..4,k in Iterations} = \n");
-      }else{
-       PostureMod << string("var Points_Arm_left {j in 1..15, i in 1..4,k in Iterations} = \n");
-      }
+     std::string n_str_left;
+     if(obj_left_place && n_s_dual==0){
+         n_str_left = to_string(15+n_s_left);
+     }else if(obj_left_place && n_s_dual!=0){
+         //n_str_left = to_string(15+n_s_dual);
+         n_str_left = to_string(15);
+     }else{
+        n_str_left = to_string(15);
+     }
+      PostureMod << string("var Points_Arm_left {j in 1..")+n_str_left+string(", i in 1..4,k in Iterations} = \n");
       PostureMod << string("if ( j=1 ) then 	(Shoulder_left[i,k]+Elbow_left[i,k])/2  \n");
       PostureMod << string("else	if ( j=2 ) then 	Elbow_left[i,k] \n");
       PostureMod << string("else    if ( j=3 ) then 	(Wrist_left[i,k]+Elbow_left[i,k])/2  \n");
@@ -12975,13 +13311,18 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
       PostureMod << string("else	if ( j=13 ) then 	Finger1_tip_left[i,k]\n");
       PostureMod << string("else	if ( j=14 ) then 	Finger2_tip_left[i,k] \n");
       PostureMod << string("else	if ( j=15 ) then 	Finger3_tip_left[i,k] \n");
-      if (obj_left_place && n_s_left!=0){
-          int j_init = 15;
-          for(int i=1;i <= n_s_left;++i){
-              std::string i_str = to_string(i);
-              int j = j_init+i; std::string j_str = to_string(j);
-              PostureMod << string("else    if ( j=")+j_str+string(" ) then 	Obj2Transp_left_")+i_str+string("[i,k] \n");
+      if(n_s_dual==0)
+      {
+          if (obj_left_place){
+              int j_init = 15;
+              for(int i=1;i <= n_s_left;++i){
+                  std::string i_str = to_string(i);
+                  int j = j_init+i; std::string j_str = to_string(j);
+                  PostureMod << string("else    if ( j=")+j_str+string(" ) then  ObjLeft2Transp_")+i_str+string("[i,k] \n");
+              }
           }
+      }else{
+          // to do
       }
       PostureMod << string("; \n\n");
       // objective function
@@ -13662,7 +14003,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          PostureMod << string("# \n");
          if(obj_right_place){
              // the object to place has to be considered
-              PostureMod << string("subject to obst_Arm_right{j in 1..18, i in 1..n_Obstacles_right, l in 1..Nsteps+1}:\n"); // approach stage is necessary
+              PostureMod << string("subject to obst_Arm_right{j in 1..")+n_str_right+string(", i in 1..n_Obstacles_right, l in 1..Nsteps+1}:\n"); // approach stage is necessary
          }else if(move){
              // for the first number of diff_steps, no obstacle is considered because the movement is very short and the planner may get stuck
              int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE_DUAL_OBS));
@@ -13839,7 +14180,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          PostureMod << string("# \n");
          if(obj_left_place){
              // the object to place has to be considered
-              PostureMod << string("subject to obst_Arm_left{j in 1..18, i in 1..n_Obstacles_left, l in 1..Nsteps+1}:\n"); // approach stage is necessary
+              PostureMod << string("subject to obst_Arm_left{j in 1..")+n_str_left+string(", i in 1..n_Obstacles_left, l in 1..Nsteps+1}:\n"); // approach stage is necessary
          }else if(move){
              // for the first number of diff_steps, no obstacle is considered because the movement is very short and the planner may get stuck
              int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE_DUAL_OBS));
@@ -13911,7 +14252,11 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
           PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
           PostureMod << string("# \n");
           PostureMod << string("# Constraints between the arms \n");
-          PostureMod << string("subject to Arm_Arm{i1 in 4..8, i2 in 4..8,l in 1..Nsteps+1}:  \n");
+          if(dual_mov_type==0){ // dual pick
+            PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9,l in 1..Nsteps+1}:  \n");
+          }else if(dual_mov_type==1){ // dual place
+            PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string(",l in 1..Nsteps+1}:  \n");
+          }
           PostureMod << string("(Points_Arm_left[i1,1,l] - Points_Arm_right[i2,1,l])^2 + \n");
           PostureMod << string("(Points_Arm_left[i1,2,l] - Points_Arm_right[i2,2,l])^2 + \n");
           PostureMod << string("(Points_Arm_left[i1,3,l] - Points_Arm_right[i2,3,l])^2 - \n");
@@ -13919,8 +14264,6 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
           PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
           PostureMod << string("# \n");
       }
-
-
       PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
 
       // close the files
