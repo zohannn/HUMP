@@ -1534,8 +1534,8 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     string tarxt0; string taryt0; string tarzt0;
     string tarxt1; string taryt1; string tarzt1;
     string tarxt2; string taryt2; string tarzt2;
-    std::vector<double> rpy_r; std::vector<double> xt_r; std::vector<double> yt_r; std::vector<double> zt_r;
-    std::vector<double> rpy_l; std::vector<double> xt_l; std::vector<double> yt_l; std::vector<double> zt_l;
+    std::vector<double> rpy_r; Matrix3d Rot_tar_r; Matrix3d Rot_tar_r_inv; std::vector<double> xt_r; std::vector<double> yt_r; std::vector<double> zt_r;
+    std::vector<double> rpy_l; Matrix3d Rot_tar_l; Matrix3d Rot_tar_l_inv; std::vector<double> xt_l; std::vector<double> yt_l; std::vector<double> zt_l;
 
     stream << string("# TARGET RIGHT POSITION \n");
     stream << string("param Tar_pos_right := \n");
@@ -1550,7 +1550,7 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     stream << to_string(3)+string(" ")+tarz+string(";\n");
 
     stream << string("# TARGET RIGHT ORIENTATION \n");
-    rpy_r = {tar_right.at(3),tar_right.at(4),tar_right.at(5)};
+    rpy_r = {tar_right.at(3),tar_right.at(4),tar_right.at(5)}; this->RPY_matrix(rpy_r,Rot_tar_r); Rot_tar_r_inv = Rot_tar_r.transpose();
     this->getRotAxis(xt_r,0,rpy_r);
     this->getRotAxis(yt_r,1,rpy_r);
     this->getRotAxis(zt_r,2,rpy_r);
@@ -1585,6 +1585,14 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     boost::replace_all(tarzt2,",",".");
     stream << to_string(3)+string(" ")+tarzt2+string(";\n");
 
+    /*
+    stream << string("param Rot_tar_right_inv : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_tar_r_inv(0,0))+string(" ")+to_string(Rot_tar_r_inv(0,1))+string(" ")+to_string(Rot_tar_r_inv(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_tar_r_inv(1,0))+string(" ")+to_string(Rot_tar_r_inv(1,1))+string(" ")+to_string(Rot_tar_r_inv(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_tar_r_inv(2,0))+string(" ")+to_string(Rot_tar_r_inv(2,1))+string(" ")+to_string(Rot_tar_r_inv(2,2))+string(" \n");
+    stream << string("; \n");
+    */
+
     stream << string("# TARGET LEFT POSITION \n");
     stream << string("param Tar_pos_left := \n");
     tarx =  boost::str(boost::format("%.2f") % (tar_left.at(0)));
@@ -1598,7 +1606,7 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     stream << to_string(3)+string(" ")+tarz+string(";\n");
 
     stream << string("# TARGET LEFT ORIENTATION \n");
-    rpy_l = {tar_left.at(3),tar_left.at(4),tar_left.at(5)};
+    rpy_l = {tar_left.at(3),tar_left.at(4),tar_left.at(5)}; this->RPY_matrix(rpy_l,Rot_tar_l); Rot_tar_l_inv = Rot_tar_l.transpose();
     this->getRotAxis(xt_l,0,rpy_l);
     this->getRotAxis(yt_l,1,rpy_l);
     this->getRotAxis(zt_l,2,rpy_l);
@@ -1632,6 +1640,14 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     tarzt2 =  boost::str(boost::format("%.2f") % (zt_l[2]));
     boost::replace_all(tarzt2,",",".");
     stream << to_string(3)+string(" ")+tarzt2+string(";\n");
+
+    /*
+    stream << string("param Rot_tar_left_inv : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_tar_l_inv(0,0))+string(" ")+to_string(Rot_tar_l_inv(0,1))+string(" ")+to_string(Rot_tar_l_inv(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_tar_l_inv(1,0))+string(" ")+to_string(Rot_tar_l_inv(1,1))+string(" ")+to_string(Rot_tar_l_inv(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_tar_l_inv(2,0))+string(" ")+to_string(Rot_tar_l_inv(2,1))+string(" ")+to_string(Rot_tar_l_inv(2,2))+string(" \n");
+    stream << string("; \n");
+    */
 }
 
 
@@ -1972,11 +1988,11 @@ void HUMPlanner::writeInfoObjectTarget(ofstream &stream, objectPtr obj)
 void HUMPlanner::writeDualInfoObjectTarget(ofstream &stream, objectPtr obj_right, objectPtr obj_left)
 {
     std::vector<double> position; string objx; string objy; string objz;
-    std::vector<double> orientation; string objroll; string objpitch; string objyaw;
+    std::vector<double> orientation; Matrix3d Rot_obj; string objroll; string objpitch; string objyaw;
     std::vector<double> dimension; string objxsize; string objysize; string objzsize;
 
     obj_right->getPos(position);
-    obj_right->getOr(orientation);
+    obj_right->getOr(orientation); this->RPY_matrix(orientation,Rot_obj);
     obj_right->getSize(dimension);
     stream << string("# OBJECT OF THE RIGHT TARGET POSITION+RADIUS+ORIENTATION \n");
     stream << string("param ObjTar_right : 1 2 3 4 5 6 7 8 9 := \n");
@@ -2010,11 +2026,19 @@ void HUMPlanner::writeDualInfoObjectTarget(ofstream &stream, objectPtr obj_right
                        objyaw+string(" ")+
                        string(" #")+obj_right->getName()+
                        string("\n");
-    stream << string("  ;\n");
-    stream << string(" param n_ObjTar_right := ")+to_string(1)+string(";\n");
+    stream << string(";\n");
+    stream << string("param n_ObjTar_right := ")+to_string(1)+string(";\n");
+
+
+    stream << string("param Rot_obj_right : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_obj(0,0))+string(" ")+to_string(Rot_obj(0,1))+string(" ")+to_string(Rot_obj(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_obj(1,0))+string(" ")+to_string(Rot_obj(1,1))+string(" ")+to_string(Rot_obj(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_obj(2,0))+string(" ")+to_string(Rot_obj(2,1))+string(" ")+to_string(Rot_obj(2,2))+string(" \n");
+    stream << string("; \n");
+
 
     obj_left->getPos(position);
-    obj_left->getOr(orientation);
+    obj_left->getOr(orientation); this->RPY_matrix(orientation,Rot_obj);
     obj_left->getSize(dimension);
     stream << string("# OBJECT OF THE LEFT TARGET POSITION+RADIUS+ORIENTATION \n");
     stream << string("param ObjTar_left : 1 2 3 4 5 6 7 8 9 := \n");
@@ -2048,8 +2072,275 @@ void HUMPlanner::writeDualInfoObjectTarget(ofstream &stream, objectPtr obj_right
                        objyaw+string(" ")+
                        string(" #")+obj_left->getName()+
                        string("\n");
-    stream << string("  ;\n");
-    stream << string(" param n_ObjTar_left := ")+to_string(1)+string(";\n");
+    stream << string(";\n");
+    stream << string("param n_ObjTar_left := ")+to_string(1)+string(";\n");
+
+
+    stream << string("param Rot_obj_left : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_obj(0,0))+string(" ")+to_string(Rot_obj(0,1))+string(" ")+to_string(Rot_obj(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_obj(1,0))+string(" ")+to_string(Rot_obj(1,1))+string(" ")+to_string(Rot_obj(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_obj(2,0))+string(" ")+to_string(Rot_obj(2,1))+string(" ")+to_string(Rot_obj(2,2))+string(" \n");
+    stream << string("; \n");
+
+
+}
+
+void HUMPlanner::writeDualInfoObjectTarget(ofstream &stream, std::vector<double> tar_right, Matrix4d T_tar_to_obj_right, std::vector<double> dim_right, std::string name_right, std::vector<double> tar_left, Matrix4d T_tar_to_obj_left,std::vector<double> dim_left,std::string name_left)
+{
+    string objx; string objy; string objz;
+    string objroll; string objpitch; string objyaw;
+    string objxsize; string objysize; string objzsize;
+
+    Matrix4d T_tar_right; Matrix3d Rot_tar_right;
+    std::vector<double> rpy_r = {tar_right.at(3),tar_right.at(4),tar_right.at(5)};
+    this->RPY_matrix(rpy_r,Rot_tar_right);
+    T_tar_right(0,0) = Rot_tar_right(0,0); T_tar_right(0,1) = Rot_tar_right(0,1); T_tar_right(0,2) = Rot_tar_right(0,2); T_tar_right(0,3) = tar_right.at(0);
+    T_tar_right(1,0) = Rot_tar_right(1,0); T_tar_right(1,1) = Rot_tar_right(1,1); T_tar_right(1,2) = Rot_tar_right(1,2); T_tar_right(1,3) = tar_right.at(1);
+    T_tar_right(2,0) = Rot_tar_right(2,0); T_tar_right(2,1) = Rot_tar_right(2,1); T_tar_right(2,2) = Rot_tar_right(2,2); T_tar_right(2,3) = tar_right.at(2);
+    T_tar_right(3,0) = 0; T_tar_right(3,1) = 0; T_tar_right(3,2) = 0; T_tar_right(3,3) = 1;
+    Matrix4d T_obj_right = T_tar_right * T_tar_to_obj_right;
+    Matrix3d Rot_obj_right = T_obj_right.block<3,3>(0,0);
+    Matrix3d Rot_tar_to_obj_right = T_tar_to_obj_right.block<3,3>(0,0);
+    Vector3d tar_to_obj_right = T_tar_to_obj_right.block<3,1>(0,3);
+    std::vector<double> rpy_obj_right; this->getRPY(rpy_obj_right,Rot_obj_right);
+    std::vector<double> pos_obj_right = {T_obj_right(0,3),T_obj_right(1,3),T_obj_right(2,3)};
+
+    stream << string("# OBJECT OF THE RIGHT TARGET POSITION+RADIUS+ORIENTATION \n");
+    stream << string("param ObjTar_right : 1 2 3 4 5 6 7 8 9 := \n");
+    objx =  boost::str(boost::format("%.2f") % (pos_obj_right.at(0)));
+    boost::replace_all(objx,",",".");
+    objy =  boost::str(boost::format("%.2f") % (pos_obj_right.at(1)));
+    boost::replace_all(objy,",",".");
+    objz =  boost::str(boost::format("%.2f") % (pos_obj_right.at(2)));
+    boost::replace_all(objz,",",".");
+    objxsize =  boost::str(boost::format("%.2f") % (dim_right.at(0)/2));
+    boost::replace_all(objxsize,",",".");
+    objysize =  boost::str(boost::format("%.2f") % (dim_right.at(1)/2));
+    boost::replace_all(objysize,",",".");
+    objzsize =  boost::str(boost::format("%.2f") % (dim_right.at(2)/2));
+    boost::replace_all(objzsize,",",".");
+    objroll =  boost::str(boost::format("%.2f") % (rpy_obj_right.at(0)));
+    boost::replace_all(objroll,",",".");
+    objpitch =  boost::str(boost::format("%.2f") % (rpy_obj_right.at(1)));
+    boost::replace_all(objpitch,",",".");
+    objyaw =  boost::str(boost::format("%.2f") % (rpy_obj_right.at(2)));
+    boost::replace_all(objyaw,",",".");
+    stream << to_string(1)+string(" ")+
+                       objx+string(" ")+
+                       objy+string(" ")+
+                       objz+string(" ")+
+                       objxsize+string(" ")+
+                       objysize+string(" ")+
+                       objzsize+string(" ")+
+                       objroll+string(" ")+
+                       objpitch+string(" ")+
+                       objyaw+string(" ")+
+                       string(" #")+name_right+
+                       string("\n");
+    stream << string(";\n");
+    stream << string("param n_ObjTar_right := ")+to_string(1)+string(";\n");
+
+    stream << string("param Rot_tar_obj_right : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_tar_to_obj_right(0,0))+string(" ")+to_string(Rot_tar_to_obj_right(0,1))+string(" ")+to_string(Rot_tar_to_obj_right(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_tar_to_obj_right(1,0))+string(" ")+to_string(Rot_tar_to_obj_right(1,1))+string(" ")+to_string(Rot_tar_to_obj_right(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_tar_to_obj_right(2,0))+string(" ")+to_string(Rot_tar_to_obj_right(2,1))+string(" ")+to_string(Rot_tar_to_obj_right(2,2))+string(" \n");
+    stream << string("; \n");
+
+    stream << string("param tar_to_obj_right :=  \n");
+    stream << string("1 ")+to_string(tar_to_obj_right(0))+string(" \n");
+    stream << string("2 ")+to_string(tar_to_obj_right(1))+string(" \n");
+    stream << string("3 ")+to_string(tar_to_obj_right(2))+string(" \n");
+    stream << string("; \n");
+
+    stream << string("param Rot_obj_right : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_obj_right(0,0))+string(" ")+to_string(Rot_obj_right(0,1))+string(" ")+to_string(Rot_obj_right(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_obj_right(1,0))+string(" ")+to_string(Rot_obj_right(1,1))+string(" ")+to_string(Rot_obj_right(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_obj_right(2,0))+string(" ")+to_string(Rot_obj_right(2,1))+string(" ")+to_string(Rot_obj_right(2,2))+string(" \n");
+    stream << string("; \n");
+
+    Matrix4d T_tar_left; Matrix3d Rot_tar_left;
+    std::vector<double> rpy_l = {tar_left.at(3),tar_left.at(4),tar_left.at(5)};
+    this->RPY_matrix(rpy_l,Rot_tar_left);
+    T_tar_left(0,0) = Rot_tar_left(0,0); T_tar_left(0,1) = Rot_tar_left(0,1); T_tar_left(0,2) = Rot_tar_left(0,2); T_tar_left(0,3) = tar_left.at(0);
+    T_tar_left(1,0) = Rot_tar_left(1,0); T_tar_left(1,1) = Rot_tar_left(1,1); T_tar_left(1,2) = Rot_tar_left(1,2); T_tar_left(1,3) = tar_left.at(1);
+    T_tar_left(2,0) = Rot_tar_left(2,0); T_tar_left(2,1) = Rot_tar_left(2,1); T_tar_left(2,2) = Rot_tar_left(2,2); T_tar_left(2,3) = tar_left.at(2);
+    T_tar_left(3,0) = 0; T_tar_left(3,1) = 0; T_tar_left(3,2) = 0; T_tar_left(3,3) = 1;
+    Matrix4d T_obj_left = T_tar_left * T_tar_to_obj_left;
+    Matrix3d Rot_obj_left = T_obj_left.block<3,3>(0,0);
+    Matrix3d Rot_tar_to_obj_left = T_tar_to_obj_left.block<3,3>(0,0);
+    Vector3d tar_to_obj_left = T_tar_to_obj_left.block<3,1>(0,3);
+    std::vector<double> rpy_obj_left; this->getRPY(rpy_obj_left,Rot_obj_left);
+    std::vector<double> pos_obj_left = {T_obj_left(0,3),T_obj_left(1,3),T_obj_left(2,3)};
+
+    stream << string("# OBJECT OF THE LEFT TARGET POSITION+RADIUS+ORIENTATION \n");
+    stream << string("param ObjTar_left : 1 2 3 4 5 6 7 8 9 := \n");
+    objx =  boost::str(boost::format("%.2f") % (pos_obj_left.at(0)));
+    boost::replace_all(objx,",",".");
+    objy =  boost::str(boost::format("%.2f") % (pos_obj_left.at(1)));
+    boost::replace_all(objy,",",".");
+    objz =  boost::str(boost::format("%.2f") % (pos_obj_left.at(2)));
+    boost::replace_all(objz,",",".");
+    objxsize =  boost::str(boost::format("%.2f") % (dim_left.at(0)/2));
+    boost::replace_all(objxsize,",",".");
+    objysize =  boost::str(boost::format("%.2f") % (dim_left.at(1)/2));
+    boost::replace_all(objysize,",",".");
+    objzsize =  boost::str(boost::format("%.2f") % (dim_left.at(2)/2));
+    boost::replace_all(objzsize,",",".");
+    objroll =  boost::str(boost::format("%.2f") % (rpy_obj_left.at(0)));
+    boost::replace_all(objroll,",",".");
+    objpitch =  boost::str(boost::format("%.2f") % (rpy_obj_left.at(1)));
+    boost::replace_all(objpitch,",",".");
+    objyaw =  boost::str(boost::format("%.2f") % (rpy_obj_left.at(2)));
+    boost::replace_all(objyaw,",",".");
+    stream << to_string(1)+string(" ")+
+                       objx+string(" ")+
+                       objy+string(" ")+
+                       objz+string(" ")+
+                       objxsize+string(" ")+
+                       objysize+string(" ")+
+                       objzsize+string(" ")+
+                       objroll+string(" ")+
+                       objpitch+string(" ")+
+                       objyaw+string(" ")+
+                       string(" #")+name_left+
+                       string("\n");
+    stream << string(";\n");
+    stream << string("param n_ObjTar_left := ")+to_string(1)+string(";\n");
+
+    stream << string("param Rot_tar_obj_left : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_tar_to_obj_left(0,0))+string(" ")+to_string(Rot_tar_to_obj_left(0,1))+string(" ")+to_string(Rot_tar_to_obj_left(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_tar_to_obj_left(1,0))+string(" ")+to_string(Rot_tar_to_obj_left(1,1))+string(" ")+to_string(Rot_tar_to_obj_left(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_tar_to_obj_left(2,0))+string(" ")+to_string(Rot_tar_to_obj_left(2,1))+string(" ")+to_string(Rot_tar_to_obj_left(2,2))+string(" \n");
+    stream << string("; \n");
+
+    stream << string("param tar_to_obj_left :=  \n");
+    stream << string("1 ")+to_string(tar_to_obj_left(0))+string(" \n");
+    stream << string("2 ")+to_string(tar_to_obj_left(1))+string(" \n");
+    stream << string("3 ")+to_string(tar_to_obj_left(2))+string(" \n");
+    stream << string("; \n");
+
+    stream << string("param Rot_obj_left : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_obj_left(0,0))+string(" ")+to_string(Rot_obj_left(0,1))+string(" ")+to_string(Rot_obj_left(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_obj_left(1,0))+string(" ")+to_string(Rot_obj_left(1,1))+string(" ")+to_string(Rot_obj_left(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_obj_left(2,0))+string(" ")+to_string(Rot_obj_left(2,1))+string(" ")+to_string(Rot_obj_left(2,2))+string(" \n");
+    stream << string("; \n");
+}
+
+void HUMPlanner::writeDualInfoObjectTargetPlaceRetreat(ofstream &stream, std::vector<double> tar_right, Matrix4d T_tar_to_obj_right, std::vector<double> dim_right, std::string name_right, std::vector<double> tar_left, Matrix4d T_tar_to_obj_left,std::vector<double> dim_left,std::string name_left)
+{
+    string objx; string objy; string objz;
+    string objroll; string objpitch; string objyaw;
+    string objxsize; string objysize; string objzsize;
+
+    Matrix4d T_tar_right; Matrix3d Rot_tar_right;
+    std::vector<double> rpy_r = {tar_right.at(3),tar_right.at(4),tar_right.at(5)};
+    this->RPY_matrix(rpy_r,Rot_tar_right);
+    T_tar_right(0,0) = Rot_tar_right(0,0); T_tar_right(0,1) = Rot_tar_right(0,1); T_tar_right(0,2) = Rot_tar_right(0,2); T_tar_right(0,3) = tar_right.at(0);
+    T_tar_right(1,0) = Rot_tar_right(1,0); T_tar_right(1,1) = Rot_tar_right(1,1); T_tar_right(1,2) = Rot_tar_right(1,2); T_tar_right(1,3) = tar_right.at(1);
+    T_tar_right(2,0) = Rot_tar_right(2,0); T_tar_right(2,1) = Rot_tar_right(2,1); T_tar_right(2,2) = Rot_tar_right(2,2); T_tar_right(2,3) = tar_right.at(2);
+    T_tar_right(3,0) = 0; T_tar_right(3,1) = 0; T_tar_right(3,2) = 0; T_tar_right(3,3) = 1;
+    Matrix4d T_obj_right = T_tar_right * T_tar_to_obj_right;
+    Matrix3d Rot_obj_right = T_obj_right.block<3,3>(0,0);
+    Matrix3d Rot_tar_to_obj_right = T_tar_to_obj_right.block<3,3>(0,0);
+    Vector3d tar_to_obj_right = T_tar_to_obj_right.block<3,1>(0,3);
+    std::vector<double> rpy_obj_right; this->getRPY(rpy_obj_right,Rot_obj_right);
+    std::vector<double> pos_obj_right = {T_obj_right(0,3),T_obj_right(1,3),T_obj_right(2,3)};
+
+    stream << string("# OBJECT OF THE RIGHT TARGET POSITION+RADIUS+ORIENTATION \n");
+    stream << string("param ObjTar_right : 1 2 3 4 5 6 7 8 9 := \n");
+    objx =  boost::str(boost::format("%.2f") % (pos_obj_right.at(0)));
+    boost::replace_all(objx,",",".");
+    objy =  boost::str(boost::format("%.2f") % (pos_obj_right.at(1)));
+    boost::replace_all(objy,",",".");
+    objz =  boost::str(boost::format("%.2f") % (pos_obj_right.at(2)));
+    boost::replace_all(objz,",",".");
+    objxsize =  boost::str(boost::format("%.2f") % (dim_right.at(0)/2));
+    boost::replace_all(objxsize,",",".");
+    objysize =  boost::str(boost::format("%.2f") % (dim_right.at(1)/2));
+    boost::replace_all(objysize,",",".");
+    objzsize =  boost::str(boost::format("%.2f") % (dim_right.at(2)/2));
+    boost::replace_all(objzsize,",",".");
+    objroll =  boost::str(boost::format("%.2f") % (rpy_obj_right.at(0)));
+    boost::replace_all(objroll,",",".");
+    objpitch =  boost::str(boost::format("%.2f") % (rpy_obj_right.at(1)));
+    boost::replace_all(objpitch,",",".");
+    objyaw =  boost::str(boost::format("%.2f") % (rpy_obj_right.at(2)));
+    boost::replace_all(objyaw,",",".");
+    stream << to_string(1)+string(" ")+
+                       objx+string(" ")+
+                       objy+string(" ")+
+                       objz+string(" ")+
+                       objxsize+string(" ")+
+                       objysize+string(" ")+
+                       objzsize+string(" ")+
+                       objroll+string(" ")+
+                       objpitch+string(" ")+
+                       objyaw+string(" ")+
+                       string(" #")+name_right+
+                       string("\n");
+    stream << string(";\n");
+    stream << string("param n_ObjTar_right := ")+to_string(1)+string(";\n");
+
+    stream << string("param Rot_obj_right : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_obj_right(0,0))+string(" ")+to_string(Rot_obj_right(0,1))+string(" ")+to_string(Rot_obj_right(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_obj_right(1,0))+string(" ")+to_string(Rot_obj_right(1,1))+string(" ")+to_string(Rot_obj_right(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_obj_right(2,0))+string(" ")+to_string(Rot_obj_right(2,1))+string(" ")+to_string(Rot_obj_right(2,2))+string(" \n");
+    stream << string("; \n");
+
+    Matrix4d T_tar_left; Matrix3d Rot_tar_left;
+    std::vector<double> rpy_l = {tar_left.at(3),tar_left.at(4),tar_left.at(5)};
+    this->RPY_matrix(rpy_l,Rot_tar_left);
+    T_tar_left(0,0) = Rot_tar_left(0,0); T_tar_left(0,1) = Rot_tar_left(0,1); T_tar_left(0,2) = Rot_tar_left(0,2); T_tar_left(0,3) = tar_left.at(0);
+    T_tar_left(1,0) = Rot_tar_left(1,0); T_tar_left(1,1) = Rot_tar_left(1,1); T_tar_left(1,2) = Rot_tar_left(1,2); T_tar_left(1,3) = tar_left.at(1);
+    T_tar_left(2,0) = Rot_tar_left(2,0); T_tar_left(2,1) = Rot_tar_left(2,1); T_tar_left(2,2) = Rot_tar_left(2,2); T_tar_left(2,3) = tar_left.at(2);
+    T_tar_left(3,0) = 0; T_tar_left(3,1) = 0; T_tar_left(3,2) = 0; T_tar_left(3,3) = 1;
+    Matrix4d T_obj_left = T_tar_left * T_tar_to_obj_left;
+    Matrix3d Rot_obj_left = T_obj_left.block<3,3>(0,0);
+    Matrix3d Rot_tar_to_obj_left = T_tar_to_obj_left.block<3,3>(0,0);
+    Vector3d tar_to_obj_left = T_tar_to_obj_left.block<3,1>(0,3);
+    std::vector<double> rpy_obj_left; this->getRPY(rpy_obj_left,Rot_obj_left);
+    std::vector<double> pos_obj_left = {T_obj_left(0,3),T_obj_left(1,3),T_obj_left(2,3)};
+
+    stream << string("# OBJECT OF THE LEFT TARGET POSITION+RADIUS+ORIENTATION \n");
+    stream << string("param ObjTar_left : 1 2 3 4 5 6 7 8 9 := \n");
+    objx =  boost::str(boost::format("%.2f") % (pos_obj_left.at(0)));
+    boost::replace_all(objx,",",".");
+    objy =  boost::str(boost::format("%.2f") % (pos_obj_left.at(1)));
+    boost::replace_all(objy,",",".");
+    objz =  boost::str(boost::format("%.2f") % (pos_obj_left.at(2)));
+    boost::replace_all(objz,",",".");
+    objxsize =  boost::str(boost::format("%.2f") % (dim_left.at(0)/2));
+    boost::replace_all(objxsize,",",".");
+    objysize =  boost::str(boost::format("%.2f") % (dim_left.at(1)/2));
+    boost::replace_all(objysize,",",".");
+    objzsize =  boost::str(boost::format("%.2f") % (dim_left.at(2)/2));
+    boost::replace_all(objzsize,",",".");
+    objroll =  boost::str(boost::format("%.2f") % (rpy_obj_left.at(0)));
+    boost::replace_all(objroll,",",".");
+    objpitch =  boost::str(boost::format("%.2f") % (rpy_obj_left.at(1)));
+    boost::replace_all(objpitch,",",".");
+    objyaw =  boost::str(boost::format("%.2f") % (rpy_obj_left.at(2)));
+    boost::replace_all(objyaw,",",".");
+    stream << to_string(1)+string(" ")+
+                       objx+string(" ")+
+                       objy+string(" ")+
+                       objz+string(" ")+
+                       objxsize+string(" ")+
+                       objysize+string(" ")+
+                       objzsize+string(" ")+
+                       objroll+string(" ")+
+                       objpitch+string(" ")+
+                       objyaw+string(" ")+
+                       string(" #")+name_left+
+                       string("\n");
+    stream << string(";\n");
+    stream << string("param n_ObjTar_left := ")+to_string(1)+string(";\n");
+
+    stream << string("param Rot_obj_left : 1 2 3 :=  \n");
+    stream << string("1 ")+to_string(Rot_obj_left(0,0))+string(" ")+to_string(Rot_obj_left(0,1))+string(" ")+to_string(Rot_obj_left(0,2))+string(" \n");
+    stream << string("2 ")+to_string(Rot_obj_left(1,0))+string(" ")+to_string(Rot_obj_left(1,1))+string(" ")+to_string(Rot_obj_left(1,2))+string(" \n");
+    stream << string("3 ")+to_string(Rot_obj_left(2,0))+string(" ")+to_string(Rot_obj_left(2,1))+string(" ")+to_string(Rot_obj_left(2,2))+string(" \n");
+    stream << string("; \n");
 }
 
 void HUMPlanner::writePI(ofstream &stream)
@@ -2127,6 +2418,7 @@ void HUMPlanner::writeInfoObjectsMod(ofstream &stream,bool vec)
 
 void HUMPlanner::writeDualInfoObjectsMod(ofstream &stream,bool vec_right,bool vec_left)
 {
+
     stream << string("# Right Target Position \n");
     stream << string("param Tar_pos_right {i in 1..3}; \n");
     stream << string("# Right Target orientation \n");
@@ -2165,10 +2457,13 @@ void HUMPlanner::writeDualInfoObjectsMod(ofstream &stream,bool vec_right,bool ve
     stream << string("# Object of the right target \n");
     stream << string("param n_ObjTar_right; \n");
     stream << string("param ObjTar_right {i in 1..n_ObjTar_right, j in 1..9}; \n");
+    stream << string("param Rot_obj_right {i1 in 1..3, i2 in 1..3};\n");
 
     stream << string("# Object of the left target \n");
     stream << string("param n_ObjTar_left; \n");
     stream << string("param ObjTar_left {i in 1..n_ObjTar_left, j in 1..9}; \n");
+    stream << string("param Rot_obj_left {i1 in 1..3, i2 in 1..3};\n");
+
 }
 
 void HUMPlanner::writeInfoObjectsMod_place(ofstream &stream, bool vec)
@@ -2207,7 +2502,7 @@ void HUMPlanner::writeRotMatObsts(ofstream &stream)
     stream << string("param c_yaw {i in 1..n_Obstacles} := cos(Obstacles[i,9]); \n");
     stream << string("param s_yaw {i in 1..n_Obstacles} := sin(Obstacles[i,9]); \n");
 
-    stream << string("param Rot {i1 in 1..4, i2 in 1..4,i in 1..n_Obstacles} :=  \n");
+    stream << string("param Rot {i1 in 1..3, i2 in 1..3,i in 1..n_Obstacles} :=  \n");
     stream << string("# 1st row \n");
     stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll[i]*c_pitch[i] \n");
     stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll[i]*c_yaw[i]+c_roll[i]*s_pitch[i]*s_yaw[i] \n");
@@ -2234,7 +2529,7 @@ void HUMPlanner::writeDualRotMatObsts(ofstream &stream)
     stream << string("param c_yaw_right {i in 1..n_Obstacles_right} := cos(Obstacles_right[i,9]); \n");
     stream << string("param s_yaw_right {i in 1..n_Obstacles_right} := sin(Obstacles_right[i,9]); \n");
 
-    stream << string("param Rot_right {i1 in 1..4, i2 in 1..4,i in 1..n_Obstacles_right} :=  \n");
+    stream << string("param Rot_right {i1 in 1..3, i2 in 1..3,i in 1..n_Obstacles_right} :=  \n");
     stream << string("# 1st row \n");
     stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_right[i]*c_pitch_right[i] \n");
     stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_right[i]*c_yaw_right[i]+c_roll_right[i]*s_pitch_right[i]*s_yaw_right[i] \n");
@@ -2258,7 +2553,7 @@ void HUMPlanner::writeDualRotMatObsts(ofstream &stream)
     stream << string("param c_yaw_left {i in 1..n_Obstacles_left} := cos(Obstacles_left[i,9]); \n");
     stream << string("param s_yaw_left {i in 1..n_Obstacles_left} := sin(Obstacles_left[i,9]); \n");
 
-    stream << string("param Rot_left {i1 in 1..4, i2 in 1..4,i in 1..n_Obstacles_left} :=  \n");
+    stream << string("param Rot_left {i1 in 1..3, i2 in 1..3,i in 1..n_Obstacles_left} :=  \n");
     stream << string("# 1st row \n");
     stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_left[i]*c_pitch_left[i] \n");
     stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_left[i]*c_yaw_left[i]+c_roll_left[i]*s_pitch_left[i]*s_yaw_left[i] \n");
@@ -2286,7 +2581,7 @@ void HUMPlanner::writeRotMatObjTar(ofstream &stream)
     stream << string("param c_yaw_obj {i in 1..n_ObjTar} := cos(ObjTar[i,9]); \n");
     stream << string("param s_yaw_obj {i in 1..n_ObjTar} := sin(ObjTar[i,9]); \n");
 
-    stream << string("param Rot_obj {i1 in 1..4, i2 in 1..4,i in 1..n_ObjTar} :=  \n");
+    stream << string("param Rot_obj {i1 in 1..3, i2 in 1..3,i in 1..n_ObjTar} :=  \n");
     stream << string("# 1st row \n");
     stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_obj[i]*c_pitch_obj[i] \n");
     stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_obj[i]*c_yaw_obj[i]+c_roll_obj[i]*s_pitch_obj[i]*s_yaw_obj[i] \n");
@@ -2306,53 +2601,12 @@ void HUMPlanner::writeRotMatObjTar(ofstream &stream)
 void HUMPlanner::writeRotMatObjTarDual(ofstream &stream)
 {
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
-    stream << string("# Rotation matrix of the object to place by the right arm \n");
-    stream << string("param c_roll_obj_right {i in 1..n_ObjTar_right} := cos(ObjTar_right[i,7]); \n");
-    stream << string("param s_roll_obj_right {i in 1..n_ObjTar_right} := sin(ObjTar_right[i,7]); \n");
-    stream << string("param c_pitch_obj_right {i in 1..n_ObjTar_right} := cos(ObjTar_right[i,8]); \n");
-    stream << string("param s_pitch_obj_right {i in 1..n_ObjTar_right} := sin(ObjTar_right[i,8]); \n");
-    stream << string("param c_yaw_obj_right {i in 1..n_ObjTar_right} := cos(ObjTar_right[i,9]); \n");
-    stream << string("param s_yaw_obj_right {i in 1..n_ObjTar_right} := sin(ObjTar_right[i,9]); \n");
-
-    stream << string("param Rot_obj_right {i1 in 1..4, i2 in 1..4,i in 1..n_ObjTar_right} :=  \n");
-    stream << string("# 1st row \n");
-    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_obj_right[i]*c_pitch_obj_right[i] \n");
-    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_obj_right[i]*c_yaw_obj_right[i]+c_roll_obj_right[i]*s_pitch_obj_right[i]*s_yaw_obj_right[i] \n");
-    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_obj_right[i]*s_yaw_obj_right[i]+c_roll_obj_right[i]*s_pitch_obj_right[i]*c_yaw_obj_right[i] \n");
-    stream << string("# 2nd row \n");
-    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_obj_right[i]*c_pitch_obj_right[i] \n");
-    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_obj_right[i]*c_yaw_obj_right[i]+s_roll_obj_right[i]*s_pitch_obj_right[i]*s_yaw_obj_right[i] \n");
-    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_obj_right[i]*s_yaw_obj_right[i]+s_roll_obj_right[i]*s_pitch_obj_right[i]*c_yaw_obj_right[i] \n");
-    stream << string("# 3rd row \n");
-    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_obj_right[i] \n");
-    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_obj_right[i]*s_yaw_obj_right[i] \n");
-    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_obj_right[i]*c_yaw_obj_right[i] \n");
-    stream << string("   ; \n");
-    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
-
-    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
-    stream << string("# Rotation matrix of the object to place by the left arm \n");
-    stream << string("param c_roll_obj_left {i in 1..n_ObjTar_left} := cos(ObjTar_left[i,7]); \n");
-    stream << string("param s_roll_obj_left {i in 1..n_ObjTar_left} := sin(ObjTar_left[i,7]); \n");
-    stream << string("param c_pitch_obj_left {i in 1..n_ObjTar_left} := cos(ObjTar_left[i,8]); \n");
-    stream << string("param s_pitch_obj_left {i in 1..n_ObjTar_left} := sin(ObjTar_left[i,8]); \n");
-    stream << string("param c_yaw_obj_left {i in 1..n_ObjTar_left} := cos(ObjTar_left[i,9]); \n");
-    stream << string("param s_yaw_obj_left {i in 1..n_ObjTar_left} := sin(ObjTar_left[i,9]); \n");
-
-    stream << string("param Rot_obj_left {i1 in 1..4, i2 in 1..4,i in 1..n_ObjTar_left} :=  \n");
-    stream << string("# 1st row \n");
-    stream << string("if 		   ( i1=1 && i2=1 ) then 	c_roll_obj_left[i]*c_pitch_obj_left[i] \n");
-    stream << string("else	if ( i1=1 && i2=2 ) then   -s_roll_obj_left[i]*c_yaw_obj_left[i]+c_roll_obj_left[i]*s_pitch_obj_left[i]*s_yaw_obj_left[i] \n");
-    stream << string("else	if ( i1=1 && i2=3 ) then 	s_roll_obj_left[i]*s_yaw_obj_left[i]+c_roll_obj_left[i]*s_pitch_obj_left[i]*c_yaw_obj_left[i] \n");
-    stream << string("# 2nd row \n");
-    stream << string("else	if ( i1=2 && i2=1 ) then 	s_roll_obj_left[i]*c_pitch_obj_left[i] \n");
-    stream << string("else	if ( i1=2 && i2=2 ) then 	c_roll_obj_left[i]*c_yaw_obj_left[i]+s_roll_obj_left[i]*s_pitch_obj_left[i]*s_yaw_obj_left[i] \n");
-    stream << string("else	if ( i1=2 && i2=3 ) then   -c_roll_obj_left[i]*s_yaw_obj_left[i]+s_roll_obj_left[i]*s_pitch_obj_left[i]*c_yaw_obj_left[i] \n");
-    stream << string("# 3rd row \n");
-    stream << string("else	if ( i1=3 && i2=1 ) then   -s_pitch_obj_left[i] \n");
-    stream << string("else	if ( i1=3 && i2=2 ) then	c_pitch_obj_left[i]*s_yaw_obj_left[i] \n");
-    stream << string("else	if ( i1=3 && i2=3 ) then	c_pitch_obj_left[i]*c_yaw_obj_left[i] \n");
-    stream << string("   ; \n");
+    stream << string("# Rotation matrix target to object to place by the right arm \n");
+    stream << string("param Rot_tar_obj_right {i1 in 1..3, i2 in 1..3}; \n");
+    stream << string("param tar_to_obj_right {i in 1..3}; \n");
+    stream << string("# Rotation matrix target to object to place by the left arm \n");
+    stream << string("param Rot_tar_obj_left {i1 in 1..3, i2 in 1..3}; \n");
+    stream << string("param tar_to_obj_left {i in 1..3}; \n");
     stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
 }
 
@@ -7636,7 +7890,8 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
 
             stream_model << string("var ext_s_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s[j,k]*ext_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
+            stream_model << string("var Obj2Transp_")+n_s_str+string(" {j in 1..4} =")+string(" #xyz+radius \n");
+            stream_model << string("if j<4 then Obj2Transp_center[j] + ext_s_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
             stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
@@ -7892,12 +8147,12 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
         x=1; y=1;
     }
     if(final){
-        stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_right[i1,j]*Rot_obj_right[j,i2,1];\n");
+        stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3} = sum {j in 1..3} Rot_H_right[i1,j]*Rot_tar_obj_right[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by the right arm\n");
         stream_dat << string("# Data of the modelization of the object to place by the right hand \n");
 
-        stream_model << string("var ObjRight2Transp_center {j in 1..3} = Hand_right[j] + dFH_right * z_H_right[j] + (ObjTar_right[1,j]-Tar_pos_right[j]); \n"); // center of the object
+        stream_model << string("var ObjRight2Transp_center {j in 1..3} = Hand_right[j] + dFH_right * z_H_right[j] + tar_to_obj_right[j]; \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -7913,10 +8168,13 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
             stream_dat << string(";\n");
 
-            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
+            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} = sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} =")+string(" # xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
+
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=i;
@@ -7932,9 +8190,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} =")+string(" #xyz+radius \n");
+                stream_model << string(" if ( j<4 ) then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -7951,9 +8210,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
         }
         for(int j=1;j<ns2;++j){// max size axis: negative direction
@@ -7971,9 +8231,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             stream_dat << string(";\n");
 
             stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
-
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=-i;
@@ -7989,9 +8250,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8008,19 +8270,20 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_right[j,k]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j] + ext_s_right_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
         }
-    }else{
+    }else{ // bounce posture selection
         int x=0; int y=0; int z=0; int k=0;
-        stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_obj_right[j,i2,1];\n");
+        stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_tar_obj_right[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by the right arm\n");
         stream_dat << string("# Data of the modelization of the object to place by the right hand\n");
 
-        stream_model << string("var ObjRight2Transp_center {j in 1..3, i in Iterations} = Hand_right[j,i] + dFH_right * z_H_right[j,i] + (ObjTar_right[1,j]-Tar_pos_right[j]); \n"); // center of the object
+        stream_model << string("var ObjRight2Transp_center {j in 1..3, i in Iterations} = Hand_right[j,i] + dFH_right * z_H_right[j,i] + tar_to_obj_right[j]; \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -8036,10 +8299,12 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             string ext_3 =  to_string(z*j); stream_dat << to_string(3)+string(" ")+ext_3+string("\n");
             stream_dat << string(";\n");
 
-            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+            stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");           
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=i;
@@ -8055,9 +8320,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8074,9 +8340,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
         }
         for(int j=1;j<ns2;++j){// max size axis: negative direction
@@ -8094,9 +8361,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             stream_dat << string(";\n");
 
             stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
+            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
 
-            stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=-i;
@@ -8112,9 +8381,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8131,9 +8401,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_right_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_right[j,k,i]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjRight2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjRight2Transp_center[j,i] + ext_s_right_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
         }
     }
@@ -8158,12 +8429,12 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
         x=1; y=1;
     }
     if(final){
-        stream_model << string("var Rot_s_left {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_left[i1,j]*Rot_obj_left[j,i2,1];\n");
+        stream_model << string("var Rot_s_left {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_left[i1,j]*Rot_tar_obj_left[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by the left arm\n");
         stream_dat << string("# Data of the modelization of the object to place by the left hand \n");
 
-        stream_model << string("var ObjLeft2Transp_center {j in 1..3} = Hand_left[j] + dFH_left * z_H_left[j] + (ObjTar_left[1,j]-Tar_pos_left[j]); \n"); // center of the object
+        stream_model << string("var ObjLeft2Transp_center {j in 1..3} = Hand_left[j] + dFH_left * z_H_left[j] + tar_to_obj_left[j]; \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -8180,9 +8451,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             stream_dat << string(";\n");
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
-
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=i;
@@ -8198,9 +8470,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_right_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8217,9 +8490,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
         }
         for(int j=1;j<ns2;++j){// max size axis: negative direction
@@ -8237,9 +8511,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             stream_dat << string(";\n");
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
-
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=-i;
@@ -8255,9 +8530,10 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8274,18 +8550,19 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3} =  sum {k in 1..3} Rot_s_left[j,k]*ext_left_")+n_s_str+string("[k];\n");
-
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = if j<4 then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j] + ext_s_left_")+n_s_str+string("[j]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
             }
         }
-    }else{
-        stream_model << string("var Rot_s_left {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_left[i1,j,i]*Rot_obj_left[j,i2,1];\n");
+    }else{ // bounce posture selection
+        stream_model << string("var Rot_s_left {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_left[i1,j,i]*Rot_tar_obj_left[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by the left arm\n");
         stream_dat << string("# Data of the modelization of the object to place by the left hand\n");
 
-        stream_model << string("var ObjLeft2Transp_center {j in 1..3, i in Iterations} = Hand_left[j,i] + dFH_left * z_H_left[j,i] + (ObjTar_left[1,j]-Tar_pos_left[j]); \n"); // center of the object
+        stream_model << string("var ObjLeft2Transp_center {j in 1..3, i in Iterations} = Hand_left[j,i] + dFH_left * z_H_left[j,i] + tar_to_obj_left[j]; \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -8302,9 +8579,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             stream_dat << string(";\n");
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
 
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=i;
@@ -8320,9 +8599,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8339,9 +8620,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
         for(int j=1;j<ns2;++j){// max size axis: negative direction
@@ -8359,9 +8642,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
             stream_dat << string(";\n");
 
             stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+            stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+            stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+            stream_model << string("; \n");
 
-            stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-            stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             for(int i=1;i<ns1;++i){ // middle size axis: positive direction
                 if(x==1 && z==1){
                     k=-i;
@@ -8377,9 +8662,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
             for(int i=1;i<ns1;++i){ // middle size axis: negative direction
                 if(x==1 && z==1){
@@ -8396,9 +8683,11 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_dat << string(";\n");
 
                 stream_model << string("var ext_s_left_")+n_s_str+string(" {j in 1..3,i in Iterations} =  sum {k in 1..3} Rot_s_left[j,k,i]*ext_left_")+n_s_str+string("[k];\n");
+                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = ")+string(" #xyz+radius \n");
+                stream_model << string("if ( j<4 ) then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*")+sphere_diam_str+string("\n");
+                stream_model << string("else if (j=4) then ")+sphere_radius_str+string("\n");
+                stream_model << string("; \n");
 
-                stream_model << string("var ObjLeft2Transp_")+n_s_str+string(" {j in 1..4, i in Iterations} = if j<4 then ObjLeft2Transp_center[j,i] + ext_s_left_")+n_s_str+string("[j,i]*(")+sphere_diam_str+string(") \n");
-                stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
     }
@@ -12058,13 +12347,16 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     bool coll_arms = params.coll_arms;
     std::vector<double> tar_right = params.mov_specs_right.target;
     std::vector<double> tar_left = params.mov_specs_left.target;
+    Matrix4d T_tar_to_obj_right = params.mov_specs_right.T_tar_to_obj;
+    Matrix4d T_tar_to_obj_left = params.mov_specs_left.T_tar_to_obj;
     int dHO_right = params.mov_specs_right.dHO;
     int dHO_left = params.mov_specs_left.dHO;
     std::vector<double> finalHand_right = params.mov_specs_right.finalHand;
     std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
     std::string mov_infoLine_right = params.mov_specs_right.mov_infoline;
     std::string mov_infoLine_left = params.mov_specs_left.mov_infoline;
-    objectPtr obj_tar_right; objectPtr obj_tar_left;
+    objectPtr obj_tar_right = params.mov_specs_right.obj;
+    objectPtr obj_tar_left = params.mov_specs_left.obj;
     bool approach_right = params.mov_specs_right.approach;
     bool approach_left = params.mov_specs_left.approach;
     bool retreat_right = params.mov_specs_right.retreat;
@@ -12076,16 +12368,12 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
 
     switch(dual_mov_type){
     case 0: // pick right pick left
-        obj_tar_right = params.mov_specs_right.obj;
-        obj_tar_left = params.mov_specs_left.obj;
         if(approach_right){pre_grasp_approach_right = params.mov_specs_right.pre_grasp_approach;}
         if(approach_left){pre_grasp_approach_left = params.mov_specs_left.pre_grasp_approach;}
         if(retreat_right){post_grasp_retreat_right = params.mov_specs_right.post_grasp_retreat;}
         if(retreat_left){post_grasp_retreat_left = params.mov_specs_left.post_grasp_retreat;}
         break;
     case 1: // place right place left
-        obj_tar_right = params.mov_specs_right.obj;
-        obj_tar_left = params.mov_specs_left.obj;
         if(approach_right){pre_place_approach_right = params.mov_specs_right.pre_place_approach;}
         if(approach_left){pre_place_approach_left = params.mov_specs_left.pre_place_approach;}
         if(retreat_right){post_place_retreat_right = params.mov_specs_right.post_place_retreat;}
@@ -12218,9 +12506,22 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         this->writeDualInfoObstacles(PostureDat,obsts_left,false);
     }
     // object that has the target
+    std::vector<double> dim_right; std::vector<double> dim_left;
+    obj_tar_right->getSize(dim_right); obj_tar_left->getSize(dim_left);
     switch(dual_mov_type){
-    case 0: case 1: //dual pick or dual place
-        this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+    case 0: //dual pick
+        if(pre_post==2){ // retreat stage
+            this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
+        }else{
+            this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+        }
+        break;
+    case 1: // dual place
+        if(pre_post==2){ // retreat stage
+            this->writeDualInfoObjectTargetPlaceRetreat(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
+        }else{
+            this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
+        }
         break;
     }
     //close the file
@@ -12582,6 +12883,29 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
 
+        if((dual_mov_type==0 && pre_post!=2) || (dual_mov_type==1 && pre_post==2)){
+            // pick movements (plan and approach stages)
+            // OR
+            // place movements (retreat stage)
+            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+            PostureMod << string("# \n");
+            PostureMod << string("subject to objLeft_Arm_right{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_left}:  \n");
+            PostureMod << string("(((Rot_obj_left[1,1]*Points_Arm_right[j,1]+Rot_obj_left[2,1]*Points_Arm_right[j,2]+Rot_obj_left[3,1]*Points_Arm_right[j,3]\n");
+            PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,1]-ObjTar_left[i,2]*Rot_obj_left[2,1]-ObjTar_left[i,3]*Rot_obj_left[3,1])\n");
+            PostureMod << string("/(ObjTar_left[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
+            PostureMod << string("+\n");
+            PostureMod << string("((Rot_obj_left[1,2]*Points_Arm_right[j,1]+Rot_obj_left[2,2]*Points_Arm_right[j,2]+Rot_obj_left[3,2]*Points_Arm_right[j,3]\n");
+            PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,2]-ObjTar_left[i,2]*Rot_obj_left[2,2]-ObjTar_left[i,3]*Rot_obj_left[3,2])\n");
+            PostureMod << string("/(ObjTar_left[i,5]+Points_Arm_right[j,4]")+tyy1+string("))^2\n");
+            PostureMod << string("+\n");
+            PostureMod << string("((Rot_obj_left[1,3]*Points_Arm_right[j,1]+Rot_obj_left[2,3]*Points_Arm_right[j,2]+Rot_obj_left[3,3]*Points_Arm_right[j,3]\n");
+            PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,3]-ObjTar_left[i,2]*Rot_obj_left[2,3]-ObjTar_left[i,3]*Rot_obj_left[3,3])\n");
+            PostureMod << string("/(ObjTar_left[i,6]+Points_Arm_right[j,4]")+tzz1+string("))^2)\n");
+            PostureMod << string(">= 1;\n");
+            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+            PostureMod << string("#  \n");
+        }
+
         /*
         PostureMod << string("((Points_Arm_right[j,1]-Obstacles_right[i,1])^2)*(  \n");
         PostureMod << string("(Rot_right[1,1,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4]")+txx1+string(")^2) + \n");
@@ -12665,6 +12989,29 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         PostureMod << string(">= 1;\n");
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
+
+        if((dual_mov_type==0 && pre_post!=2) || (dual_mov_type==1 && pre_post==2)){
+            // pick movements (plan and approach stages)
+            // OR
+            // place movements (retreat stage)
+            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+            PostureMod << string("# \n");
+            PostureMod << string("subject to objRight_Arm_left{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_right}:  \n");
+            PostureMod << string("(((Rot_obj_right[1,1]*Points_Arm_left[j,1]+Rot_obj_right[2,1]*Points_Arm_left[j,2]+Rot_obj_right[3,1]*Points_Arm_left[j,3]\n");
+            PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,1]-ObjTar_right[i,2]*Rot_obj_right[2,1]-ObjTar_right[i,3]*Rot_obj_right[3,1])\n");
+            PostureMod << string("/(ObjTar_right[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
+            PostureMod << string("+\n");
+            PostureMod << string("((Rot_obj_right[1,2]*Points_Arm_left[j,1]+Rot_obj_right[2,2]*Points_Arm_left[j,2]+Rot_obj_right[3,2]*Points_Arm_left[j,3]\n");
+            PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,2]-ObjTar_right[i,2]*Rot_obj_right[2,2]-ObjTar_right[i,3]*Rot_obj_right[3,2])\n");
+            PostureMod << string("/(ObjTar_right[i,5]+Points_Arm_left[j,4]")+tyy1+string("))^2\n");
+            PostureMod << string("+\n");
+            PostureMod << string("((Rot_obj_right[1,3]*Points_Arm_left[j,1]+Rot_obj_right[2,3]*Points_Arm_left[j,2]+Rot_obj_right[3,3]*Points_Arm_left[j,3]\n");
+            PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,3]-ObjTar_right[i,2]*Rot_obj_right[2,3]-ObjTar_right[i,3]*Rot_obj_right[3,3])\n");
+            PostureMod << string("/(ObjTar_right[i,6]+Points_Arm_left[j,4]")+tzz1+string("))^2)\n");
+            PostureMod << string(">= 1;\n");
+            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+            PostureMod << string("#  \n");
+        }
 
         /*
         PostureMod << string("((Points_Arm_left[j,1]-Obstacles_left[i,1])^2)*(  \n");
@@ -12783,8 +13130,10 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
     std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
     std::vector<double> tar_right = params.mov_specs_right.target;
     std::vector<double> tar_left = params.mov_specs_left.target;
-    objectPtr obj_tar_right;
-    objectPtr obj_tar_left;
+    Matrix4d T_tar_to_obj_right = params.mov_specs_right.T_tar_to_obj;
+    Matrix4d T_tar_to_obj_left = params.mov_specs_left.T_tar_to_obj;
+    objectPtr obj_tar_right = params.mov_specs_right.obj;
+    objectPtr obj_tar_left = params.mov_specs_left.obj;
     string mov_infoLine_right = params.mov_specs_right.mov_infoline;
     string mov_infoLine_left = params.mov_specs_left.mov_infoline;
     bool approach_right = params.mov_specs_right.approach;
@@ -12808,16 +13157,12 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
 
     switch(dual_mov_type){
     case 0: // pick right pick left
-        obj_tar_right = params.mov_specs_right.obj;
-        obj_tar_left = params.mov_specs_left.obj;
         if(approach_right){pre_grasp_approach_right = params.mov_specs_right.pre_grasp_approach;}
         if(approach_left){pre_grasp_approach_left = params.mov_specs_left.pre_grasp_approach;}
         if(retreat_right){post_grasp_retreat_right = params.mov_specs_right.post_grasp_retreat;}
         if(retreat_left){post_grasp_retreat_left = params.mov_specs_left.post_grasp_retreat;}
         break;
     case 1: // place right place left
-        obj_tar_right = params.mov_specs_right.obj;
-        obj_tar_left = params.mov_specs_left.obj;
         if(approach_right){pre_place_approach_right = params.mov_specs_right.pre_place_approach;}
         if(approach_left){pre_place_approach_left = params.mov_specs_left.pre_place_approach;}
         if(retreat_right){post_place_retreat_right = params.mov_specs_right.post_place_retreat;}
@@ -13051,9 +13396,22 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      this->writeDualInfoObstacles(PostureDat,objs_right,true);
      this->writeDualInfoObstacles(PostureDat,objs_left,false);
      // object that has the target
+     std::vector<double> dim_right; std::vector<double> dim_left;
+     obj_tar_right->getSize(dim_right); obj_tar_left->getSize(dim_left);
      switch(dual_mov_type){
-     case 0: case 1: // dual pick or dual place
-         this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+     case 0: //dual pick
+         if(pre_post==2){ // retreat stage
+             this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
+         }else{
+             this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+         }
+         break;
+     case 1: // dual place
+         if(pre_post==2){ // retreat stage
+             this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
+         }else{
+             this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
+         }
          break;
      }
      //close the file
@@ -14028,6 +14386,29 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
          PostureMod << string("# \n");
 
+         if((dual_mov_type==0 && pre_post!=2) || (dual_mov_type==1 && pre_post==2)){
+             // pick movements (plan and approach stages)
+             // OR
+             // place movements (retreat stage)
+             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+             PostureMod << string("# \n");
+             PostureMod << string("subject to objLeft_Arm_right{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_left, l in 1..Nsteps+1}:  \n");
+             PostureMod << string("(((Rot_obj_left[1,1]*Points_Arm_right[j,1,l]+Rot_obj_left[2,1]*Points_Arm_right[j,2,l]+Rot_obj_left[3,1]*Points_Arm_right[j,3,l]\n");
+             PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,1]-ObjTar_left[i,2]*Rot_obj_left[2,1]-ObjTar_left[i,3]*Rot_obj_left[3,1])\n");
+             PostureMod << string("/(ObjTar_left[i,4]+Points_Arm_right[j,4,l]+tol_obs_right_xx1[l]))^2\n");
+             PostureMod << string("+\n");
+             PostureMod << string("((Rot_obj_left[1,2]*Points_Arm_right[j,1,l]+Rot_obj_left[2,2]*Points_Arm_right[j,2,l]+Rot_obj_left[3,2]*Points_Arm_right[j,3,l]\n");
+             PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,2]-ObjTar_left[i,2]*Rot_obj_left[2,2]-ObjTar_left[i,3]*Rot_obj_left[3,2])\n");
+             PostureMod << string("/(ObjTar_left[i,5]+Points_Arm_right[j,4,l]+tol_obs_right_yy1[l]))^2\n");
+             PostureMod << string("+\n");
+             PostureMod << string("((Rot_obj_left[1,3]*Points_Arm_right[j,1,l]+Rot_obj_left[2,3]*Points_Arm_right[j,2,l]+Rot_obj_left[3,3]*Points_Arm_right[j,3,l]\n");
+             PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,3]-ObjTar_left[i,2]*Rot_obj_left[2,3]-ObjTar_left[i,3]*Rot_obj_left[3,3])\n");
+             PostureMod << string("/(ObjTar_left[i,6]+Points_Arm_right[j,4,l]+tol_obs_right_zz1[l]))^2)\n");
+             PostureMod << string(">= 1;\n");
+             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+             PostureMod << string("#  \n");
+         }
+
          /*
          PostureMod << string("((Points_Arm_right[j,1,l]-Obstacles_right[i,1])^2)*(\n");
          PostureMod << string("(Rot_right[1,1,i])^2 / ((Obstacles_right[i,4]+Points_Arm_right[j,4,l]+tol_obs_right_xx1[l])^2) +\n");
@@ -14204,6 +14585,29 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          PostureMod << string(">= 1;\n");
          PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n");
          PostureMod << string("# \n");
+
+         if((dual_mov_type==0 && pre_post!=2) || (dual_mov_type==1 && pre_post==2)){
+             // pick movements (plan and approach stages)
+             // OR
+             // place movements (retreat stage)
+             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+             PostureMod << string("# \n");
+             PostureMod << string("subject to objRight_Arm_left{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_right, l in 1..Nsteps+1}:  \n");
+             PostureMod << string("(((Rot_obj_right[1,1]*Points_Arm_left[j,1,l]+Rot_obj_right[2,1]*Points_Arm_left[j,2,l]+Rot_obj_right[3,1]*Points_Arm_left[j,3,l]\n");
+             PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,1]-ObjTar_right[i,2]*Rot_obj_right[2,1]-ObjTar_right[i,3]*Rot_obj_right[3,1])\n");
+             PostureMod << string("/(ObjTar_right[i,4]+Points_Arm_right[j,4,l]+tol_obs_left_xx1[l]))^2\n");
+             PostureMod << string("+\n");
+             PostureMod << string("((Rot_obj_right[1,2]*Points_Arm_left[j,1,l]+Rot_obj_right[2,2]*Points_Arm_left[j,2,l]+Rot_obj_right[3,2]*Points_Arm_left[j,3,l]\n");
+             PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,2]-ObjTar_right[i,2]*Rot_obj_right[2,2]-ObjTar_right[i,3]*Rot_obj_right[3,2])\n");
+             PostureMod << string("/(ObjTar_right[i,5]+Points_Arm_left[j,4,l]+tol_obs_left_yy1[l]))^2\n");
+             PostureMod << string("+\n");
+             PostureMod << string("((Rot_obj_right[1,3]*Points_Arm_left[j,1,l]+Rot_obj_right[2,3]*Points_Arm_left[j,2,l]+Rot_obj_right[3,3]*Points_Arm_left[j,3,l]\n");
+             PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,3]-ObjTar_right[i,2]*Rot_obj_right[2,3]-ObjTar_right[i,3]*Rot_obj_right[3,3])\n");
+             PostureMod << string("/(ObjTar_right[i,6]+Points_Arm_left[j,4,l]+tol_obs_left_zz1[l]))^2)\n");
+             PostureMod << string(">= 1;\n");
+             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+             PostureMod << string("#  \n");
+         }
 
          /*
          PostureMod << string("((Points_Arm_left[j,1,l]-Obstacles_left[i,1])^2)*(\n");

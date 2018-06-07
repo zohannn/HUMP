@@ -156,6 +156,7 @@ typedef struct{
     std::vector<double> finalHand;/**< final posture of the hand */
     std::vector<double> target;/**< target / location to reach: target(0)=x, target(1)=y, target(2)=z, target(3)=roll, target(4)=pitch, target(6)=yaw,*/
     objectPtr obj; /**< object involved in the movement. The info of the object have to be updated according to the selected movement */
+    Matrix4d T_tar_to_obj; /**< transformation matrix from the target to the obj = inv(T_tar)*T_obj */
     std::string support_obj; /**< name of the object that is a support surface in place movements */
     bool approach;/**< true to use the approach options, false otherwise  */
     bool retreat;/**< true to use the retreat options, false otherwise */

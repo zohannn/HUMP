@@ -1053,6 +1053,34 @@ private:
     void writeDualInfoObjectTarget(ofstream &stream, objectPtr obj_right, objectPtr obj_left);
 
     /**
+     * @brief writeDualInfoObjectTarget
+     * @param stream
+     * @param tar_right
+     * @param T_tar_to_obj_right
+     * @param dim_right
+     * @param name_right
+     * @param tar_left
+     * @param T_tar_to_obj_left
+     * @param dim_left
+     * @param name_left
+     */
+    void writeDualInfoObjectTarget(ofstream &stream, std::vector<double> tar_right, Matrix4d T_tar_to_obj_right, std::vector<double> dim_right, std::string name_right, std::vector<double> tar_left, Matrix4d T_tar_to_obj_left,std::vector<double> dim_left,std::string name_left);
+
+    /**
+     * @brief writeDualInfoObjectTargetPlaceRetreat
+     * @param stream
+     * @param tar_right
+     * @param T_tar_to_obj_right
+     * @param dim_right
+     * @param name_right
+     * @param tar_left
+     * @param T_tar_to_obj_left
+     * @param dim_left
+     * @param name_left
+     */
+    void writeDualInfoObjectTargetPlaceRetreat(ofstream &stream, std::vector<double> tar_right, Matrix4d T_tar_to_obj_right, std::vector<double> dim_right, std::string name_right, std::vector<double> tar_left, Matrix4d T_tar_to_obj_left,std::vector<double> dim_left,std::string name_left);
+
+    /**
      * @brief writePI
      * @param stream
      */
