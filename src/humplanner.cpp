@@ -8276,8 +8276,7 @@ void HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mo
                 stream_model << string("; \n");
             }
         }
-    }else{ // bounce posture selection
-        int x=0; int y=0; int z=0; int k=0;
+    }else{ // bounce posture selection        
         stream_model << string("var Rot_s_right {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_tar_obj_right[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by the right arm\n");
