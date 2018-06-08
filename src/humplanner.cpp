@@ -11667,6 +11667,7 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
             if(FPosture_pre_grasp){
                 // extend the final posture
                 finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
+                hand_r.clear();
                 finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm,finalHand_right.at(0));                
                 for(size_t i=1;i<finalHand_right.size();++i){
                     if(((finalHand_right.at(i)-AP) > minLimits_right.at(i+joints_arm))){
@@ -11676,7 +11677,8 @@ planning_dual_result_ptr HUMPlanner::plan_dual_pick_pick(hump_dual_params &param
                     }
                 }
                 finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm+1,hand_r.begin(),hand_r.end());
-                finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.at(0));                
+                hand_l.clear();
+                finalPosture_pre_grasp_ext.insert(finalPosture_pre_grasp_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.at(0));
                 for(size_t i=1;i<finalHand_left.size();++i){
                     if(((finalHand_left.at(i)-AP) > minLimits_left.at(i+joints_arm))){
                         hand_l.push_back(finalHand_left.at(i)-AP);
@@ -12080,9 +12082,28 @@ planning_dual_result_ptr HUMPlanner::plan_dual_place_place(hump_dual_params& par
                 FPosture_post_place = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_ext,finalPosture_post_place);
                 if (FPosture_post_place){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                    // extend the final posture
+                    hand_r.clear();
                     std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
-                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
-                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm,finalHand_right.at(0));
+                    for(size_t i=1;i<finalHand_right.size();++i){
+                        if(((finalHand_right.at(i)-AP) > minLimits_right.at(i+joints_arm))){
+                            hand_r.push_back(finalHand_right.at(i)-AP);
+                        }else{
+                           hand_r.push_back(minLimits_right.at(i+joints_arm));
+                        }
+                    }
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+1,hand_r.begin(),hand_r.end());
+                    hand_l.clear();
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.at(0));
+                    for(size_t i=1;i<finalHand_left.size();++i){
+                        if(((finalHand_left.at(i)-AP) > minLimits_left.at(i+joints_arm))){
+                            hand_l.push_back(finalHand_left.at(i)-AP);
+                        }else{
+                           hand_l.push_back(minLimits_left.at(i+joints_arm));
+                        }
+                    }
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm+1,hand_l.begin(),hand_l.end());
                     int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
                     // calculate the retreat boundary conditions
                     // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
@@ -12104,9 +12125,25 @@ planning_dual_result_ptr HUMPlanner::plan_dual_place_place(hump_dual_params& par
                 FPosture_post_place = this->singleDualArmFinalPosture(dual_mov_type,pre_post,params,finalPosture_ext,finalPosture_post_place);
                 if (FPosture_post_place){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+                    // extend the final posture
                     std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
-                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm,finalHand_right.begin(),finalHand_right.end());
-                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.begin(),finalHand_left.end());
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm,finalHand_right.at(0));
+                    for(size_t i=1;i<finalHand_right.size();++i){
+                        if(((finalHand_right.at(i)-AP) > minLimits_right.at(i+joints_arm))){
+                            hand_r.push_back(finalHand_right.at(i)-AP);
+                        }else{
+                           hand_r.push_back(minLimits_right.at(i+joints_arm));
+                        }
+                    }
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+1,hand_r.begin(),hand_r.end());
+                    for(size_t i=1;i<finalHand_left.size();++i){
+                        if(((finalHand_left.at(i)-AP) > minLimits_left.at(i+joints_arm))){
+                            hand_l.push_back(finalHand_left.at(i)-AP);
+                        }else{
+                           hand_l.push_back(minLimits_left.at(i+joints_arm));
+                        }
+                    }
+                    finalPosture_post_place_ext.insert(finalPosture_post_place_ext.begin()+joints_arm+joints_hand+joints_arm+1,hand_l.begin(),hand_l.end());
                     int steps_ret = this->getSteps(maxLimits, minLimits,finalPosture_ext,finalPosture_post_place_ext);
                     // calculate the retreat boundary conditions
                     // the final velocity is the maximum velocity reached at tau=0.5 of the trajectory with null boundary conditions
@@ -12519,6 +12556,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     case 1: // dual place
         if(pre_post==2){ // retreat stage
             this->writeDualInfoObjectTargetPlaceRetreat(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
+            //this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
         }else{
             this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
         }
