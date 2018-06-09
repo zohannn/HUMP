@@ -339,6 +339,17 @@ public:
     planning_dual_result_ptr plan_dual_move_move(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> initPosture_left);
 
     /**
+     * @brief plan_dual_move_move
+     * @param params
+     * @param initPosture_right
+     * @param finalPosture_right
+     * @param initPosture_left
+     * @param finalPosture_left
+     * @return
+     */
+    planning_dual_result_ptr plan_dual_move_move(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> finalPosture_right, std::vector<double> initPosture_left, std::vector<double> finalPosture_left);
+
+    /**
      * @brief plan_dual_pick_place
      * @param params
      * @param initPosture_right

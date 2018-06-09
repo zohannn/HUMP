@@ -12165,6 +12165,120 @@ planning_dual_result_ptr HUMPlanner::plan_dual_place_place(hump_dual_params& par
     return res;
 }
 
+planning_dual_result_ptr HUMPlanner::plan_dual_move_move(hump_dual_params& params, std::vector<double> initPosture_right, std::vector<double> finalPosture_right, std::vector<double> initPosture_left, std::vector<double> finalPosture_left)
+{
+    planning_dual_result_ptr res;
+    res.reset(new planning_dual_result);
+
+    int dual_mov_type = 2; // move right and move left
+    int mov_type_right = 2; // move
+    int mov_type_left = 2; // move
+    bool coll_right = params.mov_specs_right.coll;
+    bool coll_left = params.mov_specs_left.coll;
+    res->mov_type_right = mov_type_right;
+    res->mov_type_left = mov_type_left;
+    std::vector<double> finalHand_right = params.mov_specs_right.finalHand;
+    std::vector<double> finalHand_left = params.mov_specs_left.finalHand;
+    std::vector<double> initPosture;
+    std::vector<double> minLimits; std::vector<double> maxLimits;
+    std::vector<double> minLimits_right; std::vector<double> maxLimits_right;
+    std::vector<double> minLimits_left; std::vector<double> maxLimits_left;
+    minLimits_right = this->minRightLimits; maxLimits_right = this->maxRightLimits;
+    minLimits_left = this->minLeftLimits; maxLimits_left = this->maxLeftLimits;
+
+    //res->object_right_id = params.mov_specs_right.obj->getName();
+    //res->object_left_id = params.mov_specs_left.obj->getName();
+    //bool approach_right = params.mov_specs_right.approach;
+    //bool approach_left = params.mov_specs_left.approach;
+    //bool retreat_right = params.mov_specs_right.retreat;
+    //bool retreat_left = params.mov_specs_left.retreat;
+    //bool straight_line_right = params.mov_specs_right.straight_line;
+    //bool straight_line_left = params.mov_specs_left.straight_line;
+
+    int pre_post = 0; // 0 = use no options, 1 = use approach options, 2 = use retreat options
+    int mod = 0; // 0 = move, 1 = pre_approach, 2 = approach, 3 = retreat
+
+    initPosture = initPosture_right;
+    initPosture.insert(initPosture.end(),initPosture_left.begin(),initPosture_left.end());
+    std::vector<double> finalPosture;
+    finalPosture = finalPosture_right;
+    finalPosture.insert(finalPosture.end(),finalPosture_left.begin(),finalPosture_left.end());
+    minLimits = minLimits_right;
+    minLimits.insert(minLimits.end(),minLimits_left.begin(),minLimits_left.end());
+    maxLimits = maxLimits_right;
+    maxLimits.insert(maxLimits.end(),maxLimits_left.begin(),maxLimits_left.end());
+
+    try
+    {
+        // the posture is given by
+        // right arm(7) + right hand(4) + left arm(7) + left hand(4) = 22 joints
+        std::vector<double> hand_r; std::vector<double> hand_l;
+        std::vector<double> bouncePosture; bool BPosture = false;
+        std::vector<double> finalPosture_ext;
+        // extend the final posture
+        finalPosture_ext = finalPosture_right;
+        finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm,finalHand_right.at(0));
+        for(size_t i=1;i<finalHand_right.size();++i){
+            if(((finalHand_right.at(i)) > minLimits_right.at(i+joints_arm))){
+                hand_r.push_back(finalHand_right.at(i));
+            }else{
+               hand_r.push_back(minLimits_right.at(i+joints_arm));
+            }
+        }
+        finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+1,hand_r.begin(),hand_r.end());
+
+        finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+joints_hand,finalPosture_left.begin(),finalPosture_left.end());
+
+        finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+joints_hand+joints_arm,finalHand_left.at(0));
+        for(size_t i=1;i<finalHand_left.size();++i){
+            if(((finalHand_left.at(i)) > minLimits_left.at(i+joints_arm))){
+                hand_l.push_back(finalHand_left.at(i));
+            }else{
+               hand_l.push_back(minLimits_left.at(i+joints_arm));
+            }
+        }
+        finalPosture_ext.insert(finalPosture_ext.begin()+joints_arm+joints_hand+joints_arm+1,hand_l.begin(),hand_l.end());
+        // get the steps of the trajectory
+        int steps = this->getSteps(maxLimits,minLimits,initPosture,finalPosture_ext);
+
+        if(coll_right && coll_left){// collisions
+            BPosture = this->singleDualArmBouncePosture(steps,dual_mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+            if(BPosture){
+                res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully");
+                res->time_steps.clear();
+                res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+                res->velocity_stages.clear();
+                res->acceleration_stages.clear();
+                // plan stage
+                MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; bool success = true;
+                timestep = this->getDualAcceleration(dual_mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
+                // plan
+                res->time_steps.push_back(timestep);
+                res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
+                res->velocity_stages.push_back(vel);
+                res->acceleration_stages.push_back(acc);
+            }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
+        }else{ // no collisions
+            res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
+            res->time_steps.clear();
+            res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
+            res->velocity_stages.clear();
+            res->acceleration_stages.clear();
+            // plan stage
+            MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; bool success = true;
+            timestep = this->getDualAcceleration(dual_mov_type,steps,params,initPosture,finalPosture_ext,traj,vel,acc,success,mod);
+            res->time_steps.push_back(timestep);
+            res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
+            res->velocity_stages.push_back(vel);
+            res->acceleration_stages.push_back(acc);
+        }
+    }catch (const string message){throw message;
+    }catch( ... ){throw string ("HUMP: error in optimizing the trajecory");}
+
+    return res;
+}
+
+
 bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initPosture,std::vector<double>& finalPosture)
 {
     // movement settings
@@ -13434,9 +13548,9 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      this->writeDualInfoObstacles(PostureDat,objs_left,false);
      // object that has the target
      std::vector<double> dim_right; std::vector<double> dim_left;
-     obj_tar_right->getSize(dim_right); obj_tar_left->getSize(dim_left);
      switch(dual_mov_type){
      case 0: //dual pick
+         obj_tar_right->getSize(dim_right); obj_tar_left->getSize(dim_left);
          if(pre_post==2){ // retreat stage
              this->writeDualInfoObjectTarget(PostureDat,tar_right,T_tar_to_obj_right,dim_right, obj_tar_right->getName(),tar_left,T_tar_to_obj_left,dim_left,obj_tar_left->getName());
          }else{
@@ -13444,6 +13558,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
          }
          break;
      case 1: // dual place
+         obj_tar_right->getSize(dim_right); obj_tar_left->getSize(dim_left);
          if(pre_post==2){ // retreat stage
              this->writeDualInfoObjectTarget(PostureDat,obj_tar_right,obj_tar_left);
          }else{
@@ -14693,7 +14808,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
           PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
           PostureMod << string("# \n");
           PostureMod << string("# Constraints between the arms \n");
-          if(dual_mov_type==0){ // dual pick
+          if(dual_mov_type==0 || dual_mov_type==2){ // dual pick or dual move
             PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9,l in 1..Nsteps+1}:  \n");
           }else if(dual_mov_type==1){ // dual place
             PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string(",l in 1..Nsteps+1}:  \n");
