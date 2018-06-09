@@ -1056,6 +1056,26 @@ private:
     void writeInfoObjectTarget(ofstream &stream, objectPtr obj);
 
     /**
+     * @brief writeInfoObjectTarget
+     * @param stream
+     * @param tar
+     * @param T_tar_to_obj
+     * @param dim
+     * @param name
+     */
+    void writeInfoObjectTarget(ofstream &stream,std::vector<double> tar, Matrix4d T_tar_to_obj, std::vector<double> dim, std::string name);
+
+    /**
+     * @brief writeInfoObjectTargetPlaceRetreat
+     * @param stream
+     * @param tar
+     * @param T_tar_to_obj
+     * @param dim
+     * @param name
+     */
+    void writeInfoObjectTargetPlaceRetreat(ofstream &stream,std::vector<double> tar, Matrix4d T_tar_to_obj,std::vector<double> dim, std::string name);
+
+    /**
      * @brief writeDualInfoObjectTarget
      * @param stream
      * @param obj_right
