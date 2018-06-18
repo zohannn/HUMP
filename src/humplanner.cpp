@@ -8021,7 +8021,7 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
     int n_s=0;
     string sphere_radius_str; string sphere_diam_str; double sphere_diam;
     // Rotation matrix of the object to place
-    this->writeRotMatObjTar(stream_model);
+    this->writeRotMatObjTarDual(stream_model);
     std::map< std::string, double > axis_map;
     std::string axis_min; std::string axis_middle; std::string axis_max;
     double obj_min; double obj_middle; double obj_max;
@@ -8047,12 +8047,12 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
         x=1; y=1;
     }
     if(final){
-        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_right[i1,j]*Rot_obj[j,i2,1];\n");
+        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3} =  sum {j in 1..3} Rot_H_right[i1,j]*Rot_tar_obj_right[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by both arms\n");
         stream_dat << string("# Data of the modelization of the object to place \n");
 
-        stream_model << string("var Obj2Transp_center {j in 1..3} = Hand_right[j] + dFH_right * z_H_right[j] + (ObjTar[1,j]-Tar_pos_right[j]); \n"); // center of the object
+        stream_model << string("var Obj2Transp_center {j in 1..3} = Hand_right[j] + dFH_right * z_H_right[j] + tar_to_obj_right[j]; \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -8169,13 +8169,13 @@ int HUMPlanner::dual_obj_model_spheres(ofstream &stream_dat,ofstream &stream_mod
                 stream_model << string("else 	if (j=4) then ")+sphere_radius_str+string("; \n");
             }
         }
-    }else{
-        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_obj[j,i2,1];\n");
+    }else{ //bounce posture selection
+        stream_model << string("var Rot_s {i1 in 1..3, i2 in 1..3,i in Iterations} =  sum {j in 1..3} Rot_H_right[i1,j,i]*Rot_tar_obj_right[j,i2];\n");
         // Modellization of the object in spheres
         stream_model << string("# Modelization of the object to place by both arms\n");
         stream_dat << string("# Data of the modelization of the object to place \n");
 
-        stream_model << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand_right[j,i] + dFH_right * z_H_right[j,i] + (ObjTar[1,j]-Tar_pos_right[j]); \n"); // center of the object
+        stream_model << string("var Obj2Transp_center {j in 1..3, i in Iterations} = Hand_right[j,i] + dFH_right * z_H_right[j,i] + tar_to_obj_right[j]; \n"); // center of the object
 
         for(int j=0;j<ns2;++j){// max size axis: positive direction
             if(x==1 && y==1){
@@ -13219,23 +13219,26 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
             // pick movements (plan and approach stages)
             // OR
             // place movements (retreat stage)
-            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
-            PostureMod << string("# \n");
-            PostureMod << string("subject to objLeft_Arm_right{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_left}:  \n");
-            PostureMod << string("(((Rot_obj_left[1,1]*Points_Arm_right[j,1]+Rot_obj_left[2,1]*Points_Arm_right[j,2]+Rot_obj_left[3,1]*Points_Arm_right[j,3]\n");
-            PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,1]-ObjTar_left[i,2]*Rot_obj_left[2,1]-ObjTar_left[i,3]*Rot_obj_left[3,1])\n");
-            PostureMod << string("/(ObjTar_left[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
-            PostureMod << string("+\n");
-            PostureMod << string("((Rot_obj_left[1,2]*Points_Arm_right[j,1]+Rot_obj_left[2,2]*Points_Arm_right[j,2]+Rot_obj_left[3,2]*Points_Arm_right[j,3]\n");
-            PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,2]-ObjTar_left[i,2]*Rot_obj_left[2,2]-ObjTar_left[i,3]*Rot_obj_left[3,2])\n");
-            PostureMod << string("/(ObjTar_left[i,5]+Points_Arm_right[j,4]")+tyy1+string("))^2\n");
-            PostureMod << string("+\n");
-            PostureMod << string("((Rot_obj_left[1,3]*Points_Arm_right[j,1]+Rot_obj_left[2,3]*Points_Arm_right[j,2]+Rot_obj_left[3,3]*Points_Arm_right[j,3]\n");
-            PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,3]-ObjTar_left[i,2]*Rot_obj_left[2,3]-ObjTar_left[i,3]*Rot_obj_left[3,3])\n");
-            PostureMod << string("/(ObjTar_left[i,6]+Points_Arm_right[j,4]")+tzz1+string("))^2)\n");
-            PostureMod << string(">= 1;\n");
-            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
-            PostureMod << string("#  \n");
+            if(obj_tar_right->getName().compare(obj_tar_left->getName())!=0)
+            {
+                PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+                PostureMod << string("# \n");
+                PostureMod << string("subject to objLeft_Arm_right{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_left}:  \n");
+                PostureMod << string("(((Rot_obj_left[1,1]*Points_Arm_right[j,1]+Rot_obj_left[2,1]*Points_Arm_right[j,2]+Rot_obj_left[3,1]*Points_Arm_right[j,3]\n");
+                PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,1]-ObjTar_left[i,2]*Rot_obj_left[2,1]-ObjTar_left[i,3]*Rot_obj_left[3,1])\n");
+                PostureMod << string("/(ObjTar_left[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
+                PostureMod << string("+\n");
+                PostureMod << string("((Rot_obj_left[1,2]*Points_Arm_right[j,1]+Rot_obj_left[2,2]*Points_Arm_right[j,2]+Rot_obj_left[3,2]*Points_Arm_right[j,3]\n");
+                PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,2]-ObjTar_left[i,2]*Rot_obj_left[2,2]-ObjTar_left[i,3]*Rot_obj_left[3,2])\n");
+                PostureMod << string("/(ObjTar_left[i,5]+Points_Arm_right[j,4]")+tyy1+string("))^2\n");
+                PostureMod << string("+\n");
+                PostureMod << string("((Rot_obj_left[1,3]*Points_Arm_right[j,1]+Rot_obj_left[2,3]*Points_Arm_right[j,2]+Rot_obj_left[3,3]*Points_Arm_right[j,3]\n");
+                PostureMod << string("-ObjTar_left[i,1]*Rot_obj_left[1,3]-ObjTar_left[i,2]*Rot_obj_left[2,3]-ObjTar_left[i,3]*Rot_obj_left[3,3])\n");
+                PostureMod << string("/(ObjTar_left[i,6]+Points_Arm_right[j,4]")+tzz1+string("))^2)\n");
+                PostureMod << string(">= 1;\n");
+                PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+                PostureMod << string("#  \n");
+            }
         }
 
         /*
@@ -13326,23 +13329,26 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
             // pick movements (plan and approach stages)
             // OR
             // place movements (retreat stage)
-            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
-            PostureMod << string("# \n");
-            PostureMod << string("subject to objRight_Arm_left{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_right}:  \n");
-            PostureMod << string("(((Rot_obj_right[1,1]*Points_Arm_left[j,1]+Rot_obj_right[2,1]*Points_Arm_left[j,2]+Rot_obj_right[3,1]*Points_Arm_left[j,3]\n");
-            PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,1]-ObjTar_right[i,2]*Rot_obj_right[2,1]-ObjTar_right[i,3]*Rot_obj_right[3,1])\n");
-            PostureMod << string("/(ObjTar_right[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
-            PostureMod << string("+\n");
-            PostureMod << string("((Rot_obj_right[1,2]*Points_Arm_left[j,1]+Rot_obj_right[2,2]*Points_Arm_left[j,2]+Rot_obj_right[3,2]*Points_Arm_left[j,3]\n");
-            PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,2]-ObjTar_right[i,2]*Rot_obj_right[2,2]-ObjTar_right[i,3]*Rot_obj_right[3,2])\n");
-            PostureMod << string("/(ObjTar_right[i,5]+Points_Arm_left[j,4]")+tyy1+string("))^2\n");
-            PostureMod << string("+\n");
-            PostureMod << string("((Rot_obj_right[1,3]*Points_Arm_left[j,1]+Rot_obj_right[2,3]*Points_Arm_left[j,2]+Rot_obj_right[3,3]*Points_Arm_left[j,3]\n");
-            PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,3]-ObjTar_right[i,2]*Rot_obj_right[2,3]-ObjTar_right[i,3]*Rot_obj_right[3,3])\n");
-            PostureMod << string("/(ObjTar_right[i,6]+Points_Arm_left[j,4]")+tzz1+string("))^2)\n");
-            PostureMod << string(">= 1;\n");
-            PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
-            PostureMod << string("#  \n");
+            if(obj_tar_right->getName().compare(obj_tar_left->getName())!=0)
+            {
+                PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+                PostureMod << string("# \n");
+                PostureMod << string("subject to objRight_Arm_left{j in 1..")+n_str_right+string(", i in 1..n_ObjTar_right}:  \n");
+                PostureMod << string("(((Rot_obj_right[1,1]*Points_Arm_left[j,1]+Rot_obj_right[2,1]*Points_Arm_left[j,2]+Rot_obj_right[3,1]*Points_Arm_left[j,3]\n");
+                PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,1]-ObjTar_right[i,2]*Rot_obj_right[2,1]-ObjTar_right[i,3]*Rot_obj_right[3,1])\n");
+                PostureMod << string("/(ObjTar_right[i,4]+Points_Arm_right[j,4]")+txx1+string("))^2\n");
+                PostureMod << string("+\n");
+                PostureMod << string("((Rot_obj_right[1,2]*Points_Arm_left[j,1]+Rot_obj_right[2,2]*Points_Arm_left[j,2]+Rot_obj_right[3,2]*Points_Arm_left[j,3]\n");
+                PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,2]-ObjTar_right[i,2]*Rot_obj_right[2,2]-ObjTar_right[i,3]*Rot_obj_right[3,2])\n");
+                PostureMod << string("/(ObjTar_right[i,5]+Points_Arm_left[j,4]")+tyy1+string("))^2\n");
+                PostureMod << string("+\n");
+                PostureMod << string("((Rot_obj_right[1,3]*Points_Arm_left[j,1]+Rot_obj_right[2,3]*Points_Arm_left[j,2]+Rot_obj_right[3,3]*Points_Arm_left[j,3]\n");
+                PostureMod << string("-ObjTar_right[i,1]*Rot_obj_right[1,3]-ObjTar_right[i,2]*Rot_obj_right[2,3]-ObjTar_right[i,3]*Rot_obj_right[3,3])\n");
+                PostureMod << string("/(ObjTar_right[i,6]+Points_Arm_left[j,4]")+tzz1+string("))^2)\n");
+                PostureMod << string(">= 1;\n");
+                PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+                PostureMod << string("#  \n");
+            }
         }
 
         /*
@@ -13401,7 +13407,12 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
         if(dual_mov_type==0){ // dual pick
             PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9}:  \n");
         }else if(dual_mov_type==1){ // dual place
-            PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string("}:  \n");
+            if(obj_tar_right->getName().compare(obj_tar_left->getName())!=0)
+            {
+                PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string("}:  \n");
+            }else{
+                PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9}:  \n");
+            }
         }
 
         PostureMod << string("(Points_Arm_left[i1,1] - Points_Arm_right[i2,1])^2 + \n");
