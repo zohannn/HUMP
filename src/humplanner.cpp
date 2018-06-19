@@ -15003,7 +15003,12 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
           if(dual_mov_type==0 || dual_mov_type==2){ // dual pick or dual move
             PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9,l in 1..Nsteps+1}:  \n");
           }else if(dual_mov_type==1){ // dual place
-            PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string(",l in 1..Nsteps+1}:  \n");
+              if(obj_tar_right->getName().compare(obj_tar_left->getName())!=0)
+              {
+                PostureMod << string("subject to Arm_Arm{i1 in 4..")+n_str_left+string(", i2 in 4..")+n_str_right+string(",l in 1..Nsteps+1}:  \n");
+              }else{
+                PostureMod << string("subject to Arm_Arm{i1 in 4..9, i2 in 4..9,l in 1..Nsteps+1}:  \n");
+              }
           }
           PostureMod << string("(Points_Arm_left[i1,1,l] - Points_Arm_right[i2,1,l])^2 + \n");
           PostureMod << string("(Points_Arm_left[i1,2,l] - Points_Arm_right[i2,2,l])^2 + \n");

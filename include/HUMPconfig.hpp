@@ -79,13 +79,13 @@ const double SPACER_BOUNCE = 0.0*static_cast<double>(M_PI)/180; /**< degree used
                                                                          This parameter helps to stay within the joint range */
 
 const double PHI = (-log(2.0)/log(TB));/**< parameter to control when the bounce posture is reached */
-const double AP = 20.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick [rad] */
+const double AP = 25.0*static_cast<double>(M_PI)/180; /**< aperture of the fingers when approaching to pick [rad] */
 
 const double BLANK_PERCENTAGE_TAR = 0.10; /**< percentage of steps to eliminate when either reaching to grasp an object [0,1]*/
 const double BLANK_PERCENTAGE_OBS = 0.20;/**< move at the beginning of a move movement [0,1] */
 
-const double BLANK_PERCENTAGE_DUAL_TAR = 0.20; /**< percentage of steps to eliminate when either reaching to grasp an object [0,1]*/
-const double BLANK_PERCENTAGE_DUAL_OBS = 0.25;/**< move at the beginning of a move movement [0,1] */
+const double BLANK_PERCENTAGE_DUAL_TAR = 0.10; /**< percentage of steps to eliminate when reaching to grasp an object [0,1]*/
+const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a move movement [0,1] */
 
 const int N_STEP_MIN = 5; /**< minimum number of steps */
 const int N_STEP_MAX = 50; /**< maximum number of steps */
