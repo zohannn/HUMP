@@ -1585,13 +1585,6 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     boost::replace_all(tarzt2,",",".");
     stream << to_string(3)+string(" ")+tarzt2+string(";\n");
 
-    /*
-    stream << string("param Rot_tar_right_inv : 1 2 3 :=  \n");
-    stream << string("1 ")+to_string(Rot_tar_r_inv(0,0))+string(" ")+to_string(Rot_tar_r_inv(0,1))+string(" ")+to_string(Rot_tar_r_inv(0,2))+string(" \n");
-    stream << string("2 ")+to_string(Rot_tar_r_inv(1,0))+string(" ")+to_string(Rot_tar_r_inv(1,1))+string(" ")+to_string(Rot_tar_r_inv(1,2))+string(" \n");
-    stream << string("3 ")+to_string(Rot_tar_r_inv(2,0))+string(" ")+to_string(Rot_tar_r_inv(2,1))+string(" ")+to_string(Rot_tar_r_inv(2,2))+string(" \n");
-    stream << string("; \n");
-    */
 
     stream << string("# TARGET LEFT POSITION \n");
     stream << string("param Tar_pos_left := \n");
@@ -1642,12 +1635,51 @@ void HUMPlanner::writeDualInfoTarget(ofstream &stream,std::vector<double> tar_ri
     stream << to_string(3)+string(" ")+tarzt2+string(";\n");
 
     /*
-    stream << string("param Rot_tar_left_inv : 1 2 3 :=  \n");
-    stream << string("1 ")+to_string(Rot_tar_l_inv(0,0))+string(" ")+to_string(Rot_tar_l_inv(0,1))+string(" ")+to_string(Rot_tar_l_inv(0,2))+string(" \n");
-    stream << string("2 ")+to_string(Rot_tar_l_inv(1,0))+string(" ")+to_string(Rot_tar_l_inv(1,1))+string(" ")+to_string(Rot_tar_l_inv(1,2))+string(" \n");
-    stream << string("3 ")+to_string(Rot_tar_l_inv(2,0))+string(" ")+to_string(Rot_tar_l_inv(2,1))+string(" ")+to_string(Rot_tar_l_inv(2,2))+string(" \n");
-    stream << string("; \n");
+    stream << string("# TARGET POSITION DIFFERENCE \n");
+
+    double m_pos_diff = sqrt(pow((tar_right.at(0)-tar_left.at(0)),2) + pow((tar_right.at(1)-tar_left.at(1)),2) + pow((tar_right.at(2)-tar_left.at(2)),2));
+    string m_pos_diff_str =  boost::str(boost::format("%.2f") % (m_pos_diff));
+    boost::replace_all(m_pos_diff_str,",",".");
+    stream << string("param Tar_pos_diff := ")+m_pos_diff_str+string(";\n");
+
+    stream << string("# TARGET ORIENTATION DIFFERENCE \n");
+
+    stream << string("param x_t_diff := \n");
+    string x_t_1_diff_str =  boost::str(boost::format("%.2f") % (xt_r[0] - xt_l[0]));
+    boost::replace_all(x_t_1_diff_str,",",".");
+    stream << to_string(1)+string(" ")+x_t_1_diff_str+string("\n");
+    string x_t_2_diff_str =  boost::str(boost::format("%.2f") % (xt_r[1] - xt_l[1]));
+    boost::replace_all(x_t_2_diff_str,",",".");
+    stream << to_string(2)+string(" ")+x_t_2_diff_str+string("\n");
+    string x_t_3_diff_str =  boost::str(boost::format("%.2f") % (xt_r[2] - xt_l[2]));
+    boost::replace_all(x_t_3_diff_str,",",".");
+    stream << to_string(3)+string(" ")+x_t_3_diff_str+string(";\n");
+
+    stream << string("param y_t_diff := \n");
+    string y_t_1_diff_str =  boost::str(boost::format("%.2f") % (yt_r[0] - yt_l[0]));
+    boost::replace_all(y_t_1_diff_str,",",".");
+    stream << to_string(1)+string(" ")+y_t_1_diff_str+string("\n");
+    string y_t_2_diff_str =  boost::str(boost::format("%.2f") % (yt_r[1] - yt_l[1]));
+    boost::replace_all(y_t_2_diff_str,",",".");
+    stream << to_string(2)+string(" ")+y_t_2_diff_str+string("\n");
+    string y_t_3_diff_str =  boost::str(boost::format("%.2f") % (yt_r[2] - yt_l[2]));
+    boost::replace_all(y_t_3_diff_str,",",".");
+    stream << to_string(3)+string(" ")+y_t_3_diff_str+string(";\n");
+
+    stream << string("param z_t_diff := \n");
+    string z_t_1_diff_str =  boost::str(boost::format("%.2f") % (zt_r[0] - zt_l[0]));
+    boost::replace_all(z_t_1_diff_str,",",".");
+    stream << to_string(1)+string(" ")+z_t_1_diff_str+string("\n");
+    string z_t_2_diff_str =  boost::str(boost::format("%.2f") % (zt_r[1] - zt_l[1]));
+    boost::replace_all(z_t_2_diff_str,",",".");
+    stream << to_string(2)+string(" ")+z_t_2_diff_str+string("\n");
+    string z_t_3_diff_str =  boost::str(boost::format("%.2f") % (zt_r[2] - zt_l[2]));
+    boost::replace_all(z_t_3_diff_str,",",".");
+    stream << to_string(3)+string(" ")+z_t_3_diff_str+string(";\n");
+
     */
+
+
 }
 
 
@@ -2578,6 +2610,13 @@ void HUMPlanner::writeDualInfoObjectsMod(ofstream &stream,bool vec_right,bool ve
     stream << string("param x_t_left {i in 1..3}; \n");
     stream << string("param y_t_left {i in 1..3}; \n");
     stream << string("param z_t_left {i in 1..3}; \n");
+
+    /*
+    stream << string("param Tar_pos_diff; \n");
+    stream << string("param x_t_diff {i in 1..3}; \n");
+    stream << string("param y_t_diff {i in 1..3}; \n");
+    stream << string("param z_t_diff {i in 1..3}; \n");
+    */
 
     if(vec_right){
         stream << string("# Vector approach/retreat right distance \n");
@@ -14035,7 +14074,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
       PostureMod << string("#		     Constraints                  # \n");
       PostureMod << string("#  \n");
       PostureMod << string("# joint limits for all the trajectory \n");
-      PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n");
+      PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
       //PostureMod << string("# Right F1 and F2 move in synchrony \n");
       //PostureMod << string("subject to co_right_fingers: (theta_b[8] - theta_b[9])^2<=0.001; \n");
       //PostureMod << string("# Left F1 and F2 move in synchrony \n");
@@ -14050,27 +14089,20 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
       }
       switch (dual_mov_type) {
       case 0: // dual pick
-          // hand constraints for approaching direction settings
-          /*
-          if(approach_right && pre_post==1){
-              PostureMod << string("# Right Hand approach orientation\n");
-              PostureMod << string("subject to constr_hand_right_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H_right[i,k] - x_t_right[i])^2)<= 0.01; #  x_H_right = x_t_right \n\n");
-          }
-          if(approach_left && pre_post==1){
-              PostureMod << string("# Left Hand approach orientation\n");
-              PostureMod << string("subject to constr_hand_left_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H_left[i,k] - x_t_left[i])^2)<= 0.01; #  x_H_left = x_t_left \n\n");
-          }
-          */
+          // TO DO
           break;
       case 1: // dual place
-          // hand constraints for approaching and retreating direction settings
-          // TO DO
-          /*
-          if(approach && pre_post==1){
-              PostureMod << string("# Hand approach orientation\n");
-              PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 + sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  x_H = z_t  and z_H = -y_t \n\n");
+          // dual place
+          if(obj_tar_right->getName().compare(obj_tar_left->getName())==0)
+          { // transporting the same object
+            PostureMod << string("# Hand right and Hand left trajectory constraints \n");
+            string pos_tol_str = boost::str(boost::format("%d") % (pow(BOUNCE_DUAL_OBJ_POS_TOL,2)));
+            string or_tol_str = boost::str(boost::format("%d") % (pow(BOUNCE_DUAL_OBJ_OR_TOL,2)));
+            PostureMod << string("subject to constr_hand_pos_diff {k in 3..(Nsteps-2)}: (sum{i in 1..3} (Hand_right[i,k] - Hand_left[i,k] - Tar_pos_right[i] + Tar_pos_left[i])^2) <= ")+pos_tol_str+string("; # position \n");
+            PostureMod << string("subject to constr_hand_orient_x_diff {k in 3..(Nsteps-2)}: (sum{i in 1..3} (x_H_right[i,k] - x_H_left[i,k] - x_t_right[i] + x_t_left[i])^2) <= ")+or_tol_str+string("; # orientation  x \n");
+            PostureMod << string("subject to constr_hand_orient_y_diff {k in 3..(Nsteps-2)}: (sum{i in 1..3} (y_H_right[i,k] - y_H_left[i,k] - y_t_right[i] + y_t_left[i])^2) <= ")+or_tol_str+string("; # orientation  y \n");
+            PostureMod << string("subject to constr_hand_orient_z_diff {k in 3..(Nsteps-2)}: (sum{i in 1..3} (z_H_right[i,k] - z_H_left[i,k] - z_t_right[i] + z_t_left[i])^2) <= ")+or_tol_str+string("; # orientation  z \n\n");
           }
-          */
           break;
       }
 
