@@ -9324,7 +9324,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     if(mov_type==1 && pre_post==0){
         // place movement, plan stage
         // remove the support object from the obstacles
-        if(params.mov_specs.support_obj.compare("")){
+        if(params.mov_specs.support_obj.compare("")!=0){
             std::string support_obj_name = params.mov_specs.support_obj;
             for(size_t i=0; i < obsts.size();++i){
                 objectPtr curr_obj = obsts.at(i);
