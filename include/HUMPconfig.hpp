@@ -90,8 +90,8 @@ const double BLANK_PERCENTAGE_OBS = 0.20;/**< move at the beginning of a move mo
 const double BLANK_PERCENTAGE_DUAL_TAR = 0.10; /**< percentage of steps to eliminate when reaching to grasp an object [0,1]*/
 const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a move movement [0,1] */
 
-const int N_STEP_MIN = 5; /**< minimum number of steps */
-const int N_STEP_MAX = 50; /**< maximum number of steps */
+const int N_STEP_MIN = 5; /**< minimum number of steps */ //5
+const int N_STEP_MAX = 50; /**< maximum number of steps */ //50
 
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching and retreating */
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
