@@ -1300,6 +1300,21 @@ private:
     bool optimize(string &nlfile, std::vector<Number>& x, double tol, double acc_tol, double constr_viol_tol);
 
     /**
+     * @brief optimize_warm_start
+     * @param nlfile
+     * @param x
+     * @param zL
+     * @param zU
+     * @param lambda
+     * @param tol
+     * @param acc_tol
+     * @param constr_viol_tol
+     * @return
+     */
+    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, double tol, double acc_tol, double constr_viol_tol);
+
+
+    /**
      * @brief getObstaclesSingleArm
      * @param center
      * @param radius

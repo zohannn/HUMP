@@ -9212,11 +9212,103 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, double tol, do
                                  obj_sol);
 
         x=x_sol;
-
         return true;
 
     }else{
         x=x_sol;
+        return false;
+
+    }
+}
+
+bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, double tol, double acc_tol, double constr_viol_tol)
+{
+    // Create a new instance of IpoptApplication
+    //  (use a SmartPtr, not raw)
+    // We are using the factory, since this allows us to compile this
+    // example with an Ipopt Windows DLL
+    SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
+    app->RethrowNonIpoptException(true);
+
+    app->Options()->SetNumericValue("tol", tol);
+    app->Options()->SetNumericValue("acceptable_tol", acc_tol);
+    //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
+    app->Options()->SetStringValue("output_file", "ipopt.out");
+    app->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    app->Options()->SetIntegerValue("print_level",3);
+
+    // warm start options
+    app->Options()->SetStringValue("warm_start_init_point", "yes");
+    app->Options()->SetNumericValue("warm_start_bound_push", 1e-6);
+    app->Options()->SetNumericValue("warm_start_mult_bound_push", 1e-6);
+    app->Options()->SetNumericValue("mu_init", 1e-6);
+
+
+    //app->Options()->SetIntegerValue("max_iter",10000);
+    //double bound_frac = 0.01;//k2
+    //double bound_push = 0.01;//k1
+    //double bound_relax_factor = 0.0;
+    //app->Options()->SetNumericValue("bound_frac",bound_frac);
+    //app->Options()->SetNumericValue("bound_push",bound_push);
+    //app->Options()->SetNumericValue("bound_relax_factor",bound_relax_factor);
+
+    // Initialize the IpoptApplication and process the options
+    ApplicationReturnStatus status;
+    status = app->Initialize();
+    if (status != Solve_Succeeded) {
+      std::cout << std::endl << std::endl << "*** Error during initialization!" << std::endl;
+      return (int) status;
+    }
+
+    // Add the suffix handler for scaling
+    SmartPtr<AmplSuffixHandler> suffix_handler = new AmplSuffixHandler();
+    suffix_handler->AddAvailableSuffix("scaling_factor", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("scaling_factor", AmplSuffixHandler::Constraint_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("scaling_factor", AmplSuffixHandler::Objective_Source, AmplSuffixHandler::Number_Type);
+    // Modified for warm-start from AMPL
+    suffix_handler->AddAvailableSuffix("ipopt_zL_out", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("ipopt_zU_out", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("ipopt_zL_in", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+    suffix_handler->AddAvailableSuffix("ipopt_zU_in", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
+
+    char *cstr = new char[nlfile.length() + 1];
+    strcpy(cstr, nlfile.c_str());
+
+    SmartPtr<AmplInterface> ampl_tnlp = new AmplInterface(ConstPtr(app->Jnlst()),
+                                            app->Options(),
+                                            cstr, suffix_handler);
+
+
+    delete [] cstr;
+
+    // Ask Ipopt to solve the problem
+    status = app->OptimizeTNLP(ampl_tnlp);
+    std::vector<Number> x_sol;
+    std::vector<Number> z_L_sol;
+    std::vector<Number> z_U_sol;
+    std::vector<Number> lambda_sol;
+    Number obj_sol;
+
+    if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) || (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT)){
+        ampl_tnlp->get_solutions(x_sol,
+                                 z_L_sol,
+                                 z_U_sol,
+                                 lambda_sol,
+                                 obj_sol);
+
+        x=x_sol;
+        zL=z_L_sol;
+        zU=z_U_sol;
+        lambda=lambda_sol;
+
+        return true;
+
+    }else{
+
+        x=x_sol;
+        zL=z_L_sol;
+        zU=z_U_sol;
+        lambda=lambda_sol;
 
         return false;
 
