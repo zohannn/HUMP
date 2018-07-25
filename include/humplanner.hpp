@@ -4,6 +4,7 @@
 #include "HUMPconfig.hpp"
 #include "amplinterface.hpp"
 #include "IpIpoptApplication.hpp"
+#include "IpSolveStatistics.hpp"
 
 using namespace Ipopt;
 using namespace std;
@@ -1292,12 +1293,18 @@ private:
      * @brief optimize
      * @param nlfile
      * @param x
+     * @param zL
+     * @param zU
+     * @param lambda
+     * @param iter_count
+     * @param cpu_time
+     * @param obj
      * @param tol
      * @param acc_tol
      * @param constr_viol_tol
      * @return
      */
-    bool optimize(string &nlfile, std::vector<Number>& x, double tol, double acc_tol, double constr_viol_tol);
+    bool optimize(string &nlfile, std::vector<Number>& x, std::vector<Number> &zL, std::vector<Number> &zU, std::vector<Number> &lambda, Index &iter_count, Number &cpu_time, Number &obj, double tol, double acc_tol, double constr_viol_tol);
 
     /**
      * @brief optimize_warm_start
@@ -1306,12 +1313,15 @@ private:
      * @param zL
      * @param zU
      * @param lambda
+     * @param iter_count
+     * @param cpu_time
+     * @param obj
      * @param tol
      * @param acc_tol
      * @param constr_viol_tol
      * @return
      */
-    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, double tol, double acc_tol, double constr_viol_tol);
+    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, Index &iter_count, Number &cpu_time, Number &obj, double tol, double acc_tol, double constr_viol_tol);
 
 
     /**
@@ -1369,9 +1379,15 @@ private:
      * @param params
      * @param initPosture
      * @param finalPosture
+     * @param zL
+     * @param zU
+     * @param lambda
+     * @param iterations
+     * @param time
+     * @param obj
      * @return
      */
-    bool singleArmFinalPosture(int mov_type,int pre_post,hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture);
+    bool singleArmFinalPosture(int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda, int &iterations, double &time, double &obj);
 
     /**
      * @brief writeFilesFinalPosture

@@ -149,6 +149,14 @@ typedef struct{
   double maxAperture; /**< max aperture of the hand in [mm] */
 } HumanHand;
 
+/** This struct defines the parameters of the warm start settings */
+typedef struct{
+    vector<double> x; /**< initial guess */
+    vector<double> zL; /**< lower bounds multipliers */
+    vector<double> zU; /**< upper bounds multipliers */
+    vector<double> dual_vars; /**< lagrange multipliers of the constraints*/
+}warm_start_params;
+
 /** this struct defines the parameters of the movement */
 typedef struct{
     int arm_code; /**< the code of the arm: 0 = both arms, 1 = right arm, 2 = left arm */
@@ -174,7 +182,11 @@ typedef struct{
     bool coll; /**< true to enable collisions with the environment (body of the robot included) */
     bool use_move_plane; /**< true to constrain the end-effector to move on a plane in move movements, false otherwise*/
     std::vector<double> plane_params; /**< plane cartesian parameters in move movements: a*x+b*y+c*z+d=0. a=plane_params(0), b=plane_params(1), c=plane_params(2), d=plane_params(3) */
+    bool warm_start; /**< true to use warm-start options, false otherwise */
+    warm_start_params final_warm_start_params; /**< warm start params of the (approach or transport) target posture selection problem */
+    warm_start_params bounce_warm_start_params; /**< warm start params of the bounce posture selection problem */
 }mov_params;
+
 /** this struct defines the boundary conditions of the movement*/
 typedef struct{
     vector<double> vel_0; /**< initial velocity of the joints in [rad/s] */
@@ -252,6 +264,8 @@ typedef struct{
     vector<MatrixXd> acceleration_stages;/**< sequence of the accelerations */
     vector<double> time_steps; /**< sequence of each time steps for each trajectory */
     vector<string> trajectory_descriptions;/**< description of the trajectories */
+    warm_start_params final_warm_start_res; /**< warm start results of the target (approach or transport) posture selection problem */
+    warm_start_params bounce_warm_start_res; /**< warm start results of the bounce posture selection problem */
 }planning_result;
 
 /** This struct defines the result of the planned trajectory (dual-arm) */
