@@ -1411,9 +1411,15 @@ private:
      * @param initPosture
      * @param finalPosture
      * @param bouncePosture
+     * @param zL
+     * @param zU
+     * @param lambda_dual
+     * @param iterations
+     * @param time
+     * @param obj
      * @return
      */
-    bool singleArmBouncePosture(int steps,int mov_type,int pre_post,hump_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture);
+    bool singleArmBouncePosture(int steps, int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double>& bouncePosture, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda_dual, int &iterations, double &time, double &obj);
 
     /**
      * @brief writeFilesBouncePosture

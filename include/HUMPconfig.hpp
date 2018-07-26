@@ -151,6 +151,9 @@ typedef struct{
 
 /** This struct defines the parameters of the warm start settings */
 typedef struct{
+    int iterations; /**< number of iterations taken */
+    double cpu_time; /**< cpu time in [sec] taken */
+    double obj_value; /**< final value of the objective function */
     vector<double> x; /**< initial guess */
     vector<double> zL; /**< lower bounds multipliers */
     vector<double> zU; /**< upper bounds multipliers */
@@ -183,7 +186,7 @@ typedef struct{
     bool use_move_plane; /**< true to constrain the end-effector to move on a plane in move movements, false otherwise*/
     std::vector<double> plane_params; /**< plane cartesian parameters in move movements: a*x+b*y+c*z+d=0. a=plane_params(0), b=plane_params(1), c=plane_params(2), d=plane_params(3) */
     bool warm_start; /**< true to use warm-start options, false otherwise */
-    warm_start_params final_warm_start_params; /**< warm start params of the (approach or transport) target posture selection problem */
+    vector<warm_start_params> final_warm_start_params; /**< warm start params of the target posture selection problems */
     warm_start_params bounce_warm_start_params; /**< warm start params of the bounce posture selection problem */
 }mov_params;
 
@@ -264,7 +267,7 @@ typedef struct{
     vector<MatrixXd> acceleration_stages;/**< sequence of the accelerations */
     vector<double> time_steps; /**< sequence of each time steps for each trajectory */
     vector<string> trajectory_descriptions;/**< description of the trajectories */
-    warm_start_params final_warm_start_res; /**< warm start results of the target (approach or transport) posture selection problem */
+    vector<warm_start_params> final_warm_start_res; /**< warm start results of the target posture selection problems */
     warm_start_params bounce_warm_start_res; /**< warm start results of the bounce posture selection problem */
 }planning_result;
 

@@ -9496,7 +9496,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
 }
 
 
-bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture)
+bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture,std::vector<double>& zL, std::vector<double>& zU, std::vector<double>& lambda_dual, int &iterations, double &time, double &obj)
 {
 
 
@@ -9672,6 +9672,13 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
                         bouncePosture.at(9) = finalHand.at(2);
                         bouncePosture.at(10) = finalHand.at(3);
                     }
+
+                    zL=zL_sol;
+                    zU=zU_sol;
+                    lambda_dual = lambda_sol;
+                    iterations = iter_count;
+                    time = cpu_time;
+                    obj = obj_sol;
                     return true;
                 }else{return false;}
             }catch(const std::exception &exc){throw string(exc.what());}
@@ -11335,16 +11342,31 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
     {
         std::vector<double> finalPosture_pre_grasp; bool FPosture_pre_grasp = false;
         std::vector<double> zL_pre_grasp; std::vector<double> zU_pre_grasp; std::vector<double> lambda_pre_grasp; int iter_count_pre_grasp; double cpu_time_pre_grasp; double obj_pre_grasp;
+        warm_start_params final_pre_grasp_warm_start_params;
         std::vector<double> bouncePosture_pre_grasp; //bool BPosture_pre_grasp = false;
+        std::vector<double> zL_b_pre_grasp; std::vector<double> zU_b_pre_grasp; std::vector<double> lambda_b_pre_grasp; int iter_count_b_pre_grasp; double cpu_time_b_pre_grasp; double obj_b_pre_grasp;
+        warm_start_params bounce_pre_grasp_warm_start_params;
         std::vector<double> bouncePosture; bool BPosture = false;
+        std::vector<double> zL_b; std::vector<double> zU_b; std::vector<double> lambda_b; int iter_count_b; double cpu_time_b; double obj_b;
+        warm_start_params bounce_warm_start_params;
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> zL; std::vector<double> zU; std::vector<double> lambda; int iter_count; double cpu_time; double obj;
+        warm_start_params final_warm_start_params;
         std::vector<double> finalPosture_post_grasp; bool FPosture_post_grasp = false;
         std::vector<double> zL_post_grasp; std::vector<double> zU_post_grasp; std::vector<double> lambda_post_grasp; int iter_count_post_grasp; double cpu_time_post_grasp; double obj_post_grasp;
+        warm_start_params final_post_grasp_warm_start_params;
         if(approach){
             pre_post = 1;
             FPosture_pre_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,zL_pre_grasp,zU_pre_grasp,lambda_pre_grasp,iter_count_pre_grasp,cpu_time_pre_grasp,obj_pre_grasp);
             if (FPosture_pre_grasp){
+                // warm start results
+                final_pre_grasp_warm_start_params.iterations = iter_count_pre_grasp;
+                final_pre_grasp_warm_start_params.cpu_time = cpu_time_pre_grasp;
+                final_pre_grasp_warm_start_params.obj_value = obj_pre_grasp;
+                final_pre_grasp_warm_start_params.x = finalPosture_pre_grasp;
+                final_pre_grasp_warm_start_params.zL = zL_pre_grasp;
+                final_pre_grasp_warm_start_params.zU = zU_pre_grasp;
+                final_pre_grasp_warm_start_params.dual_vars = lambda_pre_grasp;
                 // extend the final postures
                 std::vector<double> finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
                 finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
@@ -11369,6 +11391,14 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 }
 
                 if(FPosture){
+                    // warm start results
+                    final_warm_start_params.iterations = iter_count;
+                    final_warm_start_params.cpu_time = cpu_time;
+                    final_warm_start_params.obj_value = obj;
+                    final_warm_start_params.x = finalPosture;
+                    final_warm_start_params.zL = zL;
+                    final_warm_start_params.zU = zU;
+                    final_warm_start_params.dual_vars = lambda;
                     // extend the final postures
                     finalPosture_ext = finalPosture;
                     finalPosture_ext.push_back(finalHand.at(0));
@@ -11383,13 +11413,21 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     if(this->setBoundaryConditions(mov_type,params,steps_app,finalPosture_pre_grasp_ext,finalPosture_ext,0)){
                         if(coll){// collisions
                             pre_post = 1;
-                            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp);
-                            if(BPosture){
+                            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp,zL_b_pre_grasp,zU_b_pre_grasp,lambda_b_pre_grasp,iter_count_b_pre_grasp,cpu_time_b_pre_grasp,obj_b_pre_grasp);
+                            if(BPosture){                              
                                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully");
                                 res->time_steps.clear();
                                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                                 res->velocity_stages.clear();
                                 res->acceleration_stages.clear();
+                                // warm start results
+                                bounce_pre_grasp_warm_start_params.iterations = iter_count_b_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.cpu_time = cpu_time_b_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.obj_value = obj_b_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.x = bouncePosture_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.zL = zL_b_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.zU = zU_b_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.dual_vars = lambda_b_pre_grasp;
                                 // approach stage
                                 MatrixXd traj_app; MatrixXd vel_app; MatrixXd acc_app; double timestep_app;
                                 mod = 2; bool success = true;
@@ -11404,11 +11442,14 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                     res->trajectory_stages.push_back(traj_pre_app); res->trajectory_descriptions.push_back("plan");
                                     res->velocity_stages.push_back(vel_pre_app);
                                     res->acceleration_stages.push_back(acc_pre_app);
+                                    res->final_warm_start_res.push_back(final_pre_grasp_warm_start_params);
+                                    res->bounce_warm_start_res = bounce_pre_grasp_warm_start_params;
                                     // approach
                                     res->time_steps.push_back(timestep_app);
                                     res->trajectory_stages.push_back(traj_app); res->trajectory_descriptions.push_back("approach");
                                     res->velocity_stages.push_back(vel_app);
                                     res->acceleration_stages.push_back(acc_app);
+                                    res->final_warm_start_res.push_back(final_warm_start_params);
                                 }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to grasp selection failed ");}
                             }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre grasp selection failed ");}
                         }else{ // no collisions
@@ -11420,6 +11461,14 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                                 res->velocity_stages.clear();
                                 res->acceleration_stages.clear();
+                                // warm start results
+                                final_warm_start_params.iterations = iter_count;
+                                final_warm_start_params.cpu_time = cpu_time;
+                                final_warm_start_params.obj_value = obj;
+                                final_warm_start_params.x = finalPosture;
+                                final_warm_start_params.zL = zL;
+                                final_warm_start_params.zU = zU;
+                                final_warm_start_params.dual_vars = lambda;
                                 // extend the final postures
                                 finalPosture_ext = finalPosture;
                                 finalPosture_ext.push_back(finalHand.at(0));
@@ -11434,6 +11483,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                                 res->velocity_stages.push_back(vel);
                                 res->acceleration_stages.push_back(acc);
+                                res->final_warm_start_res.push_back(final_pre_grasp_warm_start_params);
                                 // approach stage
                                 mod = 2;
                                 //int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_grasp_ext,finalPosture_ext);
@@ -11443,6 +11493,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
                                     res->velocity_stages.push_back(vel);
                                     res->acceleration_stages.push_back(acc);
+                                    res->final_warm_start_res.push_back(final_warm_start_params);
                                 }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to grasp selection failed ");}
                             }else{res->status = 30; res->status_msg = string("HUMP: final posture grasp selection failed ");}
                         }
@@ -11453,6 +11504,14 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
             pre_post = 0;
             FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture,zL,zU,lambda,iter_count,cpu_time,obj);
             if (FPosture){
+                // warm start results
+                final_warm_start_params.iterations = iter_count;
+                final_warm_start_params.cpu_time = cpu_time;
+                final_warm_start_params.obj_value = obj;
+                final_warm_start_params.x = finalPosture;
+                final_warm_start_params.zL = zL;
+                final_warm_start_params.zU = zU;
+                final_warm_start_params.dual_vars = lambda;
                 // extend the final postures
                 finalPosture_ext = finalPosture;
                 for(size_t i=0;i<finalHand.size();++i){
@@ -11460,7 +11519,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 }
                 int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
                 if(coll){ // collisions
-                    BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+                    BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b);
                     if(BPosture){
                         res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                         res->time_steps.clear();
@@ -11468,6 +11527,14 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                         res->velocity_stages.clear();
                         res->acceleration_stages.clear();
                         int mod;
+                        // warm start results
+                        bounce_warm_start_params.iterations = iter_count_b;
+                        bounce_warm_start_params.cpu_time = cpu_time_b;
+                        bounce_warm_start_params.obj_value = obj_b;
+                        bounce_warm_start_params.x = bouncePosture;
+                        bounce_warm_start_params.zL = zL_b;
+                        bounce_warm_start_params.zU = zU_b;
+                        bounce_warm_start_params.dual_vars = lambda_b;
                         // plan stage
                         MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0; bool success = true;
                         double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -11475,6 +11542,8 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
+                        res->final_warm_start_res.push_back(final_warm_start_params);
+                        res->bounce_warm_start_res = bounce_warm_start_params;
                     }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
                 }else{ // no collisions
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
@@ -11490,6 +11559,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
+                    res->final_warm_start_res.push_back(final_warm_start_params);
                 }
             }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
         }
@@ -11506,6 +11576,15 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp,zL_post_grasp,zU_post_grasp,lambda_post_grasp,iter_count_post_grasp,cpu_time_post_grasp,obj_post_grasp);
                 }
                 if (FPosture_post_grasp){
+                    // warm start results
+                    final_post_grasp_warm_start_params.iterations = iter_count_post_grasp;
+                    final_post_grasp_warm_start_params.cpu_time = cpu_time_post_grasp;
+                    final_post_grasp_warm_start_params.obj_value = obj_post_grasp;
+                    final_post_grasp_warm_start_params.x = finalPosture_post_grasp;
+                    final_post_grasp_warm_start_params.zL = zL_post_grasp;
+                    final_post_grasp_warm_start_params.zU = zU_post_grasp;
+                    final_post_grasp_warm_start_params.dual_vars = lambda_post_grasp;
+
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
                     for(size_t i=0;i<finalHand.size();++i){
@@ -11523,6 +11602,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
+                        res->final_warm_start_res.push_back(final_post_grasp_warm_start_params);
                     }else{res->status = 50; res->status_msg = string("HUMP: final posture retreat from grasp selection failed ");}
                 }else{res->status = 40; res->status_msg = string("HUMP: final posture post grasp selection failed ");}
             }
@@ -11531,6 +11611,15 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 pre_post=2;
                 FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp,zL_post_grasp,zU_post_grasp,lambda_post_grasp,iter_count_post_grasp,cpu_time_post_grasp,obj_post_grasp);
                 if (FPosture_post_grasp){
+                    // warm start results
+                    final_post_grasp_warm_start_params.iterations = iter_count_post_grasp;
+                    final_post_grasp_warm_start_params.cpu_time = cpu_time_post_grasp;
+                    final_post_grasp_warm_start_params.obj_value = obj_post_grasp;
+                    final_post_grasp_warm_start_params.x = finalPosture_post_grasp;
+                    final_post_grasp_warm_start_params.zL = zL_post_grasp;
+                    final_post_grasp_warm_start_params.zU = zU_post_grasp;
+                    final_post_grasp_warm_start_params.dual_vars = lambda_post_grasp;
+
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
                     for(size_t i=0;i<finalHand.size();++i){
@@ -11548,6 +11637,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
+                        res->final_warm_start_res.push_back(final_post_grasp_warm_start_params);
                     }else{res->status = 50; res->status_msg = string("HUMP: final posture retreat from grasp selection failed ");}
                 }else{res->status = 40; res->status_msg = string("HUMP: final posture post grasp selection failed ");}
             }
@@ -11593,17 +11683,32 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
     {
         std::vector<double> finalPosture_pre_place; bool FPosture_pre_place = false;
         std::vector<double> zL_pre_place; std::vector<double> zU_pre_place; std::vector<double> lambda_pre_place; int iter_count_pre_place; double cpu_time_pre_place; double obj_pre_place;
+        warm_start_params final_pre_place_warm_start_params;
         std::vector<double> bouncePosture_pre_place; //bool BPosture_pre_place = false;
+        std::vector<double> zL_b_pre_place; std::vector<double> zU_b_pre_place; std::vector<double> lambda_b_pre_place; int iter_count_b_pre_place; double cpu_time_b_pre_place; double obj_b_pre_place;
+        warm_start_params bounce_pre_place_warm_start_params;
         std::vector<double> bouncePosture; bool BPosture = false;
+        std::vector<double> zL_b; std::vector<double> zU_b; std::vector<double> lambda_b; int iter_count_b; double cpu_time_b; double obj_b;
+        warm_start_params bounce_warm_start_params;
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> zL; std::vector<double> zU; std::vector<double> lambda; int iter_count; double cpu_time; double obj;
+        warm_start_params final_warm_start_params;
         std::vector<double> finalPosture_post_place; bool FPosture_post_place = false;
         std::vector<double> zL_post_place; std::vector<double> zU_post_place; std::vector<double> lambda_post_place; int iter_count_post_place; double cpu_time_post_place; double obj_post_place;
+        warm_start_params final_post_place_warm_start_params;
 
         if(approach){
             pre_post = 1;
             FPosture_pre_place = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_place,zL_pre_place,zU_pre_place,lambda_pre_place,iter_count_pre_place,cpu_time_pre_place,obj_pre_place);
             if (FPosture_pre_place){
+                // warm start results
+                final_pre_place_warm_start_params.iterations = iter_count_pre_place;
+                final_pre_place_warm_start_params.cpu_time = cpu_time_pre_place;
+                final_pre_place_warm_start_params.obj_value = obj_pre_place;
+                final_pre_place_warm_start_params.x = finalPosture_pre_place;
+                final_pre_place_warm_start_params.zL = zL_pre_place;
+                final_pre_place_warm_start_params.zU = zU_pre_place;
+                final_pre_place_warm_start_params.dual_vars = lambda_pre_place;
                 // extend the final postures
                 std::vector<double> finalPosture_pre_place_ext = finalPosture_pre_place;
                 for(size_t i=0;i<finalHand.size();++i){
@@ -11623,6 +11728,14 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 }
 
                 if(FPosture){
+                    // warm start results
+                    final_warm_start_params.iterations = iter_count;
+                    final_warm_start_params.cpu_time = cpu_time;
+                    final_warm_start_params.obj_value = obj;
+                    final_warm_start_params.x = finalPosture;
+                    final_warm_start_params.zL = zL;
+                    final_warm_start_params.zU = zU;
+                    final_warm_start_params.dual_vars = lambda;
                     // extend the final postures
                     finalPosture_ext = finalPosture;
                     for(size_t i=0;i<finalHand.size();++i){
@@ -11634,13 +11747,21 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     if(this->setBoundaryConditions(mov_type,params,steps_app,finalPosture_pre_place_ext,finalPosture_ext,0)){
                         if(coll){ // collisions
                             pre_post = 1;
-                            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place);
+                            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place,zL_b_pre_place,zU_b_pre_place,lambda_b_pre_place,iter_count_b_pre_place,cpu_time_b_pre_place,obj_b_pre_place);
                             if(BPosture){
                                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                                     res->time_steps.clear();
                                     res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                                     res->velocity_stages.clear();
                                     res->acceleration_stages.clear();
+                                    // warm start results
+                                    bounce_pre_place_warm_start_params.iterations = iter_count_b_pre_place;
+                                    bounce_pre_place_warm_start_params.cpu_time = cpu_time_b_pre_place;
+                                    bounce_pre_place_warm_start_params.obj_value = obj_b_pre_place;
+                                    bounce_pre_place_warm_start_params.x = bouncePosture_pre_place;
+                                    bounce_pre_place_warm_start_params.zL = zL_b_pre_place;
+                                    bounce_pre_place_warm_start_params.zU = zU_b_pre_place;
+                                    bounce_pre_place_warm_start_params.dual_vars = lambda_b_pre_place;
                                     // pre-approach stage
                                     MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1; bool success = true;
                                     timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_pre_place_ext,bouncePosture_pre_place,traj,vel,acc,success,mod);
@@ -11648,6 +11769,8 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                                     res->velocity_stages.push_back(vel);
                                     res->acceleration_stages.push_back(acc);
+                                    res->final_warm_start_res.push_back(final_pre_place_warm_start_params);
+                                    res->bounce_warm_start_res = bounce_pre_place_warm_start_params;
                                     // approach stage
                                     mod = 2;
                                     timestep = this->getAcceleration(mov_type,steps_app,params,finalPosture_pre_place_ext,finalPosture_ext,traj,vel,acc,success,mod);
@@ -11656,12 +11779,21 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
                                         res->velocity_stages.push_back(vel);
                                         res->acceleration_stages.push_back(acc);
+                                        res->final_warm_start_res.push_back(final_warm_start_params);
                                     }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
                             }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture pre place selection failed ");}
                         }else{ // no collisions
                             //pre_post = 0;
                             //FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture);
                             if(FPosture){
+                                // warm start results
+                                final_warm_start_params.iterations = iter_count;
+                                final_warm_start_params.cpu_time = cpu_time;
+                                final_warm_start_params.obj_value = obj;
+                                final_warm_start_params.x = finalPosture;
+                                final_warm_start_params.zL = zL;
+                                final_warm_start_params.zU = zU;
+                                final_warm_start_params.dual_vars = lambda;
                                 // extend the final postures
                                 finalPosture_ext = finalPosture;
                                 for(size_t i=0;i<finalHand.size();++i){
@@ -11679,6 +11811,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                                 res->velocity_stages.push_back(vel);
                                 res->acceleration_stages.push_back(acc);
+                                res->final_warm_start_res.push_back(final_pre_place_warm_start_params);
                                 // approach stage
                                 mod = 2;
                                 //int steps_app = this->getSteps(maxLimits, minLimits,finalPosture_pre_place_ext,finalPosture_ext);
@@ -11688,16 +11821,25 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("approach");
                                     res->velocity_stages.push_back(vel);
                                     res->acceleration_stages.push_back(acc);
+                                    res->final_warm_start_res.push_back(final_warm_start_params);
                                 }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
                             }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
                         }
                     }else{res->status = 50; res->status_msg = string("HUMP: final posture approach to place selection failed ");}
                 }else{res->status = 30; res->status_msg = string("HUMP: final posture place selection failed ");}
             }else{res->status = 10; res->status_msg = string("HUMP: final posture pre place selection failed ");}
-        }else{
+        }else{ // no approach
             pre_post = 0;
             FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture,zL,zU,lambda,iter_count,cpu_time,obj);
             if (FPosture){
+                // warm start results
+                final_warm_start_params.iterations = iter_count;
+                final_warm_start_params.cpu_time = cpu_time;
+                final_warm_start_params.obj_value = obj;
+                final_warm_start_params.x = finalPosture;
+                final_warm_start_params.zL = zL;
+                final_warm_start_params.zU = zU;
+                final_warm_start_params.dual_vars = lambda;
                 // extend the final posture
                 finalPosture_ext = finalPosture;
                 for(size_t i=0;i<finalHand.size();++i){
@@ -11705,7 +11847,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 }
                 int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
                 if(coll){ // collisions
-                    BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+                    BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b);
                     if(BPosture){
                         res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                         res->time_steps.clear();
@@ -11713,6 +11855,14 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                         res->velocity_stages.clear();
                         res->acceleration_stages.clear();
                         int mod;
+                        // warm start results
+                        bounce_warm_start_params.iterations = iter_count_b;
+                        bounce_warm_start_params.cpu_time = cpu_time_b;
+                        bounce_warm_start_params.obj_value = obj_b;
+                        bounce_warm_start_params.x = bouncePosture;
+                        bounce_warm_start_params.zL = zL_b;
+                        bounce_warm_start_params.zU = zU_b;
+                        bounce_warm_start_params.dual_vars = lambda_b;
                         // plan stage
                         MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0; bool success = true;
                         double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -11720,6 +11870,8 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
+                        res->final_warm_start_res.push_back(final_warm_start_params);
+                        res->bounce_warm_start_res = bounce_warm_start_params;
                     }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
                 }else{ // no collisions
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
@@ -11735,6 +11887,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
+                    res->final_warm_start_res.push_back(final_warm_start_params);
                 }
             }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
         }
@@ -11751,6 +11904,15 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place,zL_post_place,zU_post_place,lambda_post_place,iter_count_post_place,cpu_time_post_place,obj_post_place);
                 }
                 if (FPosture_post_place){
+                    // warm start results
+                    final_post_place_warm_start_params.iterations = iter_count_post_place;
+                    final_post_place_warm_start_params.cpu_time = cpu_time_post_place;
+                    final_post_place_warm_start_params.obj_value = obj_post_place;
+                    final_post_place_warm_start_params.x = finalPosture_post_place;
+                    final_post_place_warm_start_params.zL = zL_post_place;
+                    final_post_place_warm_start_params.zU = zU_post_place;
+                    final_post_place_warm_start_params.dual_vars = lambda_post_place;
+
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
                     std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
@@ -11777,6 +11939,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
+                        res->final_warm_start_res.push_back(final_post_place_warm_start_params);
                     }else{res->status = 50; res->status_msg = string("HUMP: final posture retreat from place selection failed ");}
                 }else{res->status = 40; res->status_msg = string("HUMP: final posture post place selection failed ");}
             }
@@ -11785,6 +11948,15 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 pre_post=2;
                 FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place,zL_post_place,zU_post_place,lambda_post_place,iter_count_post_place,cpu_time_post_place,obj_post_place);
                 if (FPosture_post_place){
+                    // warm start results
+                    final_post_place_warm_start_params.iterations = iter_count_post_place;
+                    final_post_place_warm_start_params.cpu_time = cpu_time_post_place;
+                    final_post_place_warm_start_params.obj_value = obj_post_place;
+                    final_post_place_warm_start_params.x = finalPosture_post_place;
+                    final_post_place_warm_start_params.zL = zL_post_place;
+                    final_post_place_warm_start_params.zU = zU_post_place;
+                    final_post_place_warm_start_params.dual_vars = lambda_post_place;
+
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
                     std::vector<double> finalPosture_post_place_ext = finalPosture_post_place;
@@ -11811,6 +11983,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                         res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("retreat");
                         res->velocity_stages.push_back(vel);
                         res->acceleration_stages.push_back(acc);
+                        res->final_warm_start_res.push_back(final_post_place_warm_start_params);
                     }else{res->status = 50; res->status_msg = string("HUMP: final posture retreat from place selection failed ");}
                 }else{res->status = 40; res->status_msg = string("HUMP: final posture post place selection failed ");}
             }
@@ -11850,11 +12023,22 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
     try
     {
         std::vector<double> bouncePosture; bool BPosture = false;
+        std::vector<double> zL_b; std::vector<double> zU_b; std::vector<double> lambda_b; int iter_count_b; double cpu_time_b; double obj_b;
+        warm_start_params bounce_warm_start_params;
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> zL; std::vector<double> zU; std::vector<double> lambda; int iter_count; double cpu_time; double obj;
+        warm_start_params final_warm_start_params;
 
         FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture,zL,zU,lambda,iter_count,cpu_time,obj);
         if (FPosture){
+            // warm start results
+            final_warm_start_params.iterations = iter_count;
+            final_warm_start_params.cpu_time = cpu_time;
+            final_warm_start_params.obj_value = obj;
+            final_warm_start_params.x = finalPosture;
+            final_warm_start_params.zL = zL;
+            final_warm_start_params.zU = zU;
+            final_warm_start_params.dual_vars = lambda;
             // extend the final posture
             finalPosture_ext = finalPosture;
             for(size_t i=0;i<finalHand.size();++i){
@@ -11862,13 +12046,21 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
             }
             int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
             if(coll){ // collisions enabled
-                BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+                BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b);
                 if(BPosture){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     res->time_steps.clear();
                     res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                     res->velocity_stages.clear();
                     res->acceleration_stages.clear();
+                    // warm start results
+                    bounce_warm_start_params.iterations = iter_count_b;
+                    bounce_warm_start_params.cpu_time = cpu_time_b;
+                    bounce_warm_start_params.obj_value = obj_b;
+                    bounce_warm_start_params.x = bouncePosture;
+                    bounce_warm_start_params.zL = zL_b;
+                    bounce_warm_start_params.zU = zU_b;
+                    bounce_warm_start_params.dual_vars = lambda_b;
                     // plan stage
                     MatrixXd traj; MatrixXd vel; MatrixXd acc; bool success = true;
                     double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -11876,6 +12068,8 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                     res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                     res->velocity_stages.push_back(vel);
                     res->acceleration_stages.push_back(acc);
+                    res->final_warm_start_res.push_back(final_warm_start_params);
+                    res->bounce_warm_start_res = bounce_warm_start_params;
                 }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
             }else{// collisions disabled
                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
@@ -11890,6 +12084,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                 res->velocity_stages.push_back(vel);
                 res->acceleration_stages.push_back(acc);
+                res->final_warm_start_res.push_back(final_warm_start_params);
             }
         }else{res->status = 10; res->status_msg = string("HUMP: final posture selection failed ");}
 
@@ -11928,6 +12123,8 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
     try
     {
         std::vector<double> bouncePosture; bool BPosture = false;
+        warm_start_params bounce_warm_start_params;
+        std::vector<double> zL_b; std::vector<double> zU_b; std::vector<double> lambda_b; int iter_count_b; double cpu_time_b; double obj_b;
         std::vector<double> finalPosture_ext;
         // extend the final posture
         finalPosture_ext = finalPosture;
@@ -11936,13 +12133,21 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
         }
         int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
         if(coll){
-            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture);
+            BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b);
             if(BPosture){
                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                 res->time_steps.clear();
                 res->trajectory_stages.clear(); res->trajectory_descriptions.clear();
                 res->velocity_stages.clear();
                 res->acceleration_stages.clear();
+                // warm start results
+                bounce_warm_start_params.iterations = iter_count_b;
+                bounce_warm_start_params.cpu_time = cpu_time_b;
+                bounce_warm_start_params.obj_value = obj_b;
+                bounce_warm_start_params.x = bouncePosture;
+                bounce_warm_start_params.zL = zL_b;
+                bounce_warm_start_params.zU = zU_b;
+                bounce_warm_start_params.dual_vars = lambda_b;
                 // plan stage
                 MatrixXd traj; MatrixXd vel; MatrixXd acc; bool success = true;
                 double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -11950,6 +12155,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                 res->trajectory_stages.push_back(traj); res->trajectory_descriptions.push_back("plan");
                 res->velocity_stages.push_back(vel);
                 res->acceleration_stages.push_back(acc);
+                res->bounce_warm_start_res = bounce_warm_start_params;
             }else{ res->status = 20; res->status_msg = string("HUMP: bounce posture selection failed ");}
         }else{
             res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
