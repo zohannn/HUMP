@@ -93,6 +93,10 @@ const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a mo
 const int N_STEP_MIN = 5; /**< minimum number of steps */ //5
 const int N_STEP_MAX = 50; /**< maximum number of steps */ //50
 
+const double WARM_START_BOUND_PUSH = 1e-6; /**< k1 in section 3.6 of the paper about IPOPT */
+const double WARM_START_MULT_BOUND_PUSH = 1e-6; /**< bound push of the multipliers */
+const double MU_INIT = 1e-6; /**< initial value of the barrier parameter */
+
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching and retreating */
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
 //const double W_RED_RET_MAX = 5; /**< maximum value of angular velocity reduction when retreating */
@@ -151,6 +155,7 @@ typedef struct{
 
 /** This struct defines the parameters of the warm start settings */
 typedef struct{
+    bool valid; /**< true if the struct is valid, false otherwise */
     int iterations; /**< number of iterations taken */
     double cpu_time; /**< cpu time in [sec] taken */
     double obj_value; /**< final value of the objective function */
