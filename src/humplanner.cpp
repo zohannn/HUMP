@@ -480,10 +480,14 @@ void HUMPlanner::write_dual_dHO(std::ofstream& stream, double dHO_right, double 
 
 void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLimits, std::vector<double> &maxArmLimits,bool final)
 {
+    int n_joints = minArmLimits.size();
 
     stream << string("# JOINT LIMITS \n");
-    stream << string("# Lower Bound \n");
-    stream << string("param llim := \n");
+    stream << string("# Lower Bounds \n");
+    stream << string("param llim {i in 1..")+to_string(n_joints)+string("} ; \n");
+
+
+   // stream << string("param llim := \n");
 
     double joint_spacer;
     if(final)
@@ -496,25 +500,32 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     for (std::size_t i=0; i < minArmLimits.size(); ++i){
         string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+joint_spacer));
         boost::replace_all(minLim,",",".");
+        stream << string("let llim[")+to_string(i+1)+string("] := ")+minLim+string(";\n");
+        /*
         if (i == minArmLimits.size()-1){
             stream << to_string(i+1)+string(" ")+minLim+string(";\n");
         }else{
             stream << to_string(i+1)+string(" ")+minLim+string("\n");
         }
+        */
+
     }
 
-    stream << string("# Upper Bound \n");
-    stream << string("param ulim := \n");
+    stream << string("# Upper Bounds \n");
+    stream << string("param ulim {i in 1..")+to_string(n_joints)+string("} ; \n");
+    //stream << string("param ulim := \n");
 
     for (std::size_t i=0; i < maxArmLimits.size(); ++i){
         string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-joint_spacer));
         boost::replace_all(maxLim,",",".");
-
+        stream << string("let ulim[")+to_string(i+1)+string("] := ")+maxLim+string(";\n");
+        /**
         if (i == maxArmLimits.size()-1){
             stream << to_string(i+1)+string(" ")+maxLim+string(";\n");
         }else{
             stream << to_string(i+1)+string(" ")+maxLim+string("\n");
         }
+        */
     }
 
 }
@@ -6280,7 +6291,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     // distance between the hand and the object
     this->write_dHO(PostureDat,dHO);
     // joint limits
-    this->writeArmLimits(PostureDat,minArmLimits,maxArmLimits,true);
+    //this->writeArmLimits(PostureDat,minArmLimits,maxArmLimits,true);
     // initial pose of the arm
     this->writeArmInitPose(PostureDat,initArmPosture);
     // final posture of the fingers
@@ -6386,9 +6397,11 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     this->writeArmDHParamsMod(PostureMod);
     this->write_dHOMod(PostureMod);
 
-    PostureMod << string("# Joint Limits \n");
-    PostureMod << string("param llim {i in 1..")+to_string(joints_arm)+string("} ; \n");
-    PostureMod << string("param ulim {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    //PostureMod << string("# Joint Limits \n");
+    //PostureMod << string("param llim {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    //PostureMod << string("param ulim {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    // joint limits
+    this->writeArmLimits(PostureMod,minArmLimits,maxArmLimits,true);
 
     PostureMod << string("# Initial posture \n");
     PostureMod << string("param thet_init {i in 1..")+to_string(joints_arm)+string("} ; \n");
@@ -6828,7 +6841,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // distance between the hand and the object
      this->write_dHO(PostureDat,dHO);
      // joint limits
-     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
+     //this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
      this->writeArmInitPose(PostureDat,initAuxPosture);
      // final pose of the arm
@@ -7040,9 +7053,12 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      this->writeArmDHParamsMod(PostureMod);
      this->write_dHOMod(PostureMod);
 
-     PostureMod << string("# Joint Limits \n");
-     PostureMod << string("param llim {i in 1..")+to_string(minAuxLimits.size())+string("} ; \n");
-     PostureMod << string("param ulim {i in 1..")+to_string(maxAuxLimits.size())+string("} ; \n");
+     //PostureMod << string("# Joint Limits \n");
+     //PostureMod << string("param llim {i in 1..")+to_string(minAuxLimits.size())+string("} ; \n");
+     //PostureMod << string("param ulim {i in 1..")+to_string(maxAuxLimits.size())+string("} ; \n");
+     // joint limits
+     this->writeArmLimits(PostureMod,minAuxLimits,maxAuxLimits,false);
+
      PostureMod << string("# Initial posture \n");
      PostureMod << string("param thet_init {i in 1..")+to_string(initAuxPosture.size())+string("} ; \n");
      PostureMod << string("# Final posture \n");
