@@ -162,7 +162,8 @@ typedef struct{
     vector<double> x; /**< initial guess */
     vector<double> zL; /**< lower bounds multipliers */
     vector<double> zU; /**< upper bounds multipliers */
-    vector<double> dual_vars; /**< lagrange multipliers of the constraints*/
+    vector<double> dual_vars; /**< lagrange multipliers of the constraints */
+    string description; /**< description of the related problem. It must be either "plan" or "approach" or "retreat" or "bounce" */
 }warm_start_params;
 
 /** this struct defines the parameters of the movement */
@@ -171,14 +172,14 @@ typedef struct{
     int hand_code;/**< the code of the hand: 0 = human hand, 1 = barrett hand */
     //int griptype; /**< the type of the grip */
     string mov_infoline; /**< description of the movement */
-    double dHO;/**< distanche hand-target*/
+    double dHO;/**< distanche hand-target */
     std::vector<double> finalHand;/**< final posture of the hand */
     std::vector<double> target;/**< target / location to reach: target(0)=x, target(1)=y, target(2)=z, target(3)=roll, target(4)=pitch, target(6)=yaw,*/
     objectPtr obj; /**< object involved in the movement. The info of the object have to be updated according to the selected movement */
     Matrix4d T_tar_to_obj; /**< transformation matrix from the target to the obj = inv(T_tar)*T_obj */
     std::string support_obj; /**< name of the object that is a support surface in place movements */
-    bool approach;/**< true to use the approach options, false otherwise  */
-    bool retreat;/**< true to use the retreat options, false otherwise */
+    bool approach; /**< true to use the approach options, false otherwise  */
+    bool retreat; /**< true to use the retreat options, false otherwise */
     bool straight_line; /**< true to use the straight line option of the approach/retreat stage */
     double w_red_app_max;/**< maximum velocity reduction factor when approaching */
     double w_red_ret_max;/**< maximum velocity reduction factor when retreating */

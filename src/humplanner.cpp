@@ -486,9 +486,6 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     stream << string("# Lower Bounds \n");
     stream << string("param llim {i in 1..")+to_string(n_joints)+string("} ; \n");
 
-
-   // stream << string("param llim := \n");
-
     double joint_spacer;
     if(final)
     {
@@ -497,38 +494,141 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
         joint_spacer = SPACER_BOUNCE;
     }
 
-    for (std::size_t i=0; i < minArmLimits.size(); ++i){
+    for (std::size_t i=0; i < n_joints; ++i){
         string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+joint_spacer));
         boost::replace_all(minLim,",",".");
         stream << string("let llim[")+to_string(i+1)+string("] := ")+minLim+string(";\n");
-        /*
-        if (i == minArmLimits.size()-1){
-            stream << to_string(i+1)+string(" ")+minLim+string(";\n");
-        }else{
-            stream << to_string(i+1)+string(" ")+minLim+string("\n");
-        }
-        */
-
     }
 
     stream << string("# Upper Bounds \n");
     stream << string("param ulim {i in 1..")+to_string(n_joints)+string("} ; \n");
-    //stream << string("param ulim := \n");
 
-    for (std::size_t i=0; i < maxArmLimits.size(); ++i){
+    for (std::size_t i=0; i < n_joints; ++i){
         string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-joint_spacer));
         boost::replace_all(maxLim,",",".");
         stream << string("let ulim[")+to_string(i+1)+string("] := ")+maxLim+string(";\n");
-        /**
-        if (i == maxArmLimits.size()-1){
-            stream << to_string(i+1)+string(" ")+maxLim+string(";\n");
-        }else{
-            stream << to_string(i+1)+string(" ")+maxLim+string("\n");
-        }
-        */
     }
 
 }
+
+void HUMPlanner::writeArmLimitsMultipliers(std::ofstream& stream, std::vector<double>& minArmLimitsMultitpliers, std::vector<double>& maxArmLimitsMultipliers)
+{
+    int n_joints = minArmLimitsMultitpliers.size();
+
+    stream << string("# BOUNDS LAGRANGE MULTIPLIERS \n");
+    stream << string("# Lower Bounds Multipliers \n");
+    stream << string("param zL_in {i in 1..")+to_string(n_joints)+string("} ; \n");
+
+    for (std::size_t i=0; i < n_joints; ++i){
+        string zL_str =  boost::str(boost::format("%.2f") % (minArmLimitsMultitpliers.at(i)));
+        boost::replace_all(zL_str,",",".");
+        stream << string("let zL_in[")+to_string(i+1)+string("] := ")+zL_str+string(";\n");
+    }
+    stream << string("suffix ipopt_zL_in, IN; \n");
+    stream << string("let {i in 1..")+to_string(n_joints)+string("} theta[i].ipopt_zL_in := zL_in[i]; \n");
+
+    stream << string("# Upper Bounds Multipliers \n");
+    stream << string("param zU_in {i in 1..")+to_string(n_joints)+string("} ; \n");
+    for (std::size_t i=0; i < n_joints; ++i){
+        string zU_str =  boost::str(boost::format("%.2f") % (maxArmLimitsMultipliers.at(i)));
+        boost::replace_all(zU_str,",",".");
+        stream << string("let zU_in[")+to_string(i+1)+string("] := ")+zU_str+string(";\n");
+    }
+    stream << string("suffix ipopt_zU_in, IN; \n");
+    stream << string("let {i in 1..")+to_string(n_joints)+string("} theta[i].ipopt_zU_in := zU_in[i]; \n");
+
+}
+
+void HUMPlanner::writeConstraintsMultipliersMod(std::ofstream& stream)
+{
+    stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
+    stream << string("param n_constr; \n");
+    stream << string("# param dual_in {i in 1..n_constr}; \n");
+}
+
+void HUMPlanner::writeFinalConstraintsMultipliers(std::ofstream& stream,bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,std::vector<double> &duals)
+{
+    stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
+    int n_constr = 2; // target position and target orientation
+    if(coll && coll_obsts){
+        n_constr += (15+n_s)*n_obsts; // (15+n_s)X n_obstacles constraints
+        if(mov_type==1 && pre_post==2){
+            n_constr += (15+n_s)*n_obj_tar; // (15+n_s)X n_obj_tar constraints
+        }
+    }
+
+    if(coll && coll_body){n_constr += 3;} // 3 constraints with the body
+    stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
+    stream << string("param dual_in := \n");
+
+    string dual_str;
+    // target position
+    dual_str =  boost::str(boost::format("%.2f") % (duals.at(0))); boost::replace_all(dual_str,",",".");
+    stream << to_string(1)+string(" ")+dual_str+string("\n");
+    // target orientation
+    dual_str =  boost::str(boost::format("%.2f") % (duals.at(1))); boost::replace_all(dual_str,",",".");
+    stream << to_string(2)+string(" ")+dual_str;
+    if(n_constr==2){
+        // only target position and orientation
+        stream << string(";\n");
+    }else if (n_constr > 5){
+        // we have the full number of constraints
+        stream << string("\n");
+        for (std::size_t i=3; i < n_constr; ++i){
+            dual_str =  boost::str(boost::format("%.2f") % (duals.at(i))); boost::replace_all(dual_str,",",".");
+            if(i==n_constr-1){
+                stream << to_string(i+1)+string(" ")+dual_str+string("; \n");
+            }else{
+                stream << to_string(i+1)+string(" ")+dual_str+string("\n");
+            }
+        }
+    }else{
+        // plus only constraints with the body
+        stream << string("\n");
+        dual_str =  boost::str(boost::format("%.2f") % (duals.at(duals.size()-3))); boost::replace_all(dual_str,",",".");
+        stream << to_string(3)+string(" ")+dual_str+string("\n");
+        dual_str =  boost::str(boost::format("%.2f") % (duals.at(duals.size()-2))); boost::replace_all(dual_str,",",".");
+        stream << to_string(4)+string(" ")+dual_str+string("\n");
+        dual_str =  boost::str(boost::format("%.2f") % (duals.at(duals.size()-1))); boost::replace_all(dual_str,",",".");
+        stream << to_string(5)+string(" ")+dual_str+string(";\n");
+    }
+
+    for (std::size_t i=0; i < n_constr; ++i){
+
+        dual_str =  boost::str(boost::format("%.2f") % (duals.at(i))); boost::replace_all(dual_str,",",".");
+
+        if(i > 1){
+
+        }
+        if (i == n_constr-1){
+            stream << to_string(i+1)+string(" ")+dual_str+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+dual_str+string("\n");
+        }
+    }
+
+}
+
+void HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream,bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,std::vector<double> &duals)
+{
+    stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
+    int n_constr = 0;
+    if(coll && coll_obsts){
+        n_constr += (15+n_s)*n_obsts; // (15+n_s)X n_obstacles constraints
+        if(mov_type==1 && pre_post==2){
+            n_constr += (15+n_s)*n_obj_tar; // (15+n_s)X n_obj_tar constraints
+        }
+    }
+
+    if(coll && coll_body){n_constr += 3;} // 3 constraints with the body
+    stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
+    stream << string("param dual_in := \n");
+
+
+
+
+}
+
 
 void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& minRightArmLimits,std::vector<double>& maxRightArmLimits,
                         std::vector<double>& minLeftArmLimits,std::vector<double>& maxLeftArmLimits,bool final)
@@ -6086,16 +6186,20 @@ void HUMPlanner::writeObjective(ofstream &stream, bool final)
 
 }
 
-void HUMPlanner::writeBodyConstraints(ofstream &stream, bool final)
+void HUMPlanner::writeBodyConstraints(ofstream &stream, bool warm_start, bool final)
 {
     stream << string("# Constraints with the body: the body is modeled as a cylinder \n");
     if (final){
         //stream << string("subject to BodyArm_constr{j in 1..15}: (Points_Arm[j,1]/body[1])^2 + (Points_Arm[j,2]/body[2])^2 >= 1; \n");
-
-        stream << string("subject to BodyArm_Elbow: (Elbow[1]/(body[1]+Elbow[4]))^2 + (Elbow[2]/(body[2]+Elbow[4]))^2 >= 1; \n");
-        stream << string("subject to BodyArm_Wrist: (Wrist[1]/(body[1]+Wrist[4]))^2 + (Wrist[2]/(body[2]+Wrist[4]))^2 >= 1; \n");
-        stream << string("subject to BodyArm_Hand:  (Hand[1]/(body[1]+Hand[4]))^2  + (Hand[2]/(body[2]+Hand[4]))^2  >= 1; \n\n");
-
+        if(warm_start){
+            stream << string("subject to BodyArm_Elbow := dual_in[n_constr-2] : (Elbow[1]/(body[1]+Elbow[4]))^2 + (Elbow[2]/(body[2]+Elbow[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist := dual_in[n_constr-1] : (Wrist[1]/(body[1]+Wrist[4]))^2 + (Wrist[2]/(body[2]+Wrist[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand  := dual_in[n_constr] :  (Hand[1]/(body[1]+Hand[4]))^2  + (Hand[2]/(body[2]+Hand[4]))^2  >= 1; \n\n");
+        }else{
+            stream << string("subject to BodyArm_Elbow: (Elbow[1]/(body[1]+Elbow[4]))^2 + (Elbow[2]/(body[2]+Elbow[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist: (Wrist[1]/(body[1]+Wrist[4]))^2 + (Wrist[2]/(body[2]+Wrist[4]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand:  (Hand[1]/(body[1]+Hand[4]))^2  + (Hand[2]/(body[2]+Hand[4]))^2  >= 1; \n\n");
+        }
     }else{
         //stream << string("subject to BodyArm_constr{j in 1..15,l in Iterations}: (Points_Arm[j,1,l]/body[1])^2 + (Points_Arm[j,2,l]/body[2])^2 >= 1; \n");
 
@@ -6198,6 +6302,23 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     string path("Models/");
 
     // movement settings
+    bool warm_start = params.mov_specs.warm_start;
+    warm_start_params final_curr_warm_start_params;
+    vector<warm_start_params> final_warm_start_params = params.mov_specs.final_warm_start_params;
+    warm_start_params final_plan_warm_start_params;
+    warm_start_params final_approach_warm_start_params;
+    warm_start_params final_retreat_warm_start_params;
+    for(size_t i=0;i<final_warm_start_params.size();++i)
+    {
+        warm_start_params curr = final_warm_start_params.at(i);
+        if(curr.description.compare("plan")==0){
+            final_plan_warm_start_params = curr;
+        }else if(curr.description.compare("approach")==0){
+            final_approach_warm_start_params = curr;
+        }else if(curr.description.compare("retreat")==0){
+            final_retreat_warm_start_params = curr;
+        }
+    }
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
     //int griptype = params.mov_specs.griptype;
@@ -6310,6 +6431,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
             PostureDat << to_string(i+1)+string(" ")+guess+string("\n");
         }
     }
+
     // Parameters of the Fingers
     switch(hand_code){
     case 0: // human hand
@@ -6326,24 +6448,38 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     case 0: //pick
         switch(pre_post){
         case 0: // no approach, no retreat
+            final_curr_warm_start_params = final_plan_warm_start_params;
             break;
         case 1: // approach
-            if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);}
+            if(approach){
+                final_curr_warm_start_params = final_approach_warm_start_params;
+                this->writeInfoApproachRetreat(PostureDat,tar,pre_grasp_approach);
+            }
             break;
         case 2: // retreat
-            if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_grasp_retreat);}
+            if(retreat){
+                final_curr_warm_start_params = final_retreat_warm_start_params;
+                this->writeInfoApproachRetreat(PostureDat,tar,post_grasp_retreat);
+            }
             break;
         }
         break;
     case 1: // place
         switch(pre_post){
         case 0: // no approach, no retreat
+            final_curr_warm_start_params = final_plan_warm_start_params;
             break;
         case 1: // approach
-            if(approach){this->writeInfoApproachRetreat(PostureDat,tar,pre_place_approach);}
+            if(approach){
+                final_curr_warm_start_params = final_approach_warm_start_params;
+                this->writeInfoApproachRetreat(PostureDat,tar,pre_place_approach);
+            }
             break;
         case 2: // retreat
-            if(retreat){this->writeInfoApproachRetreat(PostureDat,tar,post_place_retreat);}
+            if(retreat){
+                final_curr_warm_start_params = final_retreat_warm_start_params;
+                this->writeInfoApproachRetreat(PostureDat,tar,post_place_retreat);
+            }
             break;
         }
 
@@ -6428,9 +6564,17 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     this->writeInfoObjectsMod(PostureMod,vec);
         //break;
     //}
+    // Constraints Lagrange multipliers
+    if(warm_start){this->writeConstraintsMultipliersMod(PostureMod);}
+
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     PostureMod << string("# DECISION VARIABLES \n");
     PostureMod << string("var theta {i in 1..")+to_string(joints_arm)+string("} >= llim[i], <= ulim[i]; \n");
+    if(warm_start){
+        vector<double> zL = final_curr_warm_start_params.zL;
+        vector<double> zU = final_curr_warm_start_params.zU;
+        this->writeArmLimitsMultipliers(PostureMod,zL,zU);
+    }
 
     // Rotation matrix of the obstacles
     this->writeRotMatObsts(PostureMod);
@@ -6446,6 +6590,14 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         std::vector<double> obj_tar_size; obj_tar->getSize(obj_tar_size);
         n_s = this->model_spheres(PostureDat,PostureMod,obj_tar_size,true);
     }
+
+    // CONSTRAINTS LAGRANGE MULTIPLIERS
+    vector<double> dual_vars;
+    if (warm_start){
+        dual_vars = final_curr_warm_start_params.dual_vars;
+        this->writeFinalConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars);
+    }
+
 
     switch(hand_code){
     case 0: // human hand
@@ -6481,7 +6633,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     PostureMod << string("else	if ( j=13 ) then 	 Finger1_2[i] \n");
     PostureMod << string("else	if ( j=14 ) then 	 Finger2_2[i] \n");
     PostureMod << string("else	if ( j=15 ) then 	 Finger3_2[i] \n");
-    PostureMod << string("else	if ( j=16 ) then 	(Finger1_2[i]+Finger1_tip[i])/2	 \n");
+    PostureMod << string("else	if ( j=16 ) then 	(Finger1_2[i]+Finger1_tip[i])/2	\n");
     PostureMod << string("else	if ( j=17 ) then 	(Finger2_2[i]+Finger2_tip[i])/2 \n");
     PostureMod << string("else	if ( j=18 ) then 	(Finger3_2[i]+Finger3_tip[i])/2 \n");
     PostureMod << string("else	if ( j=19 ) then 	Finger1_tip[i]\n");
@@ -6520,85 +6672,71 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         if(pre_post == 0){
             // do not use approach/retreat options
             PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            if(warm_start){
+                PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+                PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }else if(pre_post==1){
             // use approach options
-            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            if(warm_start){
+                PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+                PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }else if(pre_post==2){
             // use retreat options
-            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            if(warm_start){
+                PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+                PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }
         break;
     case 1: // place
         if(pre_post==0){
             // do not use approach/retreat options
             PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            if(warm_start){
+                PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+                PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }else if(pre_post==1){
             // use approach options
             PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            if(warm_start){
+                PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+                PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }else if(pre_post==2){
             // use retreat options
             PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i] = 0; \n");
-            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            if(warm_start){
+                PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }else{
+                PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] + dFH*z_H[i] - dist*v_t[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+            }
         }
         break;
     case 2: // move
         PostureMod << string("# subject to constr_hand_pos  {i in 1..3}: Hand[i] - Tar_pos[i] = 0; \n");
-        PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        if(warm_start){
+            PostureMod << string("subject to constr_hand_pos := dual_in[1] : (sum{i in 1..3} (Hand[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }else{
+            PostureMod << string("subject to constr_hand_pos: (sum{i in 1..3} (Hand[i] - Tar_pos[i])^2) <= ")+tarpos+string("; \n\n");
+        }
         break;
     }
 
 
     PostureMod << string("# Hand orientation\n");
-    PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (z_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and z_H = x_t \n");
-    /*
-    switch (mov_type){
-    case 0: //pick
-        // hand constraints for approaching and retreating direction setting
+    if(warm_start){
+        PostureMod << string("subject to constr_hand_orient := dual_in[2] : (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (z_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and z_H = x_t \n");
+    }else{
         PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (z_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and z_H = x_t \n");
-        break;
-    case 1:// place
-        //PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -y_t \n");
-        break;
     }
-    */
-    /*
-    switch(griptype){
-    case 111: case 211: // side thumb left
-        switch (mov_type){
-        case 0: //pick
-            // hand constraints for approaching and retreating direction setting
-            PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -y_t \n");
-            break;
-        case 1:// place
-            PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - z_t[i])^2 + sum{i in 1..3} (z_H[i] + y_t[i])^2 )<= ")+taror+string("; #  x_H = z_t and z_H = -y_t \n");
-            break;
-        }
-        break;
-    case 112: case 212: // side thumb right
-        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] + z_t[i])^2) <= ")+taror+string("; #  x_H = -z_t \n");
-        break;
-    case 113: case 213: // side thumb up
-        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (y_H[i] + z_t[i])^2) <= ")+taror+string("; #  y_H = -z_t \n");
-        break;
-    case 114: case 214: // side thumb down
-        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (y_H[i] - z_t[i])^2) <= ")+taror+string("; #  y_H = z_t \n");
-        break;
-    case 121: case 221: // above
-        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (z_H[i] + z_t[i])^2) <= ")+to_string(tolTarOr)+string("; #  z_H = -z_t \n");
-        break;
-    case 122: case 222: // below
-        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (z_H[i] - z_t[i])^2) <= ")+to_string(tolTarOr)+string("; #  z_H = z_t \n");
-        break;
-    default: // move movements (there is no griptype)
-        PostureMod << string("subject to constr_hand_orient: (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (y_H[i] - y_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and y_H = y_t \n");
-        break;
-
-    } // switch griptype
-    */
-
     if(obstacle_avoidance && coll){
         // obstacles
         //xx
@@ -6630,7 +6768,11 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
-        PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles}:  \n");
+        if(warm_start){
+            PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles} := dual_in[(j*n_Obstacles + i - n_Obstacles )+2] :  \n");
+        }else{
+            PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles}:  \n");
+        }
         PostureMod << string("(((Rot[1,1,i]*Points_Arm[j,1]+Rot[2,1,i]*Points_Arm[j,2]+Rot[3,1,i]*Points_Arm[j,3]\n");
         PostureMod << string("-Obstacles[i,1]*Rot[1,1,i]-Obstacles[i,2]*Rot[2,1,i]-Obstacles[i,3]*Rot[3,1,i])\n");
         PostureMod << string("/(Obstacles[i,4]+Points_Arm[j,4]")+txx1+string("))^2\n");
@@ -6650,7 +6792,11 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
             // place movements (retreat stage)
             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
             PostureMod << string("# \n");
-            PostureMod << string("subject to obj_Arm_right{j in 1..")+n_str+string(", i in 1..n_ObjTar}:  \n");
+            if(warm_start){
+                PostureMod << string("subject to obj_Arm_right{j in 1..")+n_str+string(", i in 1..n_ObjTar} := dual_in[(j*n_ObjTar + i - n_ObjTar)+2+")+to_string(15+n_s+obsts.size())+string("] :  \n");
+            }else{
+                PostureMod << string("subject to obj_Arm_right{j in 1..")+n_str+string(", i in 1..n_ObjTar}:  \n");
+            }
             PostureMod << string("(((Rot_obj[1,1]*Points_Arm[j,1]+Rot_obj[2,1]*Points_Arm[j,2]+Rot_obj[3,1]*Points_Arm[j,3]\n");
             PostureMod << string("-ObjTar[i,1]*Rot_obj[1,1]-ObjTar[i,2]*Rot_obj[2,1]-ObjTar[i,3]*Rot_obj[3,1])\n");
             PostureMod << string("/(ObjTar[i,4]+Points_Arm[j,4]")+txx1+string("))^2\n");
@@ -6707,7 +6853,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
 
     // constraints with the body
     if(coll && coll_body){
-        this->writeBodyConstraints(PostureMod,true);
+        this->writeBodyConstraints(PostureMod,warm_start,true);
     }
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
@@ -6750,6 +6896,8 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
     DHparameters dh;
 
     // movement setting
+    bool warm_start = params.mov_specs.warm_start;
+    warm_start_params bounce_warm_start_params = params.mov_specs.bounce_warm_start_params;
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
     //int griptype = params.mov_specs.griptype;
@@ -7098,10 +7246,19 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      //PostureMod << string("param time {i in Iterations} = ((i-1)*TotalTime)/Nsteps;\n");
      PostureMod << string("param time {i in Iterations} = (i-1)/Nsteps;\n");
 
+     // Constraints Lagrange multipliers
+     if(warm_start){this->writeConstraintsMultipliersMod(PostureMod);}
+
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
      PostureMod << string("# DECISION VARIABLES \n");
      PostureMod << string("# Bounce Posture \n");
      PostureMod << string("var theta_b {i in 1..")+to_string(initialGuess.size())+string("} >= llim[i], <= ulim[i]; \n");
+
+     if(warm_start){
+         vector<double> zL = bounce_warm_start_params.zL;
+         vector<double> zU = bounce_warm_start_params.zU;
+         this->writeArmLimitsMultipliers(PostureMod,zL,zU);
+     }
 
      PostureMod << string("# Direct Movement \n");
      PostureMod << string("param the_direct {(i,j) in Iterations_nJoints} := thet_init[j]+ \n");
@@ -7140,6 +7297,13 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      }else if(mov_type==2){
          // move
          move=true;
+     }
+
+     // CONSTRAINTS LAGRANGE MULTIPLIERS
+     vector<double> dual_vars;
+     if (warm_start){
+         dual_vars = bounce_warm_start_params.dual_vars;
+         this->writeBounceConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars);
      }
 
      switch(hand_code){
@@ -7236,47 +7400,9 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          */
          break;
      }
-     /*
-     switch (griptype) {
-     case 111: case 211: // side thumb left
-
-         switch (mov_type) {
-         case 0: // pick
-             // hand constraints for approaching direction settings
-             if(approach && pre_post==1){
-                 PostureMod << string("# Hand approach orientation\n");
-                 PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2)<= 0.01; #  x_H = z_t \n\n");
-             }
-             break;
-         case 1: // place
-             // hand constraints for approaching and retreating direction settings
-
-             //if(approach && pre_post==1){
-             //    PostureMod << string("# Hand approach orientation\n");
-             //    PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - z_t[i])^2 + sum{i in 1..3} (z_H[i,k] + y_t[i])^2 )<= 0.010; #  x_H = z_t  and z_H = -y_t \n\n");
-             //}
-
-             break;
-         }
-
-         break;
-     case 112: case 212: // side thumb right
-         break;
-     case 113: case 213: // side thumb up
-         break;
-     case 114: case 214: // side thumb down
-         break;
-     case 121: case 221: // above
-         break;
-     case 122: case 222: // below
-         break;
-     default:// move movements (there is no griptype)
-         break;
-     }
-    */
 
      // move plane constraints
-     if(move && use_plane && !plane_params.empty()){
+     if(move && use_plane && !plane_params.empty() && !warm_start){
         a_str =  boost::str(boost::format("%.2f") % (plane_params.at(0))); boost::replace_all(a_str,",",".");
         b_str =  boost::str(boost::format("%.2f") % (plane_params.at(1))); boost::replace_all(b_str,",",".");
         if(plane_params.at(1)>=0){b_str = string("+")+b_str;}
@@ -7772,7 +7898,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
      }
      // constraints with the body
-     this->writeBodyConstraints(PostureMod,false);
+     this->writeBodyConstraints(PostureMod,warm_start,false);
 
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
 
@@ -9363,6 +9489,22 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
 {
     // movement settings
     bool warm_start = params.mov_specs.warm_start;
+    warm_start_params final_curr_warm_start_params;
+    vector<warm_start_params> final_warm_start_params = params.mov_specs.final_warm_start_params;
+    warm_start_params final_plan_warm_start_params;
+    warm_start_params final_approach_warm_start_params;
+    warm_start_params final_retreat_warm_start_params;
+    for(size_t i=0;i<final_warm_start_params.size();++i)
+    {
+        warm_start_params curr = final_warm_start_params.at(i);
+        if(curr.description.compare("plan")==0){
+            final_plan_warm_start_params = curr;
+        }else if(curr.description.compare("approach")==0){
+            final_approach_warm_start_params = curr;
+        }else if(curr.description.compare("retreat")==0){
+            final_retreat_warm_start_params = curr;
+        }
+    }
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
     bool rand_init = params.mov_specs.rand_init;
@@ -9374,14 +9516,28 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     bool retreat = params.mov_specs.retreat;
     std::vector<double> approach_vec;
     std::vector<double> retreat_vec;
+
+    final_curr_warm_start_params = final_plan_warm_start_params;
     switch(mov_type){
     case 0: // pick
-        if(approach){approach_vec = params.mov_specs.pre_grasp_approach;}
-        if(retreat){retreat_vec = params.mov_specs.post_grasp_retreat;}
+        if(approach){
+            final_curr_warm_start_params = final_approach_warm_start_params;
+            approach_vec = params.mov_specs.pre_grasp_approach;
+        }
+        if(retreat){
+            final_curr_warm_start_params = final_retreat_warm_start_params;
+            retreat_vec = params.mov_specs.post_grasp_retreat;
+        }
         break;
     case 1: // place
-        if(approach){approach_vec = params.mov_specs.pre_place_approach;}
-        if(retreat){retreat_vec = params.mov_specs.post_place_retreat;}
+        if(approach){
+            final_curr_warm_start_params = final_approach_warm_start_params;
+            approach_vec = params.mov_specs.pre_place_approach;
+        }
+        if(retreat){
+            final_curr_warm_start_params = final_retreat_warm_start_params;
+            retreat_vec = params.mov_specs.post_place_retreat;
+        }
         break;
     }
 
@@ -9448,11 +9604,15 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
     std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
     std::vector<double> initialGuess(minArmLimits.size(),0.0);
-    if ((pre_post==1) && rand_init){ // pre_posture for approaching
-        for(size_t i=0; i < minArmLimits.size();++i){
-            initialGuess.at(i)=getRand(minArmLimits.at(i)+SPACER,maxArmLimits.at(i)-SPACER);
-        }
-    }else{initialGuess = initArmPosture;}
+    if(warm_start){
+        initialGuess = final_curr_warm_start_params.x;
+    }else{
+        if ((pre_post==1) && rand_init){ // pre_posture for approaching
+            for(size_t i=0; i < minArmLimits.size();++i){
+                initialGuess.at(i)=getRand(minArmLimits.at(i)+SPACER,maxArmLimits.at(i)-SPACER);
+            }
+        }else{initialGuess = initArmPosture;}
+    }
     // get the obstacles of the workspace
     std::vector<objectPtr> obsts;
     this->getObstaclesSingleArm(shPos,max_ext,obsts,hand_code);
@@ -9521,6 +9681,7 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
     DHparameters dh;
     // movement settings
     bool warm_start = params.mov_specs.warm_start;
+    warm_start_params bounce_warm_start_params = params.mov_specs.bounce_warm_start_params;
     int arm_code = params.mov_specs.arm_code;
     int hand_code = params.mov_specs.hand_code;
     std::vector<double> finalHand = params.mov_specs.finalHand;
@@ -9611,7 +9772,12 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
     bAux.acc_0=acc0Aux;
     bAux.acc_f=accfAux;
     // initial guess
-    std::vector<double> initialGuess = initAuxPosture;
+    std::vector<double> initialGuess;
+    if(warm_start){
+        initialGuess = bounce_warm_start_params.x;
+    }else{
+        initialGuess = initAuxPosture;
+    }
     /*
     std::vector<double> initialGuess(initAuxPosture.size(),0.0);
     for(size_t i=0; i < initAuxPosture.size();++i){
@@ -11378,6 +11544,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
             if (FPosture_pre_grasp){
                 // warm start results
                 final_pre_grasp_warm_start_params.valid = true;
+                final_pre_grasp_warm_start_params.description = "approach";
                 final_pre_grasp_warm_start_params.iterations = iter_count_pre_grasp;
                 final_pre_grasp_warm_start_params.cpu_time = cpu_time_pre_grasp;
                 final_pre_grasp_warm_start_params.obj_value = obj_pre_grasp;
@@ -11411,6 +11578,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 if(FPosture){
                     // warm start results
                     final_warm_start_params.valid = true;
+                    final_warm_start_params.description = "plan";
                     final_warm_start_params.iterations = iter_count;
                     final_warm_start_params.cpu_time = cpu_time;
                     final_warm_start_params.obj_value = obj;
@@ -11441,6 +11609,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 res->acceleration_stages.clear();
                                 // warm start results
                                 bounce_pre_grasp_warm_start_params.valid = true;
+                                bounce_pre_grasp_warm_start_params.description = "bounce";
                                 bounce_pre_grasp_warm_start_params.iterations = iter_count_b_pre_grasp;
                                 bounce_pre_grasp_warm_start_params.cpu_time = cpu_time_b_pre_grasp;
                                 bounce_pre_grasp_warm_start_params.obj_value = obj_b_pre_grasp;
@@ -11484,6 +11653,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 res->acceleration_stages.clear();
                                 // warm start results
                                 final_warm_start_params.valid = true;
+                                final_warm_start_params.description = "plan";
                                 final_warm_start_params.iterations = iter_count;
                                 final_warm_start_params.cpu_time = cpu_time;
                                 final_warm_start_params.obj_value = obj;
@@ -11529,6 +11699,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
             if (FPosture){
                 // warm start results
                 final_warm_start_params.valid = true;
+                final_warm_start_params.description = "plan";
                 final_warm_start_params.iterations = iter_count;
                 final_warm_start_params.cpu_time = cpu_time;
                 final_warm_start_params.obj_value = obj;
@@ -11553,6 +11724,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                         int mod;
                         // warm start results
                         bounce_warm_start_params.valid = true;
+                        bounce_warm_start_params.description = "bounce";
                         bounce_warm_start_params.iterations = iter_count_b;
                         bounce_warm_start_params.cpu_time = cpu_time_b;
                         bounce_warm_start_params.obj_value = obj_b;
@@ -11605,6 +11777,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 if (FPosture_post_grasp){
                     // warm start results
                     final_post_grasp_warm_start_params.valid = true;
+                    final_post_grasp_warm_start_params.description = "retreat";
                     final_post_grasp_warm_start_params.iterations = iter_count_post_grasp;
                     final_post_grasp_warm_start_params.cpu_time = cpu_time_post_grasp;
                     final_post_grasp_warm_start_params.obj_value = obj_post_grasp;
@@ -11641,6 +11814,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 if (FPosture_post_grasp){
                     // warm start results
                     final_post_grasp_warm_start_params.valid = true;
+                    final_post_grasp_warm_start_params.description = "retreat";
                     final_post_grasp_warm_start_params.iterations = iter_count_post_grasp;
                     final_post_grasp_warm_start_params.cpu_time = cpu_time_post_grasp;
                     final_post_grasp_warm_start_params.obj_value = obj_post_grasp;
@@ -11732,6 +11906,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
             if (FPosture_pre_place){
                 // warm start results
                 final_pre_place_warm_start_params.valid = true;
+                final_pre_place_warm_start_params.description = "approach";
                 final_pre_place_warm_start_params.iterations = iter_count_pre_place;
                 final_pre_place_warm_start_params.cpu_time = cpu_time_pre_place;
                 final_pre_place_warm_start_params.obj_value = obj_pre_place;
@@ -11760,6 +11935,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 if(FPosture){
                     // warm start results
                     final_warm_start_params.valid = true;
+                    final_warm_start_params.description = "plan";
                     final_warm_start_params.iterations = iter_count;
                     final_warm_start_params.cpu_time = cpu_time;
                     final_warm_start_params.obj_value = obj;
@@ -11787,6 +11963,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                     res->acceleration_stages.clear();
                                     // warm start results
                                     bounce_pre_place_warm_start_params.valid = true;
+                                    bounce_pre_place_warm_start_params.description = "bounce";
                                     bounce_pre_place_warm_start_params.iterations = iter_count_b_pre_place;
                                     bounce_pre_place_warm_start_params.cpu_time = cpu_time_b_pre_place;
                                     bounce_pre_place_warm_start_params.obj_value = obj_b_pre_place;
@@ -11820,6 +11997,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                             if(FPosture){
                                 // warm start results
                                 final_warm_start_params.valid = true;
+                                final_warm_start_params.description = "plan";
                                 final_warm_start_params.iterations = iter_count;
                                 final_warm_start_params.cpu_time = cpu_time;
                                 final_warm_start_params.obj_value = obj;
@@ -11868,6 +12046,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
             if (FPosture){
                 // warm start results
                 final_warm_start_params.valid = true;
+                final_warm_start_params.description = "plan";
                 final_warm_start_params.iterations = iter_count;
                 final_warm_start_params.cpu_time = cpu_time;
                 final_warm_start_params.obj_value = obj;
@@ -11892,6 +12071,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                         int mod;
                         // warm start results
                         bounce_warm_start_params.valid = true;
+                        bounce_warm_start_params.description = "bounce";
                         bounce_warm_start_params.iterations = iter_count_b;
                         bounce_warm_start_params.cpu_time = cpu_time_b;
                         bounce_warm_start_params.obj_value = obj_b;
@@ -11943,6 +12123,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 if (FPosture_post_place){
                     // warm start results
                     final_post_place_warm_start_params.valid = true;
+                    final_post_place_warm_start_params.description = "retreat";
                     final_post_place_warm_start_params.iterations = iter_count_post_place;
                     final_post_place_warm_start_params.cpu_time = cpu_time_post_place;
                     final_post_place_warm_start_params.obj_value = obj_post_place;
@@ -11988,6 +12169,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 if (FPosture_post_place){
                     // warm start results
                     final_post_place_warm_start_params.valid = true;
+                    final_post_place_warm_start_params.description = "retreat";
                     final_post_place_warm_start_params.iterations = iter_count_post_place;
                     final_post_place_warm_start_params.cpu_time = cpu_time_post_place;
                     final_post_place_warm_start_params.obj_value = obj_post_place;
@@ -12072,6 +12254,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
         if (FPosture){
             // warm start results
             final_warm_start_params.valid = true;
+            final_warm_start_params.description = "plan";
             final_warm_start_params.iterations = iter_count;
             final_warm_start_params.cpu_time = cpu_time;
             final_warm_start_params.obj_value = obj;
@@ -12095,6 +12278,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                     res->acceleration_stages.clear();
                     // warm start results
                     bounce_warm_start_params.valid = true;
+                    bounce_warm_start_params.description = "bounce";
                     bounce_warm_start_params.iterations = iter_count_b;
                     bounce_warm_start_params.cpu_time = cpu_time_b;
                     bounce_warm_start_params.obj_value = obj_b;
@@ -12184,6 +12368,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                 res->acceleration_stages.clear();
                 // warm start results
                 bounce_warm_start_params.valid = true;
+                bounce_warm_start_params.description = "bounce";
                 bounce_warm_start_params.iterations = iter_count_b;
                 bounce_warm_start_params.cpu_time = cpu_time_b;
                 bounce_warm_start_params.obj_value = obj_b;
