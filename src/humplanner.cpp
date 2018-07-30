@@ -609,18 +609,30 @@ void HUMPlanner::writeFinalConstraintsMultipliers(std::ofstream& stream,bool col
 
 }
 
-void HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream,bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,std::vector<double> &duals)
+void HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream, int n_steps, int n_joints, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,bool coll_tar,bool coll_obsts,std::vector<double> &duals)
 {
     stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
-    int n_constr = 0;
-    if(coll && coll_obsts){
-        n_constr += (15+n_s)*n_obsts; // (15+n_s)X n_obstacles constraints
-        if(mov_type==1 && pre_post==2){
-            n_constr += (15+n_s)*n_obj_tar; // (15+n_s)X n_obj_tar constraints
+    int n_constr = (n_steps+1)*n_joints; // joint trajectory limits constraints
+    if(mov_type==0 && pre_post==1)
+    {// pick movement in approach stage
+        int n_steps_init;
+        if(N_STEP_MIN>2){
+            n_steps_init = N_STEP_MIN-2;
+        }else{
+            n_steps_init = 1;
         }
+        n_constr += (n_steps+1)-(n_steps-n_steps_init) + 1; // hand rotation constraints
     }
+    if(mov_type==0 && coll_tar)
+    { // target avoidance during pick movements
+        int diff_steps = (int) (n_steps*BLANK_PERCENTAGE_TAR);
+        n_constr += 12 *(n_steps-diff_steps+1); // target avoidance constraints
+    }
+    if(coll_obsts)
+    {// obstacle avoidance
 
-    if(coll && coll_body){n_constr += 3;} // 3 constraints with the body
+    }
+    n_constr += 3; //  constraints with the body
     stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
     stream << string("param dual_in := \n");
 

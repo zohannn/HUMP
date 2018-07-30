@@ -897,7 +897,7 @@ private:
      * @param n_tar
      * @param duals
      */
-    void writeBounceConstraintsMultipliers(std::ofstream& stream, bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts, int mov_type, int pre_post, int n_tar, std::vector<double> &duals);
+    void writeBounceConstraintsMultipliers(std::ofstream& stream, int n_s, int n_obsts, int mov_type, int pre_post, int n_tar, std::vector<double> &duals);
 
     /**
      * @brief writeConstraintsMultipliersMod
