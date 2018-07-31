@@ -330,9 +330,9 @@ HumanHand HUMPlanner::getHumanHand()
 void HUMPlanner::writeBodyDim(double h_xsize,double h_ysize, ofstream &stream)
 {
 
-    string bodyxsize=  boost::str(boost::format("%.2f") % (h_xsize/2));
+    string bodyxsize=  boost::str(boost::format("%.4f") % (h_xsize/2));
     boost::replace_all(bodyxsize,",",".");
-    string bodyysize=  boost::str(boost::format("%.2f") % (h_ysize/2));
+    string bodyysize=  boost::str(boost::format("%.4f") % (h_ysize/2));
     boost::replace_all(bodyysize,",",".");
 
     stream << string("# BODY INFO \n");
@@ -347,10 +347,10 @@ void HUMPlanner::writeArmDHParams(DHparameters dh, ofstream &stream, int k)
     stream << string("# D-H PARAMETERS OF THE ARM \n");
     stream << string("param alpha := \n");
     string alpha_str;
-    alpha_str =  boost::str(boost::format("%.2f") % (dh.alpha.at(0)));
+    alpha_str =  boost::str(boost::format("%.4f") % (dh.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_str+string("\n");
     for(std::size_t i=1; i< joints_arm; ++i){
-        alpha_str =  boost::str(boost::format("%.2f") % (k*dh.alpha.at(i)));
+        alpha_str =  boost::str(boost::format("%.4f") % (k*dh.alpha.at(i)));
 
         if (i == dh.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_str+string(";\n");
@@ -361,7 +361,7 @@ void HUMPlanner::writeArmDHParams(DHparameters dh, ofstream &stream, int k)
     stream << string("param a := \n");
     string a_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        a_str =  boost::str(boost::format("%.2f") % (dh.a.at(i)));
+        a_str =  boost::str(boost::format("%.4f") % (dh.a.at(i)));
         if (i == dh.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_str+string(";\n");
         }else{
@@ -371,7 +371,7 @@ void HUMPlanner::writeArmDHParams(DHparameters dh, ofstream &stream, int k)
     stream << string("param d := \n");
     string d_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        d_str =  boost::str(boost::format("%.2f") % (k*dh.d.at(i)));
+        d_str =  boost::str(boost::format("%.4f") % (k*dh.d.at(i)));
         if (i == dh.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_str+string(";\n");
         }else{
@@ -386,10 +386,10 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("# D-H PARAMETERS OF THE RIGHT ARM \n");
     stream << string("param alpha_right := \n");
     string alpha_right_str;
-    alpha_right_str =  boost::str(boost::format("%.2f") % (dh_right.alpha.at(0)));
+    alpha_right_str =  boost::str(boost::format("%.4f") % (dh_right.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_right_str+string("\n");
     for(std::size_t i=1; i< joints_arm; ++i){
-        alpha_right_str =  boost::str(boost::format("%.2f") % (dh_right.alpha.at(i)));
+        alpha_right_str =  boost::str(boost::format("%.4f") % (dh_right.alpha.at(i)));
 
         if (i == dh_right.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_right_str+string(";\n");
@@ -400,7 +400,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("param a_right := \n");
     string a_right_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        a_right_str =  boost::str(boost::format("%.2f") % (dh_right.a.at(i)));
+        a_right_str =  boost::str(boost::format("%.4f") % (dh_right.a.at(i)));
         if (i == dh_right.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_right_str+string(";\n");
         }else{
@@ -410,7 +410,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("param d_right := \n");
     string d_right_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        d_right_str =  boost::str(boost::format("%.2f") % (dh_right.d.at(i)));
+        d_right_str =  boost::str(boost::format("%.4f") % (dh_right.d.at(i)));
         if (i == dh_right.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_right_str+string(";\n");
         }else{
@@ -422,10 +422,10 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("# D-H PARAMETERS OF THE LEFT ARM \n");
     stream << string("param alpha_left := \n");
     string alpha_left_str;
-    alpha_left_str =  boost::str(boost::format("%.2f") % (dh_left.alpha.at(0)));
+    alpha_left_str =  boost::str(boost::format("%.4f") % (dh_left.alpha.at(0)));
     stream << to_string(1)+string(" ")+alpha_left_str+string("\n");
     for(std::size_t i=1; i< joints_arm; ++i){
-        alpha_left_str =  boost::str(boost::format("%.2f") % (dh_left.alpha.at(i)));
+        alpha_left_str =  boost::str(boost::format("%.4f") % (dh_left.alpha.at(i)));
 
         if (i == dh_left.alpha.size()-1){
             stream << to_string(i+1)+string(" ")+alpha_left_str+string(";\n");
@@ -436,7 +436,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("param a_left := \n");
     string a_left_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        a_left_str =  boost::str(boost::format("%.2f") % (dh_left.a.at(i)));
+        a_left_str =  boost::str(boost::format("%.4f") % (dh_left.a.at(i)));
         if (i == dh_left.a.size()-1){
             stream << to_string(i+1)+string(" ")+a_left_str+string(";\n");
         }else{
@@ -446,7 +446,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
     stream << string("param d_left := \n");
     string d_left_str;
     for(std::size_t i=0; i<joints_arm; ++i){
-        d_left_str =  boost::str(boost::format("%.2f") % (dh_left.d.at(i)));
+        d_left_str =  boost::str(boost::format("%.4f") % (dh_left.d.at(i)));
         if (i == dh_left.d.size()-1){
             stream << to_string(i+1)+string(" ")+d_left_str+string(";\n");
         }else{
@@ -459,7 +459,7 @@ void HUMPlanner::writeDualArmDHParams(DHparameters dh_right, DHparameters dh_lef
 
 void HUMPlanner::write_dHO(std::ofstream& stream, double dHO)
 {
-    string dHOstr=  boost::str(boost::format("%.2f") % (dHO));
+    string dHOstr=  boost::str(boost::format("%.4f") % (dHO));
     boost::replace_all(dHOstr,",",".");
     stream << string("# DISTANCE HAND - TARGET\n");
     stream << string("param dFH := ")+dHOstr+string(";\n");
@@ -467,12 +467,12 @@ void HUMPlanner::write_dHO(std::ofstream& stream, double dHO)
 
 void HUMPlanner::write_dual_dHO(std::ofstream& stream, double dHO_right, double dHO_left)
 {
-    string dHOstr_right=  boost::str(boost::format("%.2f") % (dHO_right));
+    string dHOstr_right=  boost::str(boost::format("%.4f") % (dHO_right));
     boost::replace_all(dHOstr_right,",",".");
     stream << string("# DISTANCE RIGHT HAND - TARGET\n");
     stream << string("param dFH_right := ")+dHOstr_right+string(";\n");
 
-    string dHOstr_left=  boost::str(boost::format("%.2f") % (dHO_left));
+    string dHOstr_left=  boost::str(boost::format("%.4f") % (dHO_left));
     boost::replace_all(dHOstr_left,",",".");
     stream << string("# DISTANCE LEFT HAND - TARGET\n");
     stream << string("param dFH_left := ")+dHOstr_left+string(";\n");
@@ -495,7 +495,7 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     }
 
     for (std::size_t i=0; i < n_joints; ++i){
-        string minLim=  boost::str(boost::format("%.2f") % (minArmLimits.at(i)+joint_spacer));
+        string minLim=  boost::str(boost::format("%.4f") % (minArmLimits.at(i)+joint_spacer));
         boost::replace_all(minLim,",",".");
         stream << string("let llim[")+to_string(i+1)+string("] := ")+minLim+string(";\n");
     }
@@ -504,14 +504,14 @@ void HUMPlanner::writeArmLimits(ofstream &stream, std::vector<double> &minArmLim
     stream << string("param ulim {i in 1..")+to_string(n_joints)+string("} ; \n");
 
     for (std::size_t i=0; i < n_joints; ++i){
-        string maxLim=  boost::str(boost::format("%.2f") % (maxArmLimits.at(i)-joint_spacer));
+        string maxLim=  boost::str(boost::format("%.4f") % (maxArmLimits.at(i)-joint_spacer));
         boost::replace_all(maxLim,",",".");
         stream << string("let ulim[")+to_string(i+1)+string("] := ")+maxLim+string(";\n");
     }
 
 }
 
-void HUMPlanner::writeArmLimitsMultipliers(std::ofstream& stream, std::vector<double>& minArmLimitsMultitpliers, std::vector<double>& maxArmLimitsMultipliers)
+void HUMPlanner::writeArmLimitsMultipliers(std::ofstream& stream, std::vector<double>& minArmLimitsMultitpliers, std::vector<double>& maxArmLimitsMultipliers,bool final)
 {
     int n_joints = minArmLimitsMultitpliers.size();
 
@@ -520,22 +520,30 @@ void HUMPlanner::writeArmLimitsMultipliers(std::ofstream& stream, std::vector<do
     stream << string("param zL_in {i in 1..")+to_string(n_joints)+string("} ; \n");
 
     for (std::size_t i=0; i < n_joints; ++i){
-        string zL_str =  boost::str(boost::format("%.2f") % (minArmLimitsMultitpliers.at(i)));
+        string zL_str =  boost::str(boost::format("%.8f") % (minArmLimitsMultitpliers.at(i)));
         boost::replace_all(zL_str,",",".");
         stream << string("let zL_in[")+to_string(i+1)+string("] := ")+zL_str+string(";\n");
     }
     stream << string("suffix ipopt_zL_in, IN; \n");
-    stream << string("let {i in 1..")+to_string(n_joints)+string("} theta[i].ipopt_zL_in := zL_in[i]; \n");
+    if(final){
+        stream << string("let {i in 1..")+to_string(n_joints)+string("} theta[i].ipopt_zL_in := zL_in[i]; \n");
+    }else{
+        stream << string("let {i in 1..")+to_string(n_joints)+string("} theta_b[i].ipopt_zL_in := zL_in[i]; \n");
+    }
 
     stream << string("# Upper Bounds Multipliers \n");
     stream << string("param zU_in {i in 1..")+to_string(n_joints)+string("} ; \n");
     for (std::size_t i=0; i < n_joints; ++i){
-        string zU_str =  boost::str(boost::format("%.2f") % (maxArmLimitsMultipliers.at(i)));
+        string zU_str =  boost::str(boost::format("%.8f") % (maxArmLimitsMultipliers.at(i)));
         boost::replace_all(zU_str,",",".");
         stream << string("let zU_in[")+to_string(i+1)+string("] := ")+zU_str+string(";\n");
     }
     stream << string("suffix ipopt_zU_in, IN; \n");
-    stream << string("let {i in 1..")+to_string(n_joints)+string("} theta[i].ipopt_zU_in := zU_in[i]; \n");
+    if(final){
+        stream << string("let {i in 1..")+to_string(n_joints)+string("} theta[i].ipopt_zU_in := zU_in[i]; \n");
+    }else{
+        stream << string("let {i in 1..")+to_string(n_joints)+string("} theta_b[i].ipopt_zU_in := zU_in[i]; \n");
+    }
 
 }
 
@@ -543,10 +551,10 @@ void HUMPlanner::writeConstraintsMultipliersMod(std::ofstream& stream)
 {
     stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
     stream << string("param n_constr; \n");
-    stream << string("# param dual_in {i in 1..n_constr}; \n");
+    stream << string("param dual_in {i in 1..n_constr}; \n");
 }
 
-void HUMPlanner::writeFinalConstraintsMultipliers(std::ofstream& stream,bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,std::vector<double> &duals)
+bool HUMPlanner::writeFinalConstraintsMultipliers(std::ofstream& stream,bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,std::vector<double> &duals)
 {
     stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
     int n_constr = 2; // target position and target orientation
@@ -558,58 +566,26 @@ void HUMPlanner::writeFinalConstraintsMultipliers(std::ofstream& stream,bool col
     }
 
     if(coll && coll_body){n_constr += 3;} // 3 constraints with the body
-    stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
-    stream << string("param dual_in := \n");
 
-    string dual_str;
-    // target position
-    dual_str =  boost::str(boost::format("%.2f") % (duals.at(0))); boost::replace_all(dual_str,",",".");
-    stream << to_string(1)+string(" ")+dual_str+string("\n");
-    // target orientation
-    dual_str =  boost::str(boost::format("%.2f") % (duals.at(1))); boost::replace_all(dual_str,",",".");
-    stream << to_string(2)+string(" ")+dual_str;
-    if(n_constr==2){
-        // only target position and orientation
-        stream << string(";\n");
-    }else if (n_constr > 5){
-        // we have the full number of constraints
-        stream << string("\n");
-        for (std::size_t i=3; i < n_constr; ++i){
-            dual_str =  boost::str(boost::format("%.2f") % (duals.at(i))); boost::replace_all(dual_str,",",".");
-            if(i==n_constr-1){
+    if(n_constr==duals.size()){
+        stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
+        stream << string("param dual_in := \n");
+        string dual_str;
+        for (std::size_t i=0; i < n_constr; ++i){
+            dual_str =  boost::str(boost::format("%.8f") % (duals.at(i))); boost::replace_all(dual_str,",",".");
+            if(i==(n_constr-1)){
                 stream << to_string(i+1)+string(" ")+dual_str+string("; \n");
             }else{
                 stream << to_string(i+1)+string(" ")+dual_str+string("\n");
             }
         }
-    }else{
-        // plus only constraints with the body
-        stream << string("\n");
-        dual_str =  boost::str(boost::format("%.2f") % (duals.at(duals.size()-3))); boost::replace_all(dual_str,",",".");
-        stream << to_string(3)+string(" ")+dual_str+string("\n");
-        dual_str =  boost::str(boost::format("%.2f") % (duals.at(duals.size()-2))); boost::replace_all(dual_str,",",".");
-        stream << to_string(4)+string(" ")+dual_str+string("\n");
-        dual_str =  boost::str(boost::format("%.2f") % (duals.at(duals.size()-1))); boost::replace_all(dual_str,",",".");
-        stream << to_string(5)+string(" ")+dual_str+string(";\n");
-    }
+        return true;
+    }else{ return false;}
 
-    for (std::size_t i=0; i < n_constr; ++i){
-
-        dual_str =  boost::str(boost::format("%.2f") % (duals.at(i))); boost::replace_all(dual_str,",",".");
-
-        if(i > 1){
-
-        }
-        if (i == n_constr-1){
-            stream << to_string(i+1)+string(" ")+dual_str+string(";\n");
-        }else{
-            stream << to_string(i+1)+string(" ")+dual_str+string("\n");
-        }
-    }
 
 }
 
-void HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream, int n_steps, int n_joints, int n_s, int n_obsts,int mov_type,int pre_post,int n_obj_tar,bool coll_tar,bool coll_obsts,std::vector<double> &duals)
+bool HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream, int n_steps, int n_joints, int n_s, int n_obsts,int mov_type,int pre_post,bool coll_tar,bool coll_obsts,std::vector<double> &duals)
 {
     stream << string("# CONSTRAINTS LAGRANGE MULTIPLIERS \n");
     int n_constr = (n_steps+1)*n_joints; // joint trajectory limits constraints
@@ -626,18 +602,41 @@ void HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream, int n_
     if(mov_type==0 && coll_tar)
     { // target avoidance during pick movements
         int diff_steps = (int) (n_steps*BLANK_PERCENTAGE_TAR);
-        n_constr += 12 *(n_steps-diff_steps+1); // target avoidance constraints
+        n_constr += 12 *(n_steps-diff_steps); // target avoidance constraints
     }
     if(coll_obsts)
     {// obstacle avoidance
+        switch(mov_type)
+        {
+        case 0:// pick
+            n_constr += 15*n_obsts*(n_steps+1);
+            break;
+        case 1: // place
+            n_constr += (15+n_s)*n_obsts*(n_steps+1);
+            break;
+        case 2: //move
+            int diff_steps = std::max(1,(int)(n_steps*BLANK_PERCENTAGE_OBS));
+            n_constr += 15*n_obsts*(n_steps+1-diff_steps+1);
+            break;
+        }
 
     }
-    n_constr += 3; //  constraints with the body
-    stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
-    stream << string("param dual_in := \n");
+    n_constr += 3*(n_steps+1); //  constraints with the body
 
-
-
+    if(n_constr==duals.size()){
+        stream << string("param n_constr := ")+to_string(n_constr)+string("; \n");
+        stream << string("param dual_in := \n");
+        string dual_str;
+        for (std::size_t i=0; i < n_constr; ++i){
+            dual_str =  boost::str(boost::format("%.8f") % (duals.at(i))); boost::replace_all(dual_str,",",".");
+            if(i==(n_constr-1)){
+                stream << to_string(i+1)+string(" ")+dual_str+string("; \n");
+            }else{
+                stream << to_string(i+1)+string(" ")+dual_str+string("\n");
+            }
+        }
+        return true;
+    }else{ return false;}
 
 }
 
@@ -6198,15 +6197,18 @@ void HUMPlanner::writeObjective(ofstream &stream, bool final)
 
 }
 
-void HUMPlanner::writeBodyConstraints(ofstream &stream, bool warm_start, bool final)
+void HUMPlanner::writeBodyConstraints(ofstream &stream, bool warm_start, int &n_constr_tot, int steps,bool final)
 {
     stream << string("# Constraints with the body: the body is modeled as a cylinder \n");
     if (final){
         //stream << string("subject to BodyArm_constr{j in 1..15}: (Points_Arm[j,1]/body[1])^2 + (Points_Arm[j,2]/body[2])^2 >= 1; \n");
         if(warm_start){
-            stream << string("subject to BodyArm_Elbow := dual_in[n_constr-2] : (Elbow[1]/(body[1]+Elbow[4]))^2 + (Elbow[2]/(body[2]+Elbow[4]))^2 >= 1; \n");
-            stream << string("subject to BodyArm_Wrist := dual_in[n_constr-1] : (Wrist[1]/(body[1]+Wrist[4]))^2 + (Wrist[2]/(body[2]+Wrist[4]))^2 >= 1; \n");
-            stream << string("subject to BodyArm_Hand  := dual_in[n_constr] :  (Hand[1]/(body[1]+Hand[4]))^2  + (Hand[2]/(body[2]+Hand[4]))^2  >= 1; \n\n");
+            stream << string("subject to BodyArm_Elbow := dual_in[")+to_string(n_constr_tot+1)+string("] : (Elbow[1]/(body[1]+Elbow[4]))^2 + (Elbow[2]/(body[2]+Elbow[4]))^2 >= 1; \n");
+            n_constr_tot++;
+            stream << string("subject to BodyArm_Wrist := dual_in[")+to_string(n_constr_tot+1)+string("] : (Wrist[1]/(body[1]+Wrist[4]))^2 + (Wrist[2]/(body[2]+Wrist[4]))^2 >= 1; \n");
+            n_constr_tot++;
+            stream << string("subject to BodyArm_Hand  := dual_in[")+to_string(n_constr_tot+1)+string("] :  (Hand[1]/(body[1]+Hand[4]))^2  + (Hand[2]/(body[2]+Hand[4]))^2  >= 1; \n\n");
+            n_constr_tot++;
         }else{
             stream << string("subject to BodyArm_Elbow: (Elbow[1]/(body[1]+Elbow[4]))^2 + (Elbow[2]/(body[2]+Elbow[4]))^2 >= 1; \n");
             stream << string("subject to BodyArm_Wrist: (Wrist[1]/(body[1]+Wrist[4]))^2 + (Wrist[2]/(body[2]+Wrist[4]))^2 >= 1; \n");
@@ -6214,10 +6216,18 @@ void HUMPlanner::writeBodyConstraints(ofstream &stream, bool warm_start, bool fi
         }
     }else{
         //stream << string("subject to BodyArm_constr{j in 1..15,l in Iterations}: (Points_Arm[j,1,l]/body[1])^2 + (Points_Arm[j,2,l]/body[2])^2 >= 1; \n");
-
-        stream << string("subject to BodyArm_Elbow{l in Iterations}: (Elbow[1,l]/(body[1]+Elbow[4,l]))^2 + (Elbow[2,l]/(body[2]+Elbow[4,l]))^2 >= 1; \n");
-        stream << string("subject to BodyArm_Wrist{l in Iterations}: (Wrist[1,l]/(body[1]+Wrist[4,l]))^2 + (Wrist[2,l]/(body[2]+Wrist[4,l]))^2 >= 1; \n");
-        stream << string("subject to BodyArm_Hand{l in Iterations}:  (Hand[1,l]/(body[1]+Hand[4,l]))^2  + (Hand[2,l]/(body[2]+Hand[4,l]))^2  >= 1; \n\n");
+        if(warm_start){
+            stream << string("subject to BodyArm_Elbow{l in Iterations} := dual_in[l+")+to_string(n_constr_tot)+string("] : (Elbow[1,l]/(body[1]+Elbow[4,l]))^2 + (Elbow[2,l]/(body[2]+Elbow[4,l]))^2 >= 1; \n");
+            n_constr_tot += (steps+1);
+            stream << string("subject to BodyArm_Wrist{l in Iterations} := dual_in[l+")+to_string(n_constr_tot)+string("]: (Wrist[1,l]/(body[1]+Wrist[4,l]))^2 + (Wrist[2,l]/(body[2]+Wrist[4,l]))^2 >= 1; \n");
+            n_constr_tot += (steps+1);
+            stream << string("subject to BodyArm_Hand{l in Iterations} := dual_in[l+")+to_string(n_constr_tot)+string("]:  (Hand[1,l]/(body[1]+Hand[4,l]))^2  + (Hand[2,l]/(body[2]+Hand[4,l]))^2  >= 1; \n\n");
+            n_constr_tot += (steps+1);
+        }else{
+            stream << string("subject to BodyArm_Elbow{l in Iterations}: (Elbow[1,l]/(body[1]+Elbow[4,l]))^2 + (Elbow[2,l]/(body[2]+Elbow[4,l]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Wrist{l in Iterations}: (Wrist[1,l]/(body[1]+Wrist[4,l]))^2 + (Wrist[2,l]/(body[2]+Wrist[4,l]))^2 >= 1; \n");
+            stream << string("subject to BodyArm_Hand{l in Iterations}:  (Hand[1,l]/(body[1]+Hand[4,l]))^2  + (Hand[2,l]/(body[2]+Hand[4,l]))^2  >= 1; \n\n");
+        }
     }
 }
 
@@ -6435,7 +6445,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     PostureDat << string("# INITIAL GUESS \n");
     PostureDat << string("var theta = \n");
     for (std::size_t i=0; i < initialGuess.size(); ++i){
-        string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
+        string guess =  boost::str(boost::format("%.8f") % (initialGuess.at(i)));
         boost::replace_all(guess,",",".");
         if (i == initialGuess.size()-1){
             PostureDat << to_string(i+1)+string(" ")+guess+string(";\n");
@@ -6585,7 +6595,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     if(warm_start){
         vector<double> zL = final_curr_warm_start_params.zL;
         vector<double> zU = final_curr_warm_start_params.zU;
-        this->writeArmLimitsMultipliers(PostureMod,zL,zU);
+        this->writeArmLimitsMultipliers(PostureMod,zL,zU,true);
     }
 
     // Rotation matrix of the obstacles
@@ -6607,7 +6617,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     vector<double> dual_vars;
     if (warm_start){
         dual_vars = final_curr_warm_start_params.dual_vars;
-        this->writeFinalConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars);
+        if(!this->writeFinalConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars)){return false;}
     }
 
 
@@ -6672,6 +6682,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     this->writeObjective(PostureMod,true);
 
     // constraints
+    int n_constr_tot=0;
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
     PostureMod << string("#  \n");
     PostureMod << string("#		      Constraints                  # \n");
@@ -6679,6 +6690,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     string tarpos = boost::str(boost::format("%.2f") % tolTarPos); boost::replace_all(tarpos,",",".");
     string taror = boost::str(boost::format("%.4f") % tolTarOr); boost::replace_all(taror,",",".");
     PostureMod << string("# Hand position \n");
+    n_constr_tot++;
     switch (mov_type){
     case 0: // pick
         if(pre_post == 0){
@@ -6744,6 +6756,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
 
 
     PostureMod << string("# Hand orientation\n");
+    n_constr_tot++;
     if(warm_start){
         PostureMod << string("subject to constr_hand_orient := dual_in[2] : (sum{i in 1..3} (x_H[i] - x_t[i])^2 + sum{i in 1..3} (z_H[i] - z_t[i])^2 )<= ")+taror+string("; #  x_H = x_t and z_H = x_t \n");
     }else{
@@ -6781,7 +6794,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         PostureMod << string("# \n");
         //PostureMod << string("subject to obst_Arm{j in 1..21, i in 1..n_Obstacles}:  \n");
         if(warm_start){
-            PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles} := dual_in[(j*n_Obstacles + i - n_Obstacles )+2] :  \n");
+            PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles} := dual_in[(j-1)*n_Obstacles + i +")+to_string(n_constr_tot)+string("] :  \n");
         }else{
             PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles}:  \n");
         }
@@ -6800,14 +6813,16 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("#  \n");
 
+        n_constr_tot += (15+n_s)*(obsts.size());
+
         if(mov_type==1 && pre_post==2){
             // place movements (retreat stage)
             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
             PostureMod << string("# \n");
             if(warm_start){
-                PostureMod << string("subject to obj_Arm_right{j in 1..")+n_str+string(", i in 1..n_ObjTar} := dual_in[(j*n_ObjTar + i - n_ObjTar)+2+")+to_string(15+n_s+obsts.size())+string("] :  \n");
+                PostureMod << string("subject to objTar_Arm{j in 1..")+n_str+string(", i in 1..n_ObjTar} := dual_in[(j-1)*n_ObjTar + i +")+to_string(n_constr_tot)+string("] :  \n");
             }else{
-                PostureMod << string("subject to obj_Arm_right{j in 1..")+n_str+string(", i in 1..n_ObjTar}:  \n");
+                PostureMod << string("subject to objTar_Arm{j in 1..")+n_str+string(", i in 1..n_ObjTar}:  \n");
             }
             PostureMod << string("(((Rot_obj[1,1]*Points_Arm[j,1]+Rot_obj[2,1]*Points_Arm[j,2]+Rot_obj[3,1]*Points_Arm[j,3]\n");
             PostureMod << string("-ObjTar[i,1]*Rot_obj[1,1]-ObjTar[i,2]*Rot_obj[2,1]-ObjTar[i,3]*Rot_obj[3,1])\n");
@@ -6823,6 +6838,8 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
             PostureMod << string(">= 1;\n");
             PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
             PostureMod << string("#  \n");
+
+            n_constr_tot += (15+n_s)*1; // 1 object is the target
         }
 
 
@@ -6865,7 +6882,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
 
     // constraints with the body
     if(coll && coll_body){
-        this->writeBodyConstraints(PostureMod,warm_start,true);
+        this->writeBodyConstraints(PostureMod,warm_start,n_constr_tot,1,true);
     }
 
     PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
@@ -6990,7 +7007,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      PostureDat << string("param Nsteps :=")+to_string(steps)+string(";\n");
 
      // total time
-     string tottime_str =  boost::str(boost::format("%.2f") % (totalTime));
+     string tottime_str =  boost::str(boost::format("%.4f") % (totalTime));
      boost::replace_all(tottime_str,",",".");
      PostureDat << string("param TotalTime :=")+tottime_str+string(";\n");
      // Body dimension
@@ -7008,7 +7025,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      PostureDat << string("# FINAL POSE \n");
      PostureDat << string("param thet_final := \n");
      for (std::size_t i=0; i < finalAuxPosture.size(); ++i){
-         string finalAuxstr =  boost::str(boost::format("%.2f") % (finalAuxPosture.at(i)));
+         string finalAuxstr =  boost::str(boost::format("%.4f") % (finalAuxPosture.at(i)));
          boost::replace_all(finalAuxstr,",",".");
          if (i == finalAuxPosture.size()-1){
              PostureDat << to_string(i+1)+string(" ")+finalAuxstr+string(";\n");
@@ -7024,7 +7041,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      PostureDat << string("# INITIAL GUESS \n");
      PostureDat << string("var theta_b = \n");
      for (std::size_t i=0; i < initialGuess.size(); ++i){
-         string guess =  boost::str(boost::format("%.2f") % (initialGuess.at(i)));
+         string guess =  boost::str(boost::format("%.4f") % (initialGuess.at(i)));
          boost::replace_all(guess,",",".");
          if (i == initialGuess.size()-1){
              PostureDat << to_string(i+1)+string(" ")+guess+string(";\n");
@@ -7039,7 +7056,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("# INITIAL VELOCITY \n");
          PostureDat << string("param vel_0 := \n");
          for (std::size_t i=0; i < b.vel_0.size(); ++i){
-             string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
+             string vel_0 =  boost::str(boost::format("%.4f") % (b.vel_0.at(i)));
              boost::replace_all(vel_0,",",".");
              if (i == b.vel_0.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+vel_0+string(";\n");
@@ -7052,7 +7069,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("param acc_0 := \n");
 
          for (std::size_t i=0; i < b.acc_0.size(); ++i){
-             string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
+             string acc_0 =  boost::str(boost::format("%.4f") % (b.acc_0.at(i)));
              boost::replace_all(acc_0,",",".");
              if (i == b.acc_0.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+acc_0+string(";\n");
@@ -7064,7 +7081,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("# FINAL VELOCITY \n");
          PostureDat << string("param vel_f := \n");
          for (std::size_t i=0; i < b.vel_f.size(); ++i){
-             string vel_f =  boost::str(boost::format("%.2f") % (b.vel_f.at(i)));
+             string vel_f =  boost::str(boost::format("%.4f") % (b.vel_f.at(i)));
              boost::replace_all(vel_f,",",".");
              if (i == b.vel_f.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+vel_f+string(";\n");
@@ -7076,7 +7093,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("# FINAL ACCELERATION \n");
          PostureDat << string("param acc_f := \n");
          for (std::size_t i=0; i < b.acc_f.size(); ++i){
-             string acc_f =  boost::str(boost::format("%.2f") % (b.acc_f.at(i)));
+             string acc_f =  boost::str(boost::format("%.4f") % (b.acc_f.at(i)));
              boost::replace_all(acc_f,",",".");
 
              if (i == b.acc_f.size()-1){
@@ -7090,7 +7107,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("# INITIAL VELOCITY \n");
          PostureDat << string("param vel_0 := \n");
          for (std::size_t i=0; i < b.vel_0.size(); ++i){
-             string vel_0 =  boost::str(boost::format("%.2f") % (b.vel_0.at(i)));
+             string vel_0 =  boost::str(boost::format("%.4f") % (b.vel_0.at(i)));
              boost::replace_all(vel_0,",",".");
              if (i == b.vel_0.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+vel_0+string(";\n");
@@ -7103,7 +7120,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("param acc_0 := \n");
 
          for (std::size_t i=0; i < b.acc_0.size(); ++i){
-             string acc_0 =  boost::str(boost::format("%.2f") % (b.acc_0.at(i)));
+             string acc_0 =  boost::str(boost::format("%.4f") % (b.acc_0.at(i)));
              boost::replace_all(acc_0,",",".");
              if (i == b.acc_0.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+acc_0+string(";\n");
@@ -7115,7 +7132,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("# FINAL VELOCITY \n");
          PostureDat << string("param vel_f := \n");
          for (std::size_t i=0; i < b.vel_f.size(); ++i){
-             string vel_f =  boost::str(boost::format("%.2f") % (vel_approach.at(i)));
+             string vel_f =  boost::str(boost::format("%.4f") % (vel_approach.at(i)));
              boost::replace_all(vel_f,",",".");
              if (i == b.vel_f.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+vel_f+string(";\n");
@@ -7127,7 +7144,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
          PostureDat << string("# FINAL ACCELERATION \n");
          PostureDat << string("param acc_f := \n");
          for (std::size_t i=0; i < b.acc_f.size(); ++i){
-             string acc_f =  boost::str(boost::format("%.2f") % (acc_approach.at(i)));
+             string acc_f =  boost::str(boost::format("%.4f") % (acc_approach.at(i)));
              boost::replace_all(acc_f,",",".");
              if (i == b.acc_f.size()-1){
                  PostureDat << to_string(i+1)+string(" ")+acc_f+string(";\n");
@@ -7140,10 +7157,10 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // tb and phi
      PostureDat << string("# TB and PHI \n");
      PostureDat << string("param TB := ");
-     string tb_str =  boost::str(boost::format("%.2f") % (TB));
+     string tb_str =  boost::str(boost::format("%.4f") % (TB));
      PostureDat << tb_str+string(";\n");
      PostureDat << string("param PHI := ");
-     string phi_str =  boost::str(boost::format("%.2f") % (PHI));
+     string phi_str =  boost::str(boost::format("%.4f") % (PHI));
      PostureDat << phi_str+string(";\n");
 
      // Parameters of the Fingers
@@ -7269,7 +7286,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      if(warm_start){
          vector<double> zL = bounce_warm_start_params.zL;
          vector<double> zU = bounce_warm_start_params.zU;
-         this->writeArmLimitsMultipliers(PostureMod,zL,zU);
+         this->writeArmLimitsMultipliers(PostureMod,zL,zU,false);
      }
 
      PostureMod << string("# Direct Movement \n");
@@ -7315,7 +7332,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      vector<double> dual_vars;
      if (warm_start){
          dual_vars = bounce_warm_start_params.dual_vars;
-         this->writeBounceConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars);
+         if(!this->writeBounceConstraintsMultipliers(PostureDat,steps,initialGuess.size(),n_s,objs.size(),mov_type,pre_post,target_avoidance,obstacle_avoidance,dual_vars)){return false;}
      }
 
      switch(hand_code){
@@ -7378,28 +7395,36 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // objective function
      this->writeObjective(PostureMod,false);
      // constraints
+     int n_constr_tot = 0;
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
      PostureMod << string("#  \n");
      PostureMod << string("#		     Constraints                  # \n");
      PostureMod << string("#  \n");
-     PostureMod << string("# joint limits for all the trajectory \n");
-     PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
+     //PostureMod << string("# joint limits for all the trajectory \n");
+     //PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
 
      // plane paramters
      string a_str; string b_str; string c_str; string d_str;
      // hand constraints for approaching direction setting
-     string n_steps_init_str;
+     int n_steps_init; string n_steps_init_str;
      if(N_STEP_MIN>2){
-         n_steps_init_str = boost::str(boost::format("%d") % (N_STEP_MIN-2));
+         n_steps_init = N_STEP_MIN-2;
+         n_steps_init_str = boost::str(boost::format("%d") % n_steps_init);
      }else{
-         n_steps_init_str = boost::str(boost::format("%d") % 1);
+         n_steps_init = 1;
+         n_steps_init_str = boost::str(boost::format("%d") % n_steps_init);
      }
      switch (mov_type) {
      case 0: // pick
          // hand constraints for approaching direction settings
          if(approach && pre_post==1){
              PostureMod << string("# Hand approach orientation\n");
-             PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - x_t[i])^2)<= 0.01; #  x_H = x_t \n\n");
+             if(warm_start){
+                PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)} := dual_in[k+1-(Nsteps-")+n_steps_init_str+string(")+")+to_string(n_constr_tot)+string("] : ( sum{i in 1..3} (x_H[i,k] - x_t[i])^2)<= 0.01; #  x_H = x_t \n\n");
+             }else{
+                PostureMod << string("subject to constr_hand_or {k in (Nsteps-")+n_steps_init_str+string(")..(Nsteps+1)}: ( sum{i in 1..3} (x_H[i,k] - x_t[i])^2)<= 0.01; #  x_H = x_t \n\n");
+             }
+             n_constr_tot += (steps+1)-(steps-n_steps_init) + 1;
          }
          break;
      case 1: // place
@@ -7627,7 +7652,12 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         // in pick shorts movements (movements with N_STEP_MIN steps) collisions with the target are not considered
         int diff_steps = (int) (steps*BLANK_PERCENTAGE_TAR);
         string n_steps_end_str = boost::str(boost::format("%d") % (diff_steps));
-        PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
+        string n_steps_size_str = boost::str(boost::format("%d") % (steps+1-diff_steps));
+        if(warm_start){
+            PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("} := dual_in[(j-1-3)*")+n_steps_size_str+string("+l+")+to_string(n_constr_tot)+string("] :   \n");
+        }else{
+            PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps-")+n_steps_end_str+("}:   \n");
+        }
         /*
         if(pre_post!=0){
             PostureMod << string("subject to target_Arm{j in 4..15, l in 1..Nsteps+1}:   \n");
@@ -7687,6 +7717,8 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
         PostureMod << string("# \n");
         */
+
+        n_constr_tot += 12 *(steps-diff_steps);
    }
 
      if(obstacle_avoidance){
@@ -7846,14 +7878,30 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
         PostureMod << string("# \n");
         if(place){
             // the object to place has to be considered
-             PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
+            if(warm_start){
+                PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles, l in 1..Nsteps+1} := dual_in[((j-1)*n_Obstacles*(Nsteps+1))+((i-1)*(Nsteps+1))+l+")+to_string(n_constr_tot)+string("] :\n"); // approach stage is necessary
+            }else{
+                PostureMod << string("subject to obst_Arm{j in 1..")+n_str+string(", i in 1..n_Obstacles, l in 1..Nsteps+1}:\n"); // approach stage is necessary
+            }
+             n_constr_tot += (15+n_s)*objs.size()*(steps+1);
         }else if(move){
             // for the first number of diff_steps, no obstacle is considered because the movement is very short and the planner may get stuck
             int diff_steps = std::max(1,(int)(steps*BLANK_PERCENTAGE_OBS));
             string n_steps_init_str = boost::str(boost::format("%d") % (diff_steps));
-            PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1}:\n");
+            string n_steps_size_str = boost::str(boost::format("%d") % (steps+1-diff_steps+1));
+            if(warm_start){
+                PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1} := dual_in[((j-1)*n_Obstacles*")+n_steps_size_str+string(")+((i-1)*")+n_steps_size_str+string(")+l-")+to_string(diff_steps-1)+string("+")+to_string(n_constr_tot)+string("] :\n");
+            }else{
+                PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in ")+n_steps_init_str+("..Nsteps+1}:\n");
+            }
+            n_constr_tot += 15*objs.size()*(steps+1-diff_steps+1);
         }else{
-             PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n"); // pick movements
+            if(warm_start){
+                PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1} := dual_in[((j-1)*n_Obstacles*(Nsteps+1))+((i-1)*(Nsteps+1))+l+")+to_string(n_constr_tot)+string("] :\n"); // pick movements
+            }else{
+                PostureMod << string("subject to obst_Arm{j in 1..15, i in 1..(n_Obstacles), l in 1..Nsteps+1}:\n"); // pick movements
+            }
+             n_constr_tot += 15*objs.size()*(steps+1);
         }
 
         PostureMod << string("(((Rot[1,1,i]*Points_Arm[j,1,l]+Rot[2,1,i]*Points_Arm[j,2,l]+Rot[3,1,i]*Points_Arm[j,3,l]\n");
@@ -7910,7 +7958,17 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
      }
      // constraints with the body
-     this->writeBodyConstraints(PostureMod,warm_start,false);
+     this->writeBodyConstraints(PostureMod,warm_start,n_constr_tot,steps,false);
+
+     PostureMod << string("  \n");
+     PostureMod << string("# joint limits for all the trajectory \n");
+     if(warm_start){
+        PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints} := dual_in[((i-1)*")+to_string(initialGuess.size())+string(")+j+")+to_string(n_constr_tot)+string("] : llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
+     }else{
+        PostureMod << string("subject to co_JointLimits {i in Iterations, j in nJoints}: llim[j] <= theta[i,j]  <= ulim[j]; \n\n");
+     }
+     n_constr_tot = (steps+1)*initialGuess.size();
+
 
      PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n\n\n");
 
@@ -9529,25 +9587,33 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     std::vector<double> approach_vec;
     std::vector<double> retreat_vec;
 
-    final_curr_warm_start_params = final_plan_warm_start_params;
+
+    switch(pre_post){
+    case 0: // plan
+        final_curr_warm_start_params = final_plan_warm_start_params;
+        break;
+    case 1: // approach
+        final_curr_warm_start_params = final_approach_warm_start_params;
+        break;
+    case 2: //retreat
+        final_curr_warm_start_params = final_retreat_warm_start_params;
+        break;
+    }
+
     switch(mov_type){
     case 0: // pick
         if(approach){
-            final_curr_warm_start_params = final_approach_warm_start_params;
             approach_vec = params.mov_specs.pre_grasp_approach;
         }
         if(retreat){
-            final_curr_warm_start_params = final_retreat_warm_start_params;
             retreat_vec = params.mov_specs.post_grasp_retreat;
         }
         break;
     case 1: // place
         if(approach){
-            final_curr_warm_start_params = final_approach_warm_start_params;
             approach_vec = params.mov_specs.pre_place_approach;
         }
         if(retreat){
-            final_curr_warm_start_params = final_retreat_warm_start_params;
             retreat_vec = params.mov_specs.post_place_retreat;
         }
         break;

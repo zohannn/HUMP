@@ -866,8 +866,9 @@ private:
      * @param stream
      * @param minArmLimitsMultipliers
      * @param maxArmLimitsMultipliers
+     * @param final
      */
-    void writeArmLimitsMultipliers(std::ofstream& stream, std::vector<double>& minArmLimitsMultipliers, std::vector<double>& maxArmLimitsMultipliers);
+    void writeArmLimitsMultipliers(std::ofstream& stream, std::vector<double>& minArmLimitsMultipliers, std::vector<double>& maxArmLimitsMultipliers, bool final);
 
     /**
      * @brief writeFinalConstraintsMultipliers
@@ -881,23 +882,25 @@ private:
      * @param pre_post
      * @param n_tar
      * @param duals
+     * @return
      */
-    void writeFinalConstraintsMultipliers(std::ofstream& stream, bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts, int mov_type, int pre_post, int n_tar, std::vector<double> &duals);
+    bool writeFinalConstraintsMultipliers(std::ofstream& stream, bool coll, bool coll_body, bool coll_obsts, int n_s, int n_obsts, int mov_type, int pre_post, int n_tar, std::vector<double> &duals);
 
     /**
      * @brief writeBounceConstraintsMultipliers
      * @param stream
-     * @param coll
-     * @param coll_body
-     * @param coll_obsts
+     * @param n_steps
+     * @param n_joints
      * @param n_s
      * @param n_obsts
      * @param mov_type
      * @param pre_post
-     * @param n_tar
+     * @param coll_tar
+     * @param coll_obsts
      * @param duals
+     * @return
      */
-    void writeBounceConstraintsMultipliers(std::ofstream& stream, int n_s, int n_obsts, int mov_type, int pre_post, int n_tar, std::vector<double> &duals);
+    bool writeBounceConstraintsMultipliers(std::ofstream& stream, int n_steps, int n_joints, int n_s, int n_obsts,int mov_type,int pre_post,bool coll_tar,bool coll_obsts,std::vector<double> &duals);
 
     /**
      * @brief writeConstraintsMultipliersMod
@@ -1279,9 +1282,11 @@ private:
      * @brief writeBodyConstraints
      * @param stream
      * @param warm_start
+     * @param n_constr_tot
+     * @param steps
      * @param final
      */
-    void writeBodyConstraints(ofstream &stream, bool warm_start, bool final);
+    void writeBodyConstraints(ofstream &stream, bool warm_start, int &n_constr_tot, int steps, bool final);
 
     /**
      * @brief writeDualBodyConstraints
