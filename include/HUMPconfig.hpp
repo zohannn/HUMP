@@ -91,7 +91,7 @@ const double BLANK_PERCENTAGE_DUAL_TAR = 0.10; /**< percentage of steps to elimi
 const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a move movement [0,1] */
 
 const int N_STEP_MIN = 5; /**< minimum number of steps */ //5
-const int N_STEP_MAX = 50; /**< maximum number of steps */ //50
+const int N_STEP_MAX = 80; /**< maximum number of steps */ //50
 
 const double WARM_START_BOUND_PUSH = 1e-6; /**< k1 in section 3.6 of the paper about IPOPT */
 const double WARM_START_MULT_BOUND_PUSH = 1e-6; /**< bound push of the multipliers */
