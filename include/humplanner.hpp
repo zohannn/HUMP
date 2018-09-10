@@ -76,7 +76,7 @@ public:
     void addObstacleLeft(objectPtr obs);
 
     /**
-     * @brief setObstacleStagiare sviluppatore, informatico presso la sede principale
+     * @brief setObstacle
      * @param obs
      * @param pos
      * @return
