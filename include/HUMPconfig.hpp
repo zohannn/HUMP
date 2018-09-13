@@ -92,6 +92,8 @@ const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a mo
 
 //const int N_STEP_MIN = 5; /**< minimum number of steps */
 //const int N_STEP_MAX = 50; /**< maximum number of steps */
+
+// learning taks: reaching with one obstacle
 const int N_STEP_MIN = 14; /**< minimum number of steps */
 const int N_STEP_MAX = 14; /**< maximum number of steps */
 
