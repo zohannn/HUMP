@@ -6504,7 +6504,9 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
             }
             break;
         }
-
+        break;
+    case 2: // move
+        final_curr_warm_start_params = final_plan_warm_start_params;
         break;
     }
     if(coll){
