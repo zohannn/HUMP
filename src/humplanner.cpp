@@ -6444,6 +6444,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     // initial guess
     PostureDat << string("# INITIAL GUESS \n");
     PostureDat << string("var theta = \n");
+
     for (std::size_t i=0; i < initialGuess.size(); ++i){
         string guess =  boost::str(boost::format("%.8f") % (initialGuess.at(i)));
         boost::replace_all(guess,",",".");
