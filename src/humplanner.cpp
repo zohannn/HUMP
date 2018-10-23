@@ -9522,7 +9522,8 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
     std::vector<Number> lambda_sol;
     Number obj_sol;
 
-    if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) || (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT)){
+    //if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) || (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT)){
+    if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS)){
         ampl_tnlp->get_solutions(x_sol,
                                  z_L_sol,
                                  z_U_sol,
