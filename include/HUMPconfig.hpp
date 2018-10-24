@@ -61,8 +61,8 @@ const double FINAL_DUAL_ACC_TOL = 1e-1; /**< acceptable convergence tolerance */
 const double FINAL_DUAL_CONSTR_VIOL_TOL = 0.0001; /**< constraints violation tolerance */
 
 // Bounce posture selection problem ipopt options
-const double BOUNCE_TOL = 1e-6; /**< desired convergence tolerance*/
-const double BOUNCE_ACC_TOL = 1e-3; /**< acceptable convergence tolerance */
+const double BOUNCE_TOL = 1e-3; /**< desired convergence tolerance*/
+const double BOUNCE_ACC_TOL = 1e-2; /**< acceptable convergence tolerance */
 const double BOUNCE_CONSTR_VIOL_TOL = 0.0001; /**< constraints violation tolerance */
 //const double BOUNCE_CONSTR_VIOL_TOL = 1e-6; /**< constraints violation tolerance */
 
@@ -97,9 +97,13 @@ const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a mo
 const int N_STEP_MIN = 14; /**< minimum number of steps */
 const int N_STEP_MAX = 14; /**< maximum number of steps */
 
-const double WARM_START_BOUND_PUSH = 1e-6; /**< k1 in section 3.6 of the paper about IPOPT */
-const double WARM_START_MULT_BOUND_PUSH = 1e-6; /**< bound push of the multipliers */
-const double MU_INIT = 1e-6; /**< initial value of the barrier parameter */
+const double WARM_START_BOUND_PUSH = 1e-9; /**< This is kappa_1 in Section 3.6 of implementation paper. */
+const double WARM_START_BOUND_FRAC = 1e-9; /** < This is kappa_2 in Section 3.6 of implementation paper.*/
+const double WARM_START_SLACK_BOUND_FRAC = 1e-9; /** < Desired minimum relative distance from the initial slack to bound. */
+const double WARM_START_SLACK_BOUND_PUSH = 1e-9; /** < Desired minimum relative distance from the initial slack to bound. */
+const double WARM_START_MULT_BOUND_PUSH = 1e-9; /**< bound push of the multipliers */
+const double MU_INIT = 1e-1; /**< initial value of the barrier parameter */
+const double MU_WARM_INIT = 1e-10; /**< initial value of the barrier parameter for a warm start*/
 
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching and retreating */
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */

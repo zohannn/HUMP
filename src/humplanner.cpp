@@ -9374,13 +9374,8 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
     app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
+    app->Options()->SetNumericValue("mu_init", MU_INIT);
     //app->Options()->SetIntegerValue("max_iter",10000);
-    //double bound_frac = 0.01;//k2
-    //double bound_push = 0.01;//k1
-    //double bound_relax_factor = 0.0;
-    //app->Options()->SetNumericValue("bound_frac",bound_frac);
-    //app->Options()->SetNumericValue("bound_push",bound_push);
-    //app->Options()->SetNumericValue("bound_relax_factor",bound_relax_factor);
 
     // Initialize the IpoptApplication and process the options
     ApplicationReturnStatus status;
@@ -9419,7 +9414,8 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
     std::vector<Number> lambda_sol;
     Number obj_sol;
 
-    if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) || (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT)){
+    //if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) || (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT)){
+    if ((ampl_tnlp->get_status() == SolverReturn::SUCCESS)){
         ampl_tnlp->get_solutions(x_sol,
                                  z_L_sol,
                                  z_U_sol,
@@ -9470,20 +9466,20 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
 
+    app->Options()->SetNumericValue("mu_init", MU_WARM_INIT);
+    app->Options()->SetStringValue("bound_mult_init_method", "mu-based");
+    app->Options()->SetStringValue("mu_strategy", "adaptive");
+    //app->Options()->SetStringValue("mu_oracle", "probing");
+    //app->Options()->SetStringValue("mu_oracle", "loqo");
+
     // warm start options
     app->Options()->SetStringValue("warm_start_init_point", "yes");
     app->Options()->SetNumericValue("warm_start_bound_push", WARM_START_BOUND_PUSH);
+    app->Options()->SetNumericValue("warm_start_bound_frac", WARM_START_BOUND_FRAC);
+    app->Options()->SetNumericValue("warm_start_slack_bound_frac", WARM_START_SLACK_BOUND_FRAC);
+    app->Options()->SetNumericValue("warm_start_slack_bound_push", WARM_START_SLACK_BOUND_PUSH);
     app->Options()->SetNumericValue("warm_start_mult_bound_push", WARM_START_MULT_BOUND_PUSH);
-    app->Options()->SetNumericValue("mu_init", MU_INIT);
 
-
-    //app->Options()->SetIntegerValue("max_iter",10000);
-    //double bound_frac = 0.01;//k2
-    //double bound_push = 0.01;//k1
-    //double bound_relax_factor = 0.0;
-    //app->Options()->SetNumericValue("bound_frac",bound_frac);
-    //app->Options()->SetNumericValue("bound_push",bound_push);
-    //app->Options()->SetNumericValue("bound_relax_factor",bound_relax_factor);
 
     // Initialize the IpoptApplication and process the options
     ApplicationReturnStatus status;
