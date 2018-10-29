@@ -97,13 +97,13 @@ const double BLANK_PERCENTAGE_DUAL_OBS = 0.15;/**< move at the beginning of a mo
 const int N_STEP_MIN = 14; /**< minimum number of steps */
 const int N_STEP_MAX = 14; /**< maximum number of steps */
 
-const double WARM_START_BOUND_PUSH = 1e-9; /**< This is kappa_1 in Section 3.6 of implementation paper. */
-const double WARM_START_BOUND_FRAC = 1e-9; /** < This is kappa_2 in Section 3.6 of implementation paper.*/
-const double WARM_START_SLACK_BOUND_FRAC = 1e-9; /** < Desired minimum relative distance from the initial slack to bound. */
-const double WARM_START_SLACK_BOUND_PUSH = 1e-9; /** < Desired minimum relative distance from the initial slack to bound. */
-const double WARM_START_MULT_BOUND_PUSH = 1e-9; /**< bound push of the multipliers */
+const double WARM_START_BOUND_PUSH = 1e-19; /**< This is kappa_1 in Section 3.6 of implementation paper. */
+const double WARM_START_BOUND_FRAC = 1e-19; /** < This is kappa_2 in Section 3.6 of implementation paper.*/
+const double WARM_START_SLACK_BOUND_FRAC = 1e-19; /** < Desired minimum relative distance from the initial slack to bound. */
+const double WARM_START_SLACK_BOUND_PUSH = 1e-19; /** < Desired minimum relative distance from the initial slack to bound. */
+const double WARM_START_MULT_BOUND_PUSH = 1e-19; /**< bound push of the multipliers */
 const double MU_INIT = 1e-1; /**< initial value of the barrier parameter */
-const double MU_WARM_INIT = 1e-10; /**< initial value of the barrier parameter for a warm start*/
+const double MU_WARM_INIT = 1e-6; /**< initial value of the barrier parameter for a warm start*/
 
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching and retreating */
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
