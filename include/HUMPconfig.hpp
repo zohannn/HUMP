@@ -103,7 +103,8 @@ const double WARM_START_SLACK_BOUND_FRAC = 1e-19; /**< Desired minimum relative 
 const double WARM_START_SLACK_BOUND_PUSH = 1e-19; /**< Desired minimum relative distance from the initial slack to bound. */
 const double WARM_START_MULT_BOUND_PUSH = 1e-19; /**< bound push of the multipliers */
 const double MU_INIT = 1e-1; /**< initial value of the barrier parameter */
-const double MU_WARM_INIT = 1e-6; /**< initial value of the barrier parameter for a warm start*/
+//const double MU_WARM_INIT = 1e-6; /**< initial value of the barrier parameter for a warm start (learning tasks 1,2 for reaching)*/
+const double MU_WARM_INIT = 1e-1; /**< initial value of the barrier parameter for a warm start (learning task 3 for picking). This values allows IPOPT to use more iterations if necessary. This is more convinient than the previous value because of the number of the problems we have to solve */
 
 const double W_RED_MIN = 1; /**< minimum value of angular velocity reduction when approaching and retreating */
 //const double W_RED_APP_MAX = 5; /**< maximum value of angular velocity reduction when approaching */
