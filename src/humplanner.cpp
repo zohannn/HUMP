@@ -9375,6 +9375,8 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
     app->Options()->SetNumericValue("mu_init", MU_INIT);
+    app->Options()->SetStringValue("bound_mult_init_method", "mu-based");
+    app->Options()->SetStringValue("mu_strategy", "monotone");
     //app->Options()->SetIntegerValue("max_iter",10000);
 
     // Initialize the IpoptApplication and process the options
@@ -9468,9 +9470,7 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
 
     app->Options()->SetNumericValue("mu_init", MU_WARM_INIT);
     app->Options()->SetStringValue("bound_mult_init_method", "mu-based");
-    app->Options()->SetStringValue("mu_strategy", "adaptive");
-    //app->Options()->SetStringValue("mu_oracle", "probing");
-    //app->Options()->SetStringValue("mu_oracle", "loqo");
+    app->Options()->SetStringValue("mu_strategy", "monotone");
 
     // warm start options
     app->Options()->SetStringValue("warm_start_init_point", "yes");
@@ -9674,8 +9674,8 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
                 (sqrt(pow(tar_pos_ret(0) - shPos.at(0),2)+
                       pow(tar_pos_ret(1) - shPos.at(1),2)+
                       pow(tar_pos_ret(2) - shPos.at(2),2))>= max_ext)){
-            return false;
-            //throw string("The movement to be planned goes out of the reachable workspace");
+            //return false;
+            throw string("The movement to be planned goes out of the reachable workspace");
         }
     }
 
