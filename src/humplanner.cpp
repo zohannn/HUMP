@@ -9375,7 +9375,6 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
     app->Options()->SetNumericValue("mu_init", MU_INIT);
-    app->Options()->SetStringValue("bound_mult_init_method", "mu-based");
     app->Options()->SetStringValue("mu_strategy", "monotone");
     //app->Options()->SetIntegerValue("max_iter",10000);
 
