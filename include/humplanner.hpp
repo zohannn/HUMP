@@ -58,6 +58,18 @@ public:
     string getName();
 
     /**
+     * @brief getPHI
+     * @return
+     */
+    double getPHI();
+
+    /**
+     * @brief getTB
+     * @return
+     */
+    double getTB();
+
+    /**
      * @brief addObstacle
      * @param obs
      */

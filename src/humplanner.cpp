@@ -77,6 +77,16 @@ string HUMPlanner::getName()
     return this->name;
 }
 
+double HUMPlanner::getPHI()
+{
+    return PHI;
+}
+
+double HUMPlanner::getTB()
+{
+    return TB;
+}
+
 void HUMPlanner::addObstacle(objectPtr obs)
 {
     this->obstacles.push_back(objectPtr(new Object(*obs.get())));
