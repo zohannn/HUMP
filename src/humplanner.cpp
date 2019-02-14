@@ -590,7 +590,9 @@ bool HUMPlanner::writeFinalConstraintsMultipliers(std::ofstream& stream,bool col
             }
         }
         return true;
-    }else{ return false;}
+    }else{
+        return false;
+    }
 
 
 }
@@ -646,7 +648,9 @@ bool HUMPlanner::writeBounceConstraintsMultipliers(std::ofstream& stream, int n_
             }
         }
         return true;
-    }else{ return false;}
+    }else{
+        return false;
+    }
 
 }
 
@@ -6630,7 +6634,9 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     vector<double> dual_vars;
     if (warm_start){
         dual_vars = final_curr_warm_start_params.dual_vars;
-        if(!this->writeFinalConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars)){return false;}
+        if(!this->writeFinalConstraintsMultipliers(PostureDat,coll,coll_body,obstacle_avoidance,n_s,obsts.size(),mov_type,pre_post,1,dual_vars)){
+            return false;
+        }
     }
 
 
@@ -7345,7 +7351,9 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      vector<double> dual_vars;
      if (warm_start){
          dual_vars = bounce_warm_start_params.dual_vars;
-         if(!this->writeBounceConstraintsMultipliers(PostureDat,steps,initialGuess.size(),n_s,objs.size(),mov_type,pre_post,target_avoidance,obstacle_avoidance,dual_vars)){return false;}
+         if(!this->writeBounceConstraintsMultipliers(PostureDat,steps,initialGuess.size(),n_s,objs.size(),mov_type,pre_post,target_avoidance,obstacle_avoidance,dual_vars)){
+             return false;
+         }
      }
 
      switch(hand_code){
@@ -9753,9 +9761,15 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
                     obj = obj_sol;
                     return true;
                 }else{return false;}
-            }catch(const std::exception &exc){throw string(exc.what());}
-        }else{throw string("Error in reading the files for optimization");}
-    }else{throw string("Error in writing the files for optimization");}
+            }catch(const std::exception &exc){
+                throw string(exc.what());
+            }
+        }else{
+            throw string("Error in reading the files for optimization");
+        }
+    }else{
+        throw string("Error in writing the files for optimization");
+    }
 
 }
 
@@ -9952,9 +9966,15 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
                     obj = obj_sol;
                     return true;
                 }else{return false;}
-            }catch(const std::exception &exc){throw string(exc.what());}
-        }else{throw string("Error in writing the files for optimization");}
-    }else{throw string("Error in writing the files for optimization");}
+            }catch(const std::exception &exc){
+                throw string(exc.what());
+            }
+        }else{
+            throw string("Error in reading the files for optimization");
+        }
+    }else{
+        throw string("Error in writing the files for optimization");
+    }
 }
 
 bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_post,hump_dual_params& params,std::vector<double> initPosture,std::vector<double> finalPosture,std::vector<double>& bouncePosture)
@@ -11650,7 +11670,14 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                        finalPosture_pre_grasp_ext.push_back(minLimits.at(i+7));
                     }
                 }
-                int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_grasp_ext);
+                // number of steps in the plan stage
+                int steps;
+                if(params.mov_specs.warm_start){
+                   // warm start is used, then the number of steps in the plan stage has to be the same of the solution provided
+                   steps = params.mov_specs.warm_n_steps;
+                }else{
+                   steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_grasp_ext);
+                }
 
                 if(straight_line){
                     bool init_coll = params.mov_specs.coll;
@@ -12007,7 +12034,15 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 for(size_t i=0;i<finalHand.size();++i){
                     finalPosture_pre_place_ext.push_back(finalHand.at(i));
                 }
-                int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_place_ext);
+
+                // number of steps in the plan stage
+                int steps;
+                if(params.mov_specs.warm_start){
+                   // warm start is used, then the number of steps in the plan stage has to be the same of the solution provided
+                   steps = params.mov_specs.warm_n_steps;
+                }else{
+                   steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_pre_place_ext);
+                }
 
                 if(straight_line){
                     bool init_coll = params.mov_specs.coll;
@@ -12355,7 +12390,14 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
             for(size_t i=0;i<finalHand.size();++i){
                 finalPosture_ext.push_back(finalHand.at(i));
             }
-            int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
+            // number of steps in the plan stage
+            int steps;
+            if(params.mov_specs.warm_start){
+               // warm start is used, then the number of steps in the plan stage has to be the same of the solution provided
+               steps = params.mov_specs.warm_n_steps;
+            }else{
+               steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
+            }
             if(coll){ // collisions enabled
                 BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,x_b,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b);
                 if(BPosture){
@@ -12445,7 +12487,14 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
         for(size_t i=0;i<finalHand.size();++i){
             finalPosture_ext.push_back(finalHand.at(i));
         }
-        int steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
+        // number of steps in the plan stage
+        int steps;
+        if(params.mov_specs.warm_start){
+           // warm start is used, then the number of steps in the plan stage has to be the same of the solution provided
+           steps = params.mov_specs.warm_n_steps;
+        }else{
+           steps = this->getSteps(maxLimits, minLimits,initPosture,finalPosture_ext);
+        }
         if(coll){
             BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,x_b,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b);
             if(BPosture){

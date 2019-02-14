@@ -202,6 +202,7 @@ typedef struct{
     bool warm_start; /**< true to use warm-start options, false otherwise */
     vector<warm_start_params> final_warm_start_params; /**< warm start params of the target posture selection problems */
     warm_start_params bounce_warm_start_params; /**< warm start params of the bounce posture selection problem */
+    int warm_n_steps; /**< number of steps in the plan stage if the warm start option is used */
 }mov_params;
 
 /** this struct defines the boundary conditions of the movement*/
