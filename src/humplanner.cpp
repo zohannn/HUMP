@@ -10831,6 +10831,8 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
     if((app==1 || ret==1) && straight_line){
         hump_params params = tols;
         int arm = params.mov_specs.arm_code;
+        bool init_warm_start = params.mov_specs.warm_start;
+        vector<warm_start_params> init_final_warm_start_params = params.mov_specs.final_warm_start_params;
         std::vector<double> init_target = params.mov_specs.target;
         std::vector<double> init_hand_pos; this->getHandPos(arm,initPosture,init_hand_pos);
         //std::vector<double> init_hand_or; this->getHandOr(arm,initPosture,init_hand_or);
@@ -10847,6 +10849,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         bool init_coll = params.mov_specs.coll;
         params.mov_specs.coll = false;
 
+        warm_start_params final_warm_start_params;
         std::vector<double> new_posture; std::vector<double> new_zL; std::vector<double> new_zU; std::vector<double> new_lambda; int iter_count; double cpu_time; double obj;
         std::vector<double> new_posture_ext;
         std::vector<double> init_posture_0;
@@ -10855,11 +10858,27 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
                 init_posture_0 = initPosture;
             }else{
                init_posture_0 = new_posture_ext;
+               params.mov_specs.final_warm_start_params.clear();
+               params.mov_specs.warm_start=true;
+               final_warm_start_params.valid = true;
+                if(app==1){
+                    final_warm_start_params.description = "approach";
+                }else if(ret==1){
+                   final_warm_start_params.description = "retreat";
+                }
+               final_warm_start_params.iterations = iter_count;
+               final_warm_start_params.cpu_time = cpu_time;
+               final_warm_start_params.obj_value = obj;
+               final_warm_start_params.x = new_posture;
+               final_warm_start_params.zL = new_zL;
+               final_warm_start_params.zU = new_zU;
+               final_warm_start_params.dual_vars = new_lambda;
+               params.mov_specs.final_warm_start_params.push_back(final_warm_start_params);
             }
             if(i==steps){
                 success=true;
             }else{
-                success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0, new_posture,new_zL,new_zU,new_lambda,iter_count,cpu_time,obj);
+                success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0,new_posture,new_zL,new_zU,new_lambda,iter_count,cpu_time,obj);
             }
             if(success){
                 if(i!=steps){
@@ -10891,6 +10910,8 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         }// for loop
         params.mov_specs.target = init_target;
         params.mov_specs.coll = init_coll;
+        params.mov_specs.warm_start = init_warm_start;
+        params.mov_specs.final_warm_start_params = init_final_warm_start_params;
     }else{
         for (int i = 0; i <= steps;++i){
             for (std::size_t j = 0; j<initPosture.size(); ++j){
