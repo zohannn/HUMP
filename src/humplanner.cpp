@@ -10836,6 +10836,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         std::vector<double> init_target = params.mov_specs.target;
         std::vector<double> init_hand_pos; this->getHandPos(arm,initPosture,init_hand_pos);
         //std::vector<double> init_hand_or; this->getHandOr(arm,initPosture,init_hand_or);
+        // only position is considered. TO DO: add orientation
         std::vector<double> hand_tar = init_target;
         std::vector<double> final_hand_pos; this->getHandPos(arm,finalPosture,final_hand_pos);
         double delta_x = (final_hand_pos.at(0)-init_hand_pos.at(0))/(steps+1);
