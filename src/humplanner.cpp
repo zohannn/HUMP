@@ -7037,7 +7037,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // distance between the hand and the object
      this->write_dHO(PostureDat,dHO);
      // joint limits
-     //this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
+     // this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
      this->writeArmInitPose(PostureDat,initAuxPosture);
      // final pose of the arm
@@ -14338,7 +14338,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      // distance between the hand and the object
      this->write_dual_dHO(PostureDat,dHO_right,dHO_left);
      // joint limits
-     this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
+     // this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
      this->writeArmInitPose(PostureDat,initAuxPosture);
      // final pose of the arm
@@ -14562,9 +14562,11 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      this->writeDualArmDHParamsMod(PostureMod);
      this->write_dual_dHOMod(PostureMod);
 
+
      PostureMod << string("# Joint Limits \n");
-     PostureMod << string("param llim {i in 1..")+to_string(minAuxLimits.size())+string("} ; \n");
-     PostureMod << string("param ulim {i in 1..")+to_string(maxAuxLimits.size())+string("} ; \n");
+     //PostureMod << string("param llim {i in 1..")+to_string(minAuxLimits.size())+string("} ; \n");
+     //PostureMod << string("param ulim {i in 1..")+to_string(maxAuxLimits.size())+string("} ; \n");
+     this->writeArmLimits(PostureMod,minAuxLimits,maxAuxLimits,false);
      PostureMod << string("# Initial posture \n");
      PostureMod << string("param thet_init {i in 1..")+to_string(initAuxPosture.size())+string("} ; \n");
      PostureMod << string("# Final posture \n");
