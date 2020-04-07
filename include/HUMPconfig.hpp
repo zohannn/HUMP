@@ -165,8 +165,9 @@ typedef struct{
 typedef struct{
     bool valid; /**< true if the struct is valid, false otherwise */
     int iterations; /**< number of iterations taken */
-    double cpu_time; /**< cpu time in [sec] taken */
+    double cpu_time; /**< cpu time in [sec] taken by IPOPT */
     double obj_value; /**< final value of the objective function */
+    double error_value; /**< final value of overall error */
     vector<double> x; /**< initial guess */
     vector<double> zL; /**< lower bounds multipliers */
     vector<double> zU; /**< upper bounds multipliers */
@@ -203,6 +204,14 @@ typedef struct{
     vector<warm_start_params> final_warm_start_params; /**< warm start params of the target posture selection problems */
     warm_start_params bounce_warm_start_params; /**< warm start params of the bounce posture selection problem */
     int warm_n_steps; /**< number of steps in the plan stage if the warm start option is used */
+    bool set_max_iter_plan; /**< true to set the number of maximum iterations for the plan target posture selection*/
+    bool set_max_iter_app; /**< true to set the number of maximum iterations for the approach target posture selection*/
+    bool set_max_iter_ret; /**< true to set the number of maximum iterations for the retreat target posture selection*/
+    bool set_max_iter_bounce; /**< true to set the number of maximum iterations for the bounce posture selection*/
+    int max_iter_plan; /**< number of maximum iterations for the plan target posture selection*/
+    int max_iter_app; /**< number of maximum iterations for the approach target posture selection*/
+    int max_iter_ret; /**< number of maximum iterations for the retreat target posture selection*/
+    int max_iter_bounce; /**< number of maximum iterations for the bounce posture selection*/
 }mov_params;
 
 /** this struct defines the boundary conditions of the movement*/

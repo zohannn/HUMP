@@ -1361,12 +1361,15 @@ private:
      * @param iter_count
      * @param cpu_time
      * @param obj
+     * @param overall_error
      * @param tol
      * @param acc_tol
      * @param constr_viol_tol
+     * @param set_max_iter
+     * @param max_iter
      * @return
      */
-    bool optimize(string &nlfile, std::vector<Number>& x, std::vector<Number> &zL, std::vector<Number> &zU, std::vector<Number> &lambda, Index &iter_count, Number &cpu_time, Number &obj, double tol, double acc_tol, double constr_viol_tol);
+    bool optimize(string &nlfile, std::vector<Number>& x, std::vector<Number> &zL, std::vector<Number> &zU, std::vector<Number> &lambda, Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error, double tol, double acc_tol, double constr_viol_tol, bool set_max_iter, int max_iter);
 
     /**
      * @brief optimize_warm_start
@@ -1378,12 +1381,15 @@ private:
      * @param iter_count
      * @param cpu_time
      * @param obj
+     * @param overall_error
      * @param tol
      * @param acc_tol
      * @param constr_viol_tol
+     * @param set_max_iter
+     * @param max_iter
      * @return
      */
-    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, Index &iter_count, Number &cpu_time, Number &obj, double tol, double acc_tol, double constr_viol_tol);
+    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error, double tol, double acc_tol, double constr_viol_tol,bool set_max_iter,int max_iter);
 
 
     /**
@@ -1447,9 +1453,10 @@ private:
      * @param iterations
      * @param time
      * @param obj
+     * @param overall_error
      * @return
      */
-    bool singleArmFinalPosture(int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda, int &iterations, double &time, double &obj);
+    bool singleArmFinalPosture(int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda, int &iterations, double &time, double &obj, double &overall_error);
 
     /**
      * @brief writeFilesFinalPosture
@@ -1480,9 +1487,10 @@ private:
      * @param iterations
      * @param time
      * @param obj
+     * @param overall_error
      * @return
      */
-    bool singleArmBouncePosture(int steps, int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double>& bouncePosture, std::vector<double> &x, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda_dual, int &iterations, double &time, double &obj);
+    bool singleArmBouncePosture(int steps, int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double>& bouncePosture, std::vector<double> &x, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda_dual, int &iterations, double &time, double &obj, double &overall_error);
 
     /**
      * @brief writeFilesBouncePosture
