@@ -204,14 +204,6 @@ typedef struct{
     vector<warm_start_params> final_warm_start_params; /**< warm start params of the target posture selection problems */
     warm_start_params bounce_warm_start_params; /**< warm start params of the bounce posture selection problem */
     int warm_n_steps; /**< number of steps in the plan stage if the warm start option is used */
-    bool set_max_iter_plan; /**< true to set the number of maximum iterations for the plan target posture selection*/
-    bool set_max_iter_app; /**< true to set the number of maximum iterations for the approach target posture selection*/
-    bool set_max_iter_ret; /**< true to set the number of maximum iterations for the retreat target posture selection*/
-    bool set_max_iter_bounce; /**< true to set the number of maximum iterations for the bounce posture selection*/
-    int max_iter_plan; /**< number of maximum iterations for the plan target posture selection*/
-    int max_iter_app; /**< number of maximum iterations for the approach target posture selection*/
-    int max_iter_ret; /**< number of maximum iterations for the retreat target posture selection*/
-    int max_iter_bounce; /**< number of maximum iterations for the bounce posture selection*/
 }mov_params;
 
 /** this struct defines the boundary conditions of the movement*/
@@ -242,6 +234,14 @@ typedef struct{
     bool obstacle_avoidance; /**< true to avoid obstacle */
     bool target_avoidance; /**< true to avoid the target during the motion */
     bool coll_body; /**< true to enable collisions avoidance with the body */
+    bool set_max_iter_plan; /**< true to set the number of maximum iterations for the plan target posture selection*/
+    bool set_max_iter_app; /**< true to set the number of maximum iterations for the approach target posture selection*/
+    bool set_max_iter_ret; /**< true to set the number of maximum iterations for the retreat target posture selection*/
+    bool set_max_iter_bounce; /**< true to set the number of maximum iterations for the bounce posture selection*/
+    int max_iter_plan; /**< number of maximum iterations for the plan target posture selection*/
+    int max_iter_app; /**< number of maximum iterations for the approach target posture selection*/
+    int max_iter_ret; /**< number of maximum iterations for the retreat target posture selection*/
+    int max_iter_bounce; /**< number of maximum iterations for the bounce posture selection*/
 } hump_params;
 
 /** this struct defines the tolerances that have to be set before planning the trajectory (dual-arm) */
@@ -278,6 +278,14 @@ typedef struct{
     bool target_avoidance; /**< true to avoid the target during the motion */
     bool coll_arms; /**< true to enable collisions avoidance between the arms-hands */
     bool coll_body; /**< true to enable collisions avoidance with the body */
+    bool set_max_iter_plan; /**< true to set the number of maximum iterations for the plan target posture selection*/
+    bool set_max_iter_app; /**< true to set the number of maximum iterations for the approach target posture selection*/
+    bool set_max_iter_ret; /**< true to set the number of maximum iterations for the retreat target posture selection*/
+    bool set_max_iter_bounce; /**< true to set the number of maximum iterations for the bounce posture selection*/
+    int max_iter_plan; /**< number of maximum iterations for the plan target posture selection*/
+    int max_iter_app; /**< number of maximum iterations for the approach target posture selection*/
+    int max_iter_ret; /**< number of maximum iterations for the retreat target posture selection*/
+    int max_iter_bounce; /**< number of maximum iterations for the bounce posture selection*/
 }hump_dual_params;
 
 /** This struct defines the result of the planned trajectory (single-arm) */

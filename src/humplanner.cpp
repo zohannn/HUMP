@@ -9389,7 +9389,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
     app->Options()->SetNumericValue("tol", tol);
     app->Options()->SetNumericValue("acceptable_tol", acc_tol);
     //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
-    app->Options()->SetStringValue("output_file", "ipopt.out");
+    //app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
     app->Options()->SetNumericValue("mu_init", MU_INIT);
@@ -9512,7 +9512,7 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
     app->Options()->SetNumericValue("tol", tol);
     app->Options()->SetNumericValue("acceptable_tol", acc_tol);
     //app->Options()->SetNumericValue("constr_viol_tol", constr_viol_tol);
-    app->Options()->SetStringValue("output_file", "ipopt.out");
+    //app->Options()->SetStringValue("output_file", "ipopt.out");
     app->Options()->SetStringValue("hessian_approximation", "limited-memory");
     app->Options()->SetIntegerValue("print_level",3);
 
@@ -9664,16 +9664,24 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
     bool retreat = params.mov_specs.retreat;
     std::vector<double> approach_vec;
     std::vector<double> retreat_vec;
+    bool set_max_iter;
+    int max_iter;
 
 
     switch(pre_post){
     case 0: // plan
+        set_max_iter = params.set_max_iter_plan;
+        max_iter = params.max_iter_plan;
         final_curr_warm_start_params = final_plan_warm_start_params;
         break;
     case 1: // approach
+        set_max_iter = params.set_max_iter_app;
+        max_iter = params.max_iter_app;
         final_curr_warm_start_params = final_approach_warm_start_params;
         break;
     case 2: //retreat
+        set_max_iter = params.set_max_iter_ret;
+        max_iter = params.max_iter_ret;
         final_curr_warm_start_params = final_retreat_warm_start_params;
         break;
     }
@@ -9803,9 +9811,9 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
             {
                 bool opt_solved;
                 if(warm_start){
-                    opt_solved = this->optimize_warm_start(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL);
+                    opt_solved = this->optimize_warm_start(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL,set_max_iter,max_iter);
                 }else{
-                    opt_solved = this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL);
+                    opt_solved = this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL,set_max_iter,max_iter);
                 }
                 if (opt_solved){
                     finalPosture = std::vector<double>(x_sol.size());
@@ -9843,6 +9851,8 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
     std::vector<double> maxLimits;
     DHparameters dh;
     // movement settings
+    bool set_max_iter = params.set_max_iter_bounce;
+    int max_iter = params.max_iter_bounce;
     bool warm_start = params.mov_specs.warm_start;
     warm_start_params bounce_warm_start_params = params.mov_specs.bounce_warm_start_params;
     int arm_code = params.mov_specs.arm_code;
@@ -9970,9 +9980,9 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
             {
                 bool opt_solved;
                 if(warm_start){
-                    opt_solved = this->optimize_warm_start(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL);
+                    opt_solved = this->optimize_warm_start(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL,set_max_iter,max_iter);
                 }else{
-                    opt_solved = this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL);
+                    opt_solved = this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL,set_max_iter,max_iter);
                 }
                 if (opt_solved){
                     size_t size;
@@ -10045,6 +10055,8 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
     std::vector<double> minLimits_left; std::vector<double> maxLimits_left;
     DHparameters dh_right; DHparameters dh_left;
     // movement settings
+    bool set_max_iter = params.set_max_iter_bounce;
+    bool max_iter = params.max_iter_bounce;
     int hand_code_right = params.mov_specs_right.hand_code;
     int hand_code_left = params.mov_specs_left.hand_code;
     std::vector<double> finalHand_right(params.mov_specs_right.finalHand);
@@ -10210,7 +10222,7 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
             std::vector<Number> x_sol; std::vector<Number> zL_sol; std::vector<Number> zU_sol; std::vector<Number> lambda_sol; Index iter_count; Number cpu_time; Number obj_sol; Number overall_error_sol;
             try
             {
-                if (this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,BOUNCE_DUAL_TOL,BOUNCE_DUAL_ACC_TOL,BOUNCE_DUAL_CONSTR_VIOL_TOL)){
+                if (this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,BOUNCE_DUAL_TOL,BOUNCE_DUAL_ACC_TOL,BOUNCE_DUAL_CONSTR_VIOL_TOL,set_max_iter,max_iter)){
 
                     bouncePosture = std::vector<double>(2*(joints_arm+joints_hand));
                     // right arm
@@ -13355,6 +13367,23 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
         break;
     }
 
+    bool set_max_iter;
+    int max_iter;
+    switch(pre_post){
+    case 0: // plan
+        set_max_iter = params.set_max_iter_plan;
+        max_iter = params.max_iter_plan;
+        break;
+    case 1: // approach
+        set_max_iter = params.set_max_iter_app;
+        max_iter = params.max_iter_app;
+        break;
+    case 2: //retreat
+        set_max_iter = params.set_max_iter_ret;
+        max_iter = params.max_iter_ret;
+        break;
+    }
+
     std::vector<double> initRightPosture(initPosture.begin(),initPosture.begin()+joints_arm+joints_hand);
     std::vector<double> initLeftPosture(initPosture.begin()+joints_arm+joints_hand,initPosture.begin()+2*(joints_arm+joints_hand));
     std::vector<double> initRightArmPosture(initPosture.begin(),initPosture.begin()+joints_arm);
@@ -13504,7 +13533,7 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
             std::vector<Number> x_sol; std::vector<Number> zL_sol; std::vector<Number> zU_sol; std::vector<Number> lambda_sol; Index iter_count; Number cpu_time; Number obj_sol; Number overall_error_sol;
             try
             {
-                if (this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,FINAL_DUAL_TOL,FINAL_DUAL_ACC_TOL,FINAL_DUAL_CONSTR_VIOL_TOL)){
+                if (this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,FINAL_DUAL_TOL,FINAL_DUAL_ACC_TOL,FINAL_DUAL_CONSTR_VIOL_TOL,set_max_iter,max_iter)){
                     finalPosture = std::vector<double>(x_sol.size());
                     for (std::size_t i=0; i < x_sol.size(); ++i){
                         finalPosture.at(i)=x_sol[i];
