@@ -662,6 +662,57 @@
 
 
   }
+
+  bool AmplInterface::intermediate_callback(AlgorithmMode mode,
+                                     Index iter, Number obj_value,
+                                     Number inf_pr, Number inf_du,
+                                     Number mu, Number d_norm,
+                                     Number regularization_size,
+                                     Number alpha_du, Number alpha_pr,
+                                     Index ls_trials,
+                                     const IpoptData* ip_data,
+                                     IpoptCalculatedQuantities* ip_cq)
+  {
+      Ipopt::TNLPAdapter* tnlp_adapter = NULL;
+      if( ip_cq != NULL )
+      {
+        Ipopt::OrigIpoptNLP* orignlp;
+        orignlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ip_cq->GetIpoptNLP()));
+        if( orignlp != NULL )
+        {
+            tnlp_adapter = dynamic_cast<TNLPAdapter*>(GetRawPtr(orignlp->nlp()));
+            Index n;
+            Index m;
+            Index nnz_jac_g; Index nnz_h_lag; IndexStyleEnum index_style;
+            this->get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, index_style);
+
+            double* primals = new double[n];
+            double* dualeqs = new double[m];
+            double* duallbs = new double[n];
+            double* dualubs = new double[n];
+            tnlp_adapter->ResortX(*ip_data->curr()->x(), primals);
+            tnlp_adapter->ResortG(*ip_data->curr()->y_c(), *ip_data->curr()->y_d(), dualeqs);
+            tnlp_adapter->ResortBnds(*ip_data->curr()->z_L(), duallbs,*ip_data->curr()->z_U(), dualubs);
+
+            std::vector<double> x_values(primals, primals + n); this->primals.push_back(x_values);
+            std::vector<double> z_L_values(duallbs, duallbs + n); this->duallbs.push_back(z_L_values);
+            std::vector<double> z_U_values(dualubs, dualubs + n); this->dualubs.push_back(z_U_values);
+            std::vector<double> d_values(dualeqs, dualeqs + m); this->dualeqs.push_back(d_values);
+
+            delete [] primals;
+            delete [] dualeqs;
+            delete [] duallbs;
+            delete [] dualubs;
+        }
+        this->obj_values.push_back(ip_cq->unscaled_curr_f());
+        this->dual_inf_values.push_back(ip_cq->curr_dual_infeasibility(Ipopt::NORM_MAX));
+        this->constr_viol_values.push_back(ip_cq->unscaled_curr_nlp_constraint_violation(Ipopt::NORM_MAX));
+        this->nlp_err_values.push_back(ip_cq->unscaled_curr_nlp_error());
+      }
+
+    return true;
+  }
+
   /**
    * @brief AmplInterface::get_status
    * @return
@@ -697,6 +748,46 @@
 
       obj = obj_sol_;
 
+  }
+
+  void AmplInterface::get_iter_primals(std::vector<std::vector<Number>>& x_values)
+  {
+      x_values = this->primals;
+  }
+
+  void AmplInterface::get_iter_duallbs(std::vector<std::vector<Number>>& z_L_values)
+  {
+      z_L_values = this->duallbs;
+  }
+
+  void AmplInterface::get_iter_dualubs(std::vector<std::vector<Number>>& z_U_values)
+  {
+      z_U_values = this->dualubs;
+  }
+
+  void AmplInterface::get_iter_dualeqs(std::vector<std::vector<Number>>& d_values)
+  {
+      d_values = this->dualeqs;
+  }
+
+  void AmplInterface::get_iter_obj_f(std::vector<Number>& obj)
+  {
+      obj = this->obj_values;
+  }
+
+  void AmplInterface::get_iter_dual_inf(std::vector<Number>& dual)
+  {
+      dual = this->dual_inf_values;
+  }
+
+  void AmplInterface::get_iter_constr_viol(std::vector<Number>& constr_viol)
+  {
+      constr_viol = this->constr_viol_values;
+  }
+
+  void AmplInterface::get_iter_nlp_error(std::vector<Number>& error)
+  {
+      error = this->nlp_err_values;
   }
 
   bool AmplInterface::internal_objval(const Number* x, Number& obj_val)

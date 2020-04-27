@@ -100,7 +100,7 @@ const int N_STEP_MAX = 50; /**< maximum number of steps */
 const double WARM_START_BOUND_PUSH = 1e-19; /**< This is kappa_1 in Section 3.6 of implementation paper. */
 const double WARM_START_BOUND_FRAC = 1e-19; /**< This is kappa_2 in Section 3.6 of implementation paper.*/
 const double WARM_START_SLACK_BOUND_FRAC = 1e-19; /**< Desired minimum relative distance from the initial slack to bound. */
-const double WARM_START_SLACK_BOUND_PUSH = 1e-19; /**< Desired minimum relative distance from the initial slack to bound. */
+const double WARM_START_SLACK_BOUND_PUSH = 1e-19; /**< Desired minimum absolute distance from the initial slack to bound. */
 const double WARM_START_MULT_BOUND_PUSH = 1e-19; /**< bound push of the multipliers */
 const double MU_INIT = 1e-1; /**< initial value of the barrier parameter */
 const double MU_WARM_INIT = 1e-6; /**< initial value of the barrier parameter for a warm start */
@@ -168,6 +168,10 @@ typedef struct{
     double cpu_time; /**< cpu time in [sec] taken by IPOPT */
     double obj_value; /**< final value of the objective function */
     double error_value; /**< final value of overall error */
+    vector<double> obj_values; /**< objective function values over the iterations */
+    vector<double> dual_inf_values; /**< dual infeasibility values over the iterations */
+    vector<double> constr_viol_values; /**< constraint violation values over the iterations */
+    vector<double> error_values; /**< overall nlp error values over the iterations */
     vector<double> x; /**< initial guess */
     vector<double> zL; /**< lower bounds multipliers */
     vector<double> zU; /**< upper bounds multipliers */

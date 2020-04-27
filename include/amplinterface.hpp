@@ -5,6 +5,11 @@
 #include "IpTNLP.hpp"
 #include "IpJournalist.hpp"
 #include "IpOptionsList.hpp"
+#include "IpIpoptCalculatedQuantities.hpp"
+#include "IpIpoptData.hpp"
+#include "IpTNLPAdapter.hpp"
+#include "IpOrigIpoptNLP.hpp"
+
 #include <map>
 #include <string>
 
@@ -401,6 +406,18 @@ public:
                                    IpoptCalculatedQuantities* ip_cq);
     //@}
 
+    /** Intermediate Callback method for the user. This method is called once per iteration (during the convergence check),
+     * and can be used to obtain information about the optimization status while Ipopt solves the problem, and also to request a premature termination.*/
+    virtual bool intermediate_callback(AlgorithmMode mode,
+                                       Index iter, Number obj_value,
+                                       Number inf_pr, Number inf_du,
+                                       Number mu, Number d_norm,
+                                       Number regularization_size,
+                                       Number alpha_du, Number alpha_pr,
+                                       Index ls_trials,
+                                       const IpoptData* ip_data,
+                                       IpoptCalculatedQuantities* ip_cq);
+
     /** @name Method for quasi-Newton approximation information. */
     //@{
     virtual Ipopt::Index get_number_of_nonlinear_variables();
@@ -495,6 +512,31 @@ public:
 
     /** Method to return the status of the solver at the end of the optimization*/
     SolverReturn get_status();
+
+    /** get the values of the primals during the iterations */
+    void get_iter_primals(std::vector<std::vector<Number>>& x_values);
+
+    /** get the values of the lower bounds during the iterations */
+    void get_iter_duallbs(std::vector<std::vector<Number>>& z_L_values);
+
+    /** get the values of the upper bounds during the iterations */
+    void get_iter_dualubs(std::vector<std::vector<Number>>& z_U_values);
+
+    /** get the values of the constraints multipliers during the iterations */
+    void get_iter_dualeqs(std::vector<std::vector<Number>>& d_values);
+
+    /** get the values of the objective function during the iterations */
+    void get_iter_obj_f(std::vector<Number>& obj);
+
+    /** get the values of the dual infeasibilities during the iterations */
+    void get_iter_dual_inf(std::vector<Number>& dual);
+
+    /** get the values of the constraints violations during the iterations */
+    void get_iter_constr_viol(std::vector<Number>& constr_viol);
+
+    /** get the values of the overall nlp error during the iterations */
+    void get_iter_nlp_error(std::vector<Number>& error);
+
 
 private:
   /**@name Default Compiler Generated Methods
@@ -605,6 +647,16 @@ private:
   StringMetaDataMapType con_string_md_; /**< constraint string metadata */
   IntegerMetaDataMapType con_integer_md_; /**< constraint integer metadata*/
   NumericMetaDataMapType con_numeric_md_; /**< constraint numeric metadata */
+
+  /** itermediate callback data */
+  std::vector< std::vector<Number> > primals;
+  std::vector< std::vector<Number> > duallbs;
+  std::vector< std::vector<Number> > dualubs;
+  std::vector< std::vector<Number> > dualeqs;
+  std::vector< Number > obj_values;
+  std::vector< Number > dual_inf_values;
+  std::vector< Number > constr_viol_values;
+  std::vector< Number > nlp_err_values;
 
 
 }; // class AmplInterface
