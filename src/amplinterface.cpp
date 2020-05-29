@@ -171,6 +171,7 @@
       }
       break;
     }
+
   }
 
   void AmplInterface::set_active_objective(Index in_obj_no)
@@ -708,6 +709,7 @@
         this->dual_inf_values.push_back(ip_cq->curr_dual_infeasibility(Ipopt::NORM_MAX));
         this->constr_viol_values.push_back(ip_cq->unscaled_curr_nlp_constraint_violation(Ipopt::NORM_MAX));
         this->nlp_err_values.push_back(ip_cq->unscaled_curr_nlp_error());
+
       }
 
     return true;
@@ -734,6 +736,7 @@
   void AmplInterface::get_solutions(std::vector<Number> &x, std::vector<Number> &z_L, std::vector<Number> &z_U, std::vector<Number> &lambda, Number &obj){
 
 
+      std::vector<Number> g_slack;
       for (int i =0; i < num_vars; ++i ){
 
           x.push_back(x_sol_[i]);
@@ -743,6 +746,7 @@
 
       for (int i=0; i <num_cons; ++i){
 
+          g_slack.push_back(g_sol_[i]);
           lambda.push_back(lambda_sol_[i]);
       }
 
@@ -789,6 +793,94 @@
   {
       error = this->nlp_err_values;
   }
+
+
+  void AmplInterface::getDerivative(std::vector<Number> &function, std::vector<Number> &derFunction)
+  {
+      // Formula of the numarical differentiation with 5 points
+         // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
+         // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
+         // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
+         // f'3 = ( -1*f0 +  6*f1 - 18*f2 + 10*f3 +  3*f4)/(12*h) - h^4/20*f^(5)(c_3)
+         // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
+
+
+         const Number STEP_VALUE = 1;
+         const Number MIN_DER_VALUE = -999;
+         derFunction.clear();
+
+         if(function.size()>=5)
+         {
+             Int h = 1;
+             Index tnsample;
+             Number f0;
+             Number f1;
+             Number f2;
+             Number f3;
+             Number f4;
+             Number step_value = STEP_VALUE;
+
+             // 1st point
+             // f'0 = (-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h) + h^4/5*f^(5)(c_0)
+             tnsample = 0;
+             f0 = function.at(tnsample);
+             f1 = function.at(tnsample+1);
+             f2 = function.at(tnsample+2);
+             f3 = function.at(tnsample+3);
+             f4 = function.at(tnsample+4);
+             derFunction.push_back((Number)(-25*f0 + 48*f1 - 36*f2 + 16*f3 -  3*f4)/(12*h*step_value));
+
+             // 2nd point
+             // f'1 = ( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h) - h^4/20*f^(5)(c_1)
+             tnsample = 1;
+             f0 = function.at(tnsample-1);
+             f1 = function.at(tnsample);
+             f2 = function.at(tnsample+1);
+             f3 = function.at(tnsample+2);
+             f4 = function.at(tnsample+3);
+             derFunction.push_back((Number)( -3*f0 - 10*f1 + 18*f2 -  6*f3 +  1*f4)/(12*h*step_value));
+
+             // 3rd point
+             // f'2 = (  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h) + h^4/30*f^(5)(c_2)
+             for (int i=2; i< function.size() -2;++i){     // centered
+                 f0 = function.at(i-2);
+                 f1 = function.at(i-1);
+                 f2 = function.at(i);
+                 f3 = function.at(i+1);
+                 f4 = function.at(i+2);
+                 derFunction.push_back((Number)(  1*f0 -  8*f1         +  8*f3 -  1*f4)/(12*h*step_value));
+             }
+
+             // 4th point
+             // f'3 = ( -1*f0 +  6*f1 - 18*f2 + 10*f3 +  3*f4)/(12*h) - h^4/20*f^(5)(c_3)
+             tnsample = function.size()-2;
+             f0 = function.at(tnsample-3);
+             f1 = function.at(tnsample-2);
+             f2 = function.at(tnsample-1);
+             f3 = function.at(tnsample);
+             f4 = function.at(tnsample+1);
+             derFunction.push_back((Number)( -f0+6*f1-18*f2+10*f3+3*f4)/(12*h*step_value));
+
+
+             // 5th point
+             // f'4 = (  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h) + h^4/5*f^(5)(c_4)
+             tnsample = function.size()-1;
+             f0 = function.at(tnsample-4);
+             f1 = function.at(tnsample-3);
+             f2 = function.at(tnsample-2);
+             f3 = function.at(tnsample-1);
+             f4 = function.at(tnsample);
+             derFunction.push_back((Number)(  3*f0 - 16*f1 + 36*f2 - 48*f3 + 25*f4)/(12*h*step_value));
+         }else{
+             derFunction.resize(function.size(),MIN_DER_VALUE);
+         }
+  }
+
+  void AmplInterface::get_der_iter_nlp_error(std::vector<Number>& der_error)
+  {
+     this->getDerivative(this->nlp_err_values, der_error);
+  }
+
 
   bool AmplInterface::internal_objval(const Number* x, Number& obj_val)
   {

@@ -172,6 +172,7 @@ typedef struct{
     vector<double> dual_inf_values; /**< dual infeasibility values over the iterations */
     vector<double> constr_viol_values; /**< constraint violation values over the iterations */
     vector<double> error_values; /**< overall nlp error values over the iterations */
+    vector<double> der_error_values; /**< first derivative of the overall nlp error values over the iterations */
     vector<double> x; /**< initial guess */
     vector<double> zL; /**< lower bounds multipliers */
     vector<double> zU; /**< upper bounds multipliers */

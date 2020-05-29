@@ -537,6 +537,11 @@ public:
     /** get the values of the overall nlp error during the iterations */
     void get_iter_nlp_error(std::vector<Number>& error);
 
+    /** get the first derivative of the total nlp error */
+    void get_der_iter_nlp_error(std::vector<Number>& der_error);
+
+
+
 
 private:
   /**@name Default Compiler Generated Methods
@@ -622,6 +627,9 @@ private:
    *  x value changes */
   bool apply_new_x(bool new_x, Ipopt::Index n, const Number* x);
 
+  /** get the first derivative */
+  void getDerivative(std::vector<Number> &function, std::vector<Number> &derFunction);
+
 
   /** Method for obtaining the name of the NL file and the options
    *  set from AMPL.  Returns a pointer to a char* with the name of
@@ -657,6 +665,10 @@ private:
   std::vector< Number > dual_inf_values;
   std::vector< Number > constr_viol_values;
   std::vector< Number > nlp_err_values;
+  std::vector< Number > nlp_err_filtered_values;
+  std::vector< Number> d_search_norm_values;
+  std::vector< Number> barrier_error;
+  std::vector< Number> armijo;
 
 
 }; // class AmplInterface

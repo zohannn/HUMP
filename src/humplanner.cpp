@@ -9381,7 +9381,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
                           Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error,
                           double tol, double acc_tol, double constr_viol_tol,bool set_max_iter,int max_iter,
                           std::vector<Number>& obj_values, std::vector<Number>& dual_inf_values,
-                          std::vector<Number>& constr_viol_values,std::vector<Number>& error_values)
+                          std::vector<Number>& constr_viol_values,std::vector<Number>& error_values,std::vector<Number>& der_error_values)
 {
     // Create a new instance of IpoptApplication
     //  (use a SmartPtr, not raw)
@@ -9456,7 +9456,7 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
 
         double dual_inf,constr_viol,complementarity;
         app->Statistics()->Infeasibilities(dual_inf,constr_viol,complementarity,overall_error);
-        //std::cout << std::endl << std::endl << "*** Overall error " << kkt_error << std::endl;
+        //std::cout << std::endl << std::endl << "*** Overall error " << overall_error << std::endl;
 
         //final_obj = app->Statistics()->FinalObjective();
         //std::cout << std::endl << std::endl << "*** The final value of the objective function is " << final_obj << '.' << std::endl;
@@ -9478,13 +9478,18 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
         ampl_tnlp->get_iter_dual_inf(dual_inf_values);
         ampl_tnlp->get_iter_constr_viol(constr_viol_values);
         ampl_tnlp->get_iter_nlp_error(error_values);
+        ampl_tnlp->get_der_iter_nlp_error(der_error_values);
+
 
         return true;
 
     }else if(set_max_iter && ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) ||
                               (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT) ||
                               (ampl_tnlp->get_status() == SolverReturn::MAXITER_EXCEEDED) ||
-                              (ampl_tnlp->get_status() == SolverReturn::LOCAL_INFEASIBILITY)
+                              (ampl_tnlp->get_status() == SolverReturn::LOCAL_INFEASIBILITY) ||
+                              (ampl_tnlp->get_status() == SolverReturn::RESTORATION_FAILURE) ||
+                              (ampl_tnlp->get_status() == SolverReturn::FEASIBLE_POINT_FOUND) ||
+                              (ampl_tnlp->get_status() == SolverReturn::DIVERGING_ITERATES)
                               )){
         ampl_tnlp->get_solutions(x_sol,
                                  z_L_sol,
@@ -9513,6 +9518,8 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
         ampl_tnlp->get_iter_dual_inf(dual_inf_values);
         ampl_tnlp->get_iter_constr_viol(constr_viol_values);
         ampl_tnlp->get_iter_nlp_error(error_values);
+        ampl_tnlp->get_der_iter_nlp_error(der_error_values);
+
 
         return true;
 
@@ -9539,6 +9546,8 @@ bool HUMPlanner::optimize(string &nlfile, std::vector<Number> &x, std::vector<Nu
         ampl_tnlp->get_iter_dual_inf(dual_inf_values);
         ampl_tnlp->get_iter_constr_viol(constr_viol_values);
         ampl_tnlp->get_iter_nlp_error(error_values);
+        ampl_tnlp->get_der_iter_nlp_error(der_error_values);
+
 
         return false;
 
@@ -9549,7 +9558,7 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
                                      Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error,
                                      double tol, double acc_tol, double constr_viol_tol,bool set_max_iter,int max_iter,
                                      std::vector<Number>& obj_values, std::vector<Number>& dual_inf_values,
-                                     std::vector<Number>& constr_viol_values,std::vector<Number>& error_values)
+                                     std::vector<Number>& constr_viol_values,std::vector<Number>& error_values,std::vector<Number>& der_error_values)
 {
     // Create a new instance of IpoptApplication
     //  (use a SmartPtr, not raw)
@@ -9654,13 +9663,18 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
         ampl_tnlp->get_iter_dual_inf(dual_inf_values);
         ampl_tnlp->get_iter_constr_viol(constr_viol_values);
         ampl_tnlp->get_iter_nlp_error(error_values);
+        ampl_tnlp->get_der_iter_nlp_error(der_error_values);
+
 
         return true;
 
     }else if(set_max_iter && ((ampl_tnlp->get_status() == SolverReturn::SUCCESS) ||
                               (ampl_tnlp->get_status() == SolverReturn::STOP_AT_ACCEPTABLE_POINT) ||
                               (ampl_tnlp->get_status() == SolverReturn::MAXITER_EXCEEDED) ||
-                              (ampl_tnlp->get_status() == SolverReturn::LOCAL_INFEASIBILITY)
+                              (ampl_tnlp->get_status() == SolverReturn::LOCAL_INFEASIBILITY) ||
+                              (ampl_tnlp->get_status() == SolverReturn::RESTORATION_FAILURE) ||
+                              (ampl_tnlp->get_status() == SolverReturn::FEASIBLE_POINT_FOUND) ||
+                              (ampl_tnlp->get_status() == SolverReturn::DIVERGING_ITERATES)
                               )){
         ampl_tnlp->get_solutions(x_sol,
                                  z_L_sol,
@@ -9689,6 +9703,8 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
         ampl_tnlp->get_iter_dual_inf(dual_inf_values);
         ampl_tnlp->get_iter_constr_viol(constr_viol_values);
         ampl_tnlp->get_iter_nlp_error(error_values);
+        ampl_tnlp->get_der_iter_nlp_error(der_error_values);
+
 
         return true;
 
@@ -9715,6 +9731,7 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
         ampl_tnlp->get_iter_dual_inf(dual_inf_values);
         ampl_tnlp->get_iter_constr_viol(constr_viol_values);
         ampl_tnlp->get_iter_nlp_error(error_values);
+        ampl_tnlp->get_der_iter_nlp_error(der_error_values);
 
         return false;
 
@@ -9725,7 +9742,7 @@ bool HUMPlanner::optimize_warm_start(string &nlfile, std::vector<Number>& x, std
 bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture, std::vector<double>& zL, std::vector<double>& zU, std::vector<double>& lambda,
                                        int &iterations, double &time, double &obj, double &overall_error,
                                        std::vector<double>& obj_values, std::vector<double>& dual_inf_values,
-                                       std::vector<double>& constr_viol_values,std::vector<double>& error_values)
+                                       std::vector<double>& constr_viol_values,std::vector<double>& error_values,std::vector<double>& der_error_values)
 
 {
     // movement settings
@@ -9906,11 +9923,11 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
                 if(warm_start){
                     opt_solved = this->optimize_warm_start(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,
                                                            FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL,set_max_iter,max_iter,
-                                                           obj_values,dual_inf_values,constr_viol_values,error_values);
+                                                           obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values);
                 }else{
                     opt_solved = this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,
                                                 FINAL_TOL,FINAL_ACC_TOL,FINAL_CONSTR_VIOL_TOL,set_max_iter,max_iter,
-                                                obj_values,dual_inf_values,constr_viol_values,error_values);
+                                                obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values);
                 }
                 if (opt_solved){
                     finalPosture = std::vector<double>(x_sol.size());
@@ -9945,7 +9962,7 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
                                         std::vector<double>& x,std::vector<double>& zL, std::vector<double>& zU, std::vector<double>& lambda_dual,
                                         int &iterations, double &time, double &obj, double &overall_error,
                                         std::vector<double>& obj_values, std::vector<double>& dual_inf_values,
-                                        std::vector<double>& constr_viol_values,std::vector<double>& error_values)
+                                        std::vector<double>& constr_viol_values,std::vector<double>& error_values,std::vector<double>& der_error_values)
 {
 
     std::vector<double> minLimits;
@@ -10083,11 +10100,11 @@ bool HUMPlanner::singleArmBouncePosture(int steps,int mov_type,int pre_post,hump
                 if(warm_start){
                     opt_solved = this->optimize_warm_start(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,
                                                            BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL,set_max_iter,max_iter,
-                                                           obj_values,dual_inf_values,constr_viol_values,error_values);
+                                                           obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values);
                 }else{
                     opt_solved = this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,
                                                 BOUNCE_TOL,BOUNCE_ACC_TOL,BOUNCE_CONSTR_VIOL_TOL,set_max_iter,max_iter,
-                                                obj_values,dual_inf_values,constr_viol_values,error_values);
+                                                obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values);
                 }
                 if (opt_solved){
                     size_t size;
@@ -10327,10 +10344,10 @@ bool HUMPlanner::singleDualArmBouncePosture(int steps,int dual_mov_type,int pre_
             std::vector<Number> x_sol; std::vector<Number> zL_sol; std::vector<Number> zU_sol; std::vector<Number> lambda_sol; Index iter_count; Number cpu_time; Number obj_sol; Number overall_error_sol;
             try
             {
-                std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
+                std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
                 if (this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,
                                    BOUNCE_DUAL_TOL,BOUNCE_DUAL_ACC_TOL,BOUNCE_DUAL_CONSTR_VIOL_TOL,set_max_iter,max_iter,
-                                   obj_values,dual_inf_values,constr_viol_values,error_values)){
+                                   obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values)){
 
                     bouncePosture = std::vector<double>(2*(joints_arm+joints_hand));
                     // right arm
@@ -10779,7 +10796,7 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
 
 
     std::vector<double> new_posture; std::vector<double> new_zL; std::vector<double> new_zU; std::vector<double> new_lambda; int iter_count; double cpu_time; double obj; double overall_error;
-    std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
+    std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
 
     if(straight_line){
         hand_tar.at(0) = hand_tar.at(0) + delta_x;
@@ -10787,7 +10804,7 @@ bool HUMPlanner::setBoundaryConditions(int mov_type,hump_params &params, int ste
         hand_tar.at(2) = hand_tar.at(2) + delta_z;
         params.mov_specs.target = hand_tar;
         params.mov_specs.coll = false;
-        success = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture, new_posture,new_zL,new_zU,new_lambda,iter_count,cpu_time,obj,overall_error,obj_values, dual_inf_values, constr_viol_values, error_values);
+        success = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture, new_posture,new_zL,new_zU,new_lambda,iter_count,cpu_time,obj,overall_error,obj_values, dual_inf_values, constr_viol_values, error_values, der_error_values);
         params.mov_specs.target = init_target;
         params.mov_specs.coll = init_coll;
 
@@ -11037,7 +11054,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
         std::vector<double> new_posture; std::vector<double> new_zL; std::vector<double> new_zU; std::vector<double> new_lambda; int iter_count; double cpu_time; double obj; double overall_error;
         std::vector<double> new_posture_ext;
         std::vector<double> init_posture_0;
-        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
+        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
         for (int i = 0; i <= steps;++i){
             if(i==0){
                 init_posture_0 = initPosture;
@@ -11064,7 +11081,7 @@ bool HUMPlanner::directTrajectory(int mov_type,int steps,hump_params &tols, std:
             if(i==steps){
                 success=true;
             }else{
-                success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0,new_posture,new_zL,new_zU,new_lambda,iter_count,cpu_time,obj,overall_error,obj_values, dual_inf_values, constr_viol_values, error_values);
+                success = this->singleArmFinalPosture(mov_type,pre_post,params,init_posture_0,new_posture,new_zL,new_zU,new_lambda,iter_count,cpu_time,obj,overall_error,obj_values, dual_inf_values, constr_viol_values, error_values, der_error_values);
             }
             if(success){
                 if(i!=steps){
@@ -11853,17 +11870,17 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
         std::vector<double> finalPosture_post_grasp; bool FPosture_post_grasp = false;
         std::vector<double> zL_post_grasp; std::vector<double> zU_post_grasp; std::vector<double> lambda_post_grasp; int iter_count_post_grasp; double cpu_time_post_grasp; double obj_post_grasp; double overall_error_post_grasp;
         warm_start_params final_post_grasp_warm_start_params; final_post_grasp_warm_start_params.valid = false;
-        std::vector<double> obj_values_pre_grasp; std::vector<double> dual_inf_values_pre_grasp; std::vector<double> constr_viol_values_pre_grasp; std::vector<double> error_values_pre_grasp;
-        std::vector<double> obj_values_b_pre_grasp; std::vector<double> dual_inf_values_b_pre_grasp; std::vector<double> constr_viol_values_b_pre_grasp; std::vector<double> error_values_b_pre_grasp;
-        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
-        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b;
-        std::vector<double> obj_values_post_grasp; std::vector<double> dual_inf_values_post_grasp; std::vector<double> constr_viol_values_post_grasp; std::vector<double> error_values_post_grasp;
+        std::vector<double> obj_values_pre_grasp; std::vector<double> dual_inf_values_pre_grasp; std::vector<double> constr_viol_values_pre_grasp; std::vector<double> error_values_pre_grasp; std::vector<double> der_error_values_pre_grasp;
+        std::vector<double> obj_values_b_pre_grasp; std::vector<double> dual_inf_values_b_pre_grasp; std::vector<double> constr_viol_values_b_pre_grasp; std::vector<double> error_values_b_pre_grasp; std::vector<double> der_error_values_b_pre_grasp;
+        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
+        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b; std::vector<double> der_error_values_b;
+        std::vector<double> obj_values_post_grasp; std::vector<double> dual_inf_values_post_grasp; std::vector<double> constr_viol_values_post_grasp; std::vector<double> error_values_post_grasp; std::vector<double> der_error_values_post_grasp;
 
         if(approach){
             pre_post = 1;
             FPosture_pre_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,zL_pre_grasp,zU_pre_grasp,
                                                              lambda_pre_grasp,iter_count_pre_grasp,cpu_time_pre_grasp,obj_pre_grasp,overall_error_pre_grasp,
-                                                             obj_values_pre_grasp,dual_inf_values_pre_grasp,constr_viol_values_pre_grasp,error_values_pre_grasp);
+                                                             obj_values_pre_grasp,dual_inf_values_pre_grasp,constr_viol_values_pre_grasp,error_values_pre_grasp,der_error_values_pre_grasp);
             if (FPosture_pre_grasp){
                 // warm start results
                 final_pre_grasp_warm_start_params.valid = true;
@@ -11880,6 +11897,8 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 final_pre_grasp_warm_start_params.dual_inf_values = dual_inf_values_pre_grasp;
                 final_pre_grasp_warm_start_params.constr_viol_values = constr_viol_values_pre_grasp;
                 final_pre_grasp_warm_start_params.error_values = error_values_pre_grasp;
+                final_pre_grasp_warm_start_params.der_error_values = der_error_values_pre_grasp;
+
                 // extend the final postures
                 std::vector<double> finalPosture_pre_grasp_ext = finalPosture_pre_grasp;
                 finalPosture_pre_grasp_ext.push_back(finalHand.at(0));
@@ -11904,12 +11923,12 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     params.mov_specs.coll = false;
                     pre_post = 0;
                     FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture,zL,zU,lambda,iter_count,cpu_time,obj,overall_error,
-                                                           obj_values_pre_grasp,dual_inf_values_pre_grasp,constr_viol_values_pre_grasp,error_values_pre_grasp);
+                                                           obj_values_pre_grasp,dual_inf_values_pre_grasp,constr_viol_values_pre_grasp,error_values_pre_grasp,der_error_values_pre_grasp);
                     params.mov_specs.coll = init_coll;
                 }else{
                     pre_post = 0;
                     FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_grasp,finalPosture,zL,zU,lambda,iter_count,cpu_time,obj,overall_error,
-                                                           obj_values_pre_grasp,dual_inf_values_pre_grasp,constr_viol_values_pre_grasp,error_values_pre_grasp);
+                                                           obj_values_pre_grasp,dual_inf_values_pre_grasp,constr_viol_values_pre_grasp,error_values_pre_grasp,der_error_values_pre_grasp);
                 }
 
                 if(FPosture){
@@ -11928,6 +11947,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     final_warm_start_params.dual_inf_values = dual_inf_values_pre_grasp;
                     final_warm_start_params.constr_viol_values = constr_viol_values_pre_grasp;
                     final_warm_start_params.error_values = error_values_pre_grasp;
+                    final_warm_start_params.der_error_values = der_error_values_pre_grasp;
                     // extend the final postures
                     finalPosture_ext = finalPosture;
                     finalPosture_ext.push_back(finalHand.at(0));
@@ -11944,7 +11964,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                             pre_post = 1;
                             BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_grasp,bouncePosture_pre_grasp,
                                                                     x_b_pre_grasp,zL_b_pre_grasp,zU_b_pre_grasp,lambda_b_pre_grasp,iter_count_b_pre_grasp,cpu_time_b_pre_grasp,obj_b_pre_grasp,overall_error_b_pre_grasp,
-                                                                    obj_values_b_pre_grasp,dual_inf_values_b_pre_grasp,constr_viol_values_b_pre_grasp,error_values_b_pre_grasp);
+                                                                    obj_values_b_pre_grasp,dual_inf_values_b_pre_grasp,constr_viol_values_b_pre_grasp,error_values_b_pre_grasp,der_error_values_b_pre_grasp);
                             if(BPosture){                              
                                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully");
                                 res->time_steps.clear();
@@ -11966,6 +11986,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                                 bounce_pre_grasp_warm_start_params.dual_inf_values = dual_inf_values_b_pre_grasp;
                                 bounce_pre_grasp_warm_start_params.constr_viol_values = constr_viol_values_b_pre_grasp;
                                 bounce_pre_grasp_warm_start_params.error_values = error_values_b_pre_grasp;
+                                bounce_pre_grasp_warm_start_params.der_error_values = der_error_values_b_pre_grasp;
                                 // approach stage
                                 MatrixXd traj_app; MatrixXd vel_app; MatrixXd acc_app; double timestep_app;
                                 mod = 2; bool success = true;
@@ -12050,7 +12071,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
         }else{ // no approach
             pre_post = 0;
             FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture,zL,zU,lambda,iter_count,cpu_time,obj,overall_error,
-                                                   obj_values,dual_inf_values,constr_viol_values,error_values);
+                                                   obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values);
             if (FPosture){
                 // warm start results
                 final_warm_start_params.valid = true;
@@ -12067,6 +12088,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 final_warm_start_params.dual_inf_values = dual_inf_values;
                 final_warm_start_params.constr_viol_values = constr_viol_values;
                 final_warm_start_params.error_values = error_values;
+                final_warm_start_params.der_error_values = der_error_values;
                 // extend the final postures
                 finalPosture_ext = finalPosture;
                 for(size_t i=0;i<finalHand.size();++i){
@@ -12076,7 +12098,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 if(coll){ // collisions
                     BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,
                                                             x_b,zL_b,zU_b,lambda_b,iter_count_b,cpu_time_b,obj_b,overall_error_b,
-                                                            obj_values_b,dual_inf_values_b,constr_viol_values_b,error_values_b);
+                                                            obj_values_b,dual_inf_values_b,constr_viol_values_b,error_values_b,der_error_values_b);
                     if(BPosture){
                         res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                         res->time_steps.clear();
@@ -12099,6 +12121,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                         bounce_warm_start_params.dual_inf_values = dual_inf_values_b;
                         bounce_warm_start_params.constr_viol_values = constr_viol_values_b;
                         bounce_warm_start_params.error_values = error_values_b;
+                        bounce_warm_start_params.der_error_values = der_error_values_b;
                         // plan stage
                         MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0; bool success = true;
                         double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -12137,13 +12160,13 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     pre_post=2;
                     FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp,zL_post_grasp,zU_post_grasp,lambda_post_grasp,
                                                                       iter_count_post_grasp,cpu_time_post_grasp,obj_post_grasp,overall_error_post_grasp,
-                                                                      obj_values_post_grasp,dual_inf_values_post_grasp,constr_viol_values_post_grasp,error_values_post_grasp);
+                                                                      obj_values_post_grasp,dual_inf_values_post_grasp,constr_viol_values_post_grasp,error_values_post_grasp,der_error_values_post_grasp);
                     params.mov_specs.coll = init_coll;
                 }else{
                     pre_post=2;
                     FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp,zL_post_grasp,zU_post_grasp,lambda_post_grasp,
                                                                       iter_count_post_grasp,cpu_time_post_grasp,obj_post_grasp,overall_error_post_grasp,
-                                                                      obj_values_post_grasp,dual_inf_values_post_grasp,constr_viol_values_post_grasp,error_values_post_grasp);
+                                                                      obj_values_post_grasp,dual_inf_values_post_grasp,constr_viol_values_post_grasp,error_values_post_grasp,der_error_values_post_grasp);
                 }
                 if (FPosture_post_grasp){
                     // warm start results
@@ -12161,6 +12184,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     final_post_grasp_warm_start_params.dual_inf_values = dual_inf_values_post_grasp;
                     final_post_grasp_warm_start_params.constr_viol_values = constr_viol_values_post_grasp;
                     final_post_grasp_warm_start_params.error_values = error_values_post_grasp;
+                    final_post_grasp_warm_start_params.der_error_values = der_error_values_post_grasp;
 
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
@@ -12188,7 +12212,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                 pre_post=2;
                 FPosture_post_grasp = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_grasp,zL_post_grasp,zU_post_grasp,lambda_post_grasp,
                                                                   iter_count_post_grasp,cpu_time_post_grasp,obj_post_grasp,overall_error_post_grasp,
-                                                                  obj_values_post_grasp,dual_inf_values_post_grasp,constr_viol_values_post_grasp,error_values_post_grasp);
+                                                                  obj_values_post_grasp,dual_inf_values_post_grasp,constr_viol_values_post_grasp,error_values_post_grasp,der_error_values_post_grasp);
                 if (FPosture_post_grasp){
                     // warm start results
                     final_post_grasp_warm_start_params.valid = true;
@@ -12205,6 +12229,7 @@ planning_result_ptr HUMPlanner::plan_pick(hump_params &params, std::vector<doubl
                     final_post_grasp_warm_start_params.dual_inf_values = dual_inf_values_post_grasp;
                     final_post_grasp_warm_start_params.constr_viol_values = constr_viol_values_post_grasp;
                     final_post_grasp_warm_start_params.error_values = error_values_post_grasp;
+                    final_post_grasp_warm_start_params.der_error_values = der_error_values_post_grasp;
 
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     std::vector<double> finalPosture_post_grasp_ext = finalPosture_post_grasp;
@@ -12282,17 +12307,17 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
         std::vector<double> finalPosture_post_place; bool FPosture_post_place = false;
         std::vector<double> zL_post_place; std::vector<double> zU_post_place; std::vector<double> lambda_post_place; int iter_count_post_place; double cpu_time_post_place; double obj_post_place; double overall_error_post_place;
         warm_start_params final_post_place_warm_start_params; final_post_place_warm_start_params.valid = false;
-        std::vector<double> obj_values_pre_place; std::vector<double> dual_inf_values_pre_place; std::vector<double> constr_viol_values_pre_place; std::vector<double> error_values_pre_place;
-        std::vector<double> obj_values_b_pre_place; std::vector<double> dual_inf_values_b_pre_place; std::vector<double> constr_viol_values_b_pre_place; std::vector<double> error_values_b_pre_place;
-        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
-        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b;
-        std::vector<double> obj_values_post_place; std::vector<double> dual_inf_values_post_place; std::vector<double> constr_viol_values_post_place; std::vector<double> error_values_post_place;
+        std::vector<double> obj_values_pre_place; std::vector<double> dual_inf_values_pre_place; std::vector<double> constr_viol_values_pre_place; std::vector<double> error_values_pre_place; std::vector<double> der_error_values_pre_place;
+        std::vector<double> obj_values_b_pre_place; std::vector<double> dual_inf_values_b_pre_place; std::vector<double> constr_viol_values_b_pre_place; std::vector<double> error_values_b_pre_place; std::vector<double> der_error_values_b_pre_place;
+        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
+        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b; std::vector<double> der_error_values_b;
+        std::vector<double> obj_values_post_place; std::vector<double> dual_inf_values_post_place; std::vector<double> constr_viol_values_post_place; std::vector<double> error_values_post_place; std::vector<double> der_error_values_post_place;
 
         if(approach){
             pre_post = 1;
             FPosture_pre_place = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture_pre_place,zL_pre_place,zU_pre_place,lambda_pre_place,
                                                              iter_count_pre_place,cpu_time_pre_place,obj_pre_place,overall_error_pre_place,
-                                                             obj_values_pre_place, dual_inf_values_pre_place, constr_viol_values_pre_place, error_values_pre_place);
+                                                             obj_values_pre_place, dual_inf_values_pre_place, constr_viol_values_pre_place,error_values_pre_place,der_error_values_pre_place);
             if (FPosture_pre_place){
                 // warm start results
                 final_pre_place_warm_start_params.valid = true;
@@ -12309,6 +12334,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 final_pre_place_warm_start_params.dual_inf_values = dual_inf_values_pre_place;
                 final_pre_place_warm_start_params.constr_viol_values = constr_viol_values_pre_place;
                 final_pre_place_warm_start_params.error_values = error_values_pre_place;
+                final_pre_place_warm_start_params.der_error_values = der_error_values_pre_place;
                 // extend the final postures
                 std::vector<double> finalPosture_pre_place_ext = finalPosture_pre_place;
                 for(size_t i=0;i<finalHand.size();++i){
@@ -12330,13 +12356,13 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     pre_post = 0;
                     FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture,zL,zU,lambda,
                                                            iter_count,cpu_time,obj,overall_error,
-                                                           obj_values, dual_inf_values, constr_viol_values, error_values);
+                                                           obj_values, dual_inf_values, constr_viol_values, error_values,der_error_values);
                     params.mov_specs.coll = init_coll;
                 }else{
                     pre_post = 0;
                     FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture_pre_place,finalPosture,zL,zU,lambda,
                                                            iter_count,cpu_time,obj,overall_error,
-                                                           obj_values, dual_inf_values, constr_viol_values, error_values);
+                                                           obj_values, dual_inf_values, constr_viol_values, error_values,der_error_values);
                 }
 
                 if(FPosture){
@@ -12355,6 +12381,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     final_warm_start_params.dual_inf_values = dual_inf_values;
                     final_warm_start_params.constr_viol_values = constr_viol_values;
                     final_warm_start_params.error_values = error_values;
+                    final_warm_start_params.der_error_values = der_error_values;
                     // extend the final postures
                     finalPosture_ext = finalPosture;
                     for(size_t i=0;i<finalHand.size();++i){
@@ -12369,7 +12396,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                             BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture_pre_place,bouncePosture_pre_place,
                                                                     x_b_pre_place,zL_b_pre_place,zU_b_pre_place,lambda_b_pre_place,
                                                                     iter_count_b_pre_place,cpu_time_b_pre_place,obj_b_pre_place,overall_error_b_pre_place,
-                                                                    obj_values_b_pre_place, dual_inf_values_b_pre_place, constr_viol_values_b_pre_place, error_values_b_pre_place);
+                                                                    obj_values_b_pre_place, dual_inf_values_b_pre_place, constr_viol_values_b_pre_place, error_values_b_pre_place,der_error_values_b_pre_place);
                             if(BPosture){
                                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                                     res->time_steps.clear();
@@ -12391,6 +12418,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                                     bounce_pre_place_warm_start_params.dual_inf_values = dual_inf_values_b_pre_place;
                                     bounce_pre_place_warm_start_params.constr_viol_values = constr_viol_values_b_pre_place;
                                     bounce_pre_place_warm_start_params.error_values = error_values_b_pre_place;
+                                    bounce_pre_place_warm_start_params.der_error_values = der_error_values_b_pre_place;
                                     // pre-approach stage
                                     MatrixXd traj; MatrixXd vel; MatrixXd acc; double timestep; mod = 1; bool success = true;
                                     timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_pre_place_ext,bouncePosture_pre_place,traj,vel,acc,success,mod);
@@ -12469,7 +12497,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
             pre_post = 0;
             FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture,zL,zU,lambda,
                                                    iter_count,cpu_time,obj,overall_error,
-                                                   obj_values, dual_inf_values, constr_viol_values, error_values);
+                                                   obj_values, dual_inf_values, constr_viol_values, error_values,der_error_values);
             if (FPosture){
                 // warm start results
                 final_warm_start_params.valid = true;
@@ -12486,6 +12514,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 final_warm_start_params.dual_inf_values = dual_inf_values;
                 final_warm_start_params.constr_viol_values = constr_viol_values;
                 final_warm_start_params.error_values = error_values;
+                final_warm_start_params.der_error_values = der_error_values;
 
                 // extend the final posture
                 finalPosture_ext = finalPosture;
@@ -12496,7 +12525,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 if(coll){ // collisions
                     BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,x_b,zL_b,zU_b,lambda_b,
                                                             iter_count_b,cpu_time_b,obj_b,overall_error_b,
-                                                            obj_values_b, dual_inf_values_b, constr_viol_values_b, error_values_b);
+                                                            obj_values_b, dual_inf_values_b, constr_viol_values_b, error_values_b, der_error_values_b);
                     if(BPosture){
                         res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                         res->time_steps.clear();
@@ -12519,6 +12548,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                         bounce_warm_start_params.dual_inf_values = dual_inf_values_b;
                         bounce_warm_start_params.constr_viol_values = constr_viol_values_b;
                         bounce_warm_start_params.error_values = error_values_b;
+                        bounce_warm_start_params.der_error_values = der_error_values_b;
                         // plan stage
                         MatrixXd traj; MatrixXd vel; MatrixXd acc; mod = 0; bool success = true;
                         double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -12556,13 +12586,13 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     pre_post=2;
                     FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place,zL_post_place,zU_post_place,lambda_post_place,
                                                                       iter_count_post_place,cpu_time_post_place,obj_post_place,overall_error_post_place,
-                                                                      obj_values_post_place, dual_inf_values_post_place, constr_viol_values_post_place, error_values_post_place);
+                                                                      obj_values_post_place, dual_inf_values_post_place, constr_viol_values_post_place, error_values_post_place,der_error_values_post_place);
                     params.mov_specs.coll = init_coll;
                 }else{
                     pre_post=2;
                     FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place,zL_post_place,zU_post_place,lambda_post_place,
                                                                       iter_count_post_place,cpu_time_post_place,obj_post_place,overall_error_post_place,
-                                                                      obj_values_post_place, dual_inf_values_post_place, constr_viol_values_post_place, error_values_post_place);
+                                                                      obj_values_post_place, dual_inf_values_post_place, constr_viol_values_post_place, error_values_post_place,der_error_values_post_place);
                 }
                 if (FPosture_post_place){
                     // warm start results
@@ -12580,6 +12610,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     final_post_place_warm_start_params.dual_inf_values = dual_inf_values_post_place;
                     final_post_place_warm_start_params.constr_viol_values = constr_viol_values_post_place;
                     final_post_place_warm_start_params.error_values = error_values_post_place;
+                    final_post_place_warm_start_params.der_error_values = der_error_values_post_place;
 
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
@@ -12616,7 +12647,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                 pre_post=2;
                 FPosture_post_place = this->singleArmFinalPosture(mov_type,pre_post,params,finalPosture,finalPosture_post_place,zL_post_place,zU_post_place,lambda_post_place,
                                                                   iter_count_post_place,cpu_time_post_place,obj_post_place,overall_error_post_place,
-                                                                  obj_values_post_place, dual_inf_values_post_place, constr_viol_values_post_place, error_values_post_place);
+                                                                  obj_values_post_place, dual_inf_values_post_place, constr_viol_values_post_place, error_values_post_place,der_error_values_post_place);
                 if (FPosture_post_place){
                     // warm start results
                     final_post_place_warm_start_params.valid = true;
@@ -12633,6 +12664,7 @@ planning_result_ptr HUMPlanner::plan_place(hump_params &params, std::vector<doub
                     final_post_place_warm_start_params.dual_inf_values = dual_inf_values_post_place;
                     final_post_place_warm_start_params.constr_viol_values = constr_viol_values_post_place;
                     final_post_place_warm_start_params.error_values = error_values_post_place;
+                    final_post_place_warm_start_params.der_error_values = der_error_values_post_place;
 
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     // extend the final postures
@@ -12705,13 +12737,13 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
         std::vector<double> finalPosture; bool FPosture = false; std::vector<double> finalPosture_ext;
         std::vector<double> zL; std::vector<double> zU; std::vector<double> lambda; int iter_count; double cpu_time; double obj; double overall_error;
         warm_start_params final_warm_start_params; final_warm_start_params.valid = false;
-        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
-        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b;
+        std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
+        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b; std::vector<double> der_error_values_b;
 
 
         FPosture = this->singleArmFinalPosture(mov_type,pre_post,params,initPosture,finalPosture,zL,zU,lambda,
                                                iter_count,cpu_time,obj,overall_error,
-                                               obj_values,dual_inf_values,constr_viol_values,error_values);
+                                               obj_values,dual_inf_values,constr_viol_values,error_values,der_error_values);
         if (FPosture){
             // warm start results
             final_warm_start_params.valid = true;
@@ -12728,6 +12760,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
             final_warm_start_params.dual_inf_values = dual_inf_values;
             final_warm_start_params.constr_viol_values = constr_viol_values;
             final_warm_start_params.error_values = error_values;
+            final_warm_start_params.der_error_values = der_error_values;
             // extend the final posture
             finalPosture_ext = finalPosture;
             for(size_t i=0;i<finalHand.size();++i){
@@ -12744,7 +12777,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
             if(coll){ // collisions enabled
                 BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,x_b,zL_b,zU_b,lambda_b,
                                                         iter_count_b,cpu_time_b,obj_b,overall_error_b,
-                                                        obj_values_b,dual_inf_values_b,constr_viol_values_b,error_values_b);
+                                                        obj_values_b,dual_inf_values_b,constr_viol_values_b,error_values_b,der_error_values_b);
                 if(BPosture){
                     res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                     res->time_steps.clear();
@@ -12766,6 +12799,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                     bounce_warm_start_params.dual_inf_values = dual_inf_values_b;
                     bounce_warm_start_params.constr_viol_values = constr_viol_values_b;
                     bounce_warm_start_params.error_values = error_values_b;
+                    bounce_warm_start_params.der_error_values = der_error_values_b;
                     // plan stage
                     MatrixXd traj; MatrixXd vel; MatrixXd acc; bool success = true;
                     double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -12831,7 +12865,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
         std::vector<double> bouncePosture; bool BPosture = false;
         warm_start_params bounce_warm_start_params; bounce_warm_start_params.valid = false;
         std::vector<double> x_b; std::vector<double> zL_b; std::vector<double> zU_b; std::vector<double> lambda_b; int iter_count_b; double cpu_time_b; double obj_b; double overall_error_b;
-        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b;
+        std::vector<double> obj_values_b; std::vector<double> dual_inf_values_b; std::vector<double> constr_viol_values_b; std::vector<double> error_values_b; std::vector<double> der_error_values_b;
 
         std::vector<double> finalPosture_ext;
         // extend the final posture
@@ -12850,7 +12884,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
         if(coll){
             BPosture = this->singleArmBouncePosture(steps,mov_type,pre_post,params,initPosture,finalPosture,bouncePosture,x_b,zL_b,zU_b,lambda_b,
                                                     iter_count_b,cpu_time_b,obj_b,overall_error_b,
-                                                    obj_values_b, dual_inf_values_b, constr_viol_values_b, error_values_b);
+                                                    obj_values_b, dual_inf_values_b, constr_viol_values_b, error_values_b,der_error_values_b);
             if(BPosture){
                 res->status = 0; res->status_msg = string("HUMP: trajectory planned successfully ");
                 res->time_steps.clear();
@@ -12872,6 +12906,7 @@ planning_result_ptr HUMPlanner::plan_move(hump_params &params, std::vector<doubl
                 bounce_warm_start_params.dual_inf_values = dual_inf_values_b;
                 bounce_warm_start_params.constr_viol_values = constr_viol_values_b;
                 bounce_warm_start_params.error_values = error_values_b;
+                bounce_warm_start_params.der_error_values = der_error_values_b;
                 // plan stage
                 MatrixXd traj; MatrixXd vel; MatrixXd acc; bool success = true;
                 double timestep = this->getAcceleration(mov_type,steps,params,initPosture,finalPosture_ext,bouncePosture,traj,vel,acc,success,mod);
@@ -13776,10 +13811,10 @@ bool HUMPlanner::singleDualArmFinalPosture(int dual_mov_type,int pre_post,hump_d
             std::vector<Number> x_sol; std::vector<Number> zL_sol; std::vector<Number> zU_sol; std::vector<Number> lambda_sol; Index iter_count; Number cpu_time; Number obj_sol; Number overall_error_sol;
             try
             {
-                std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values;
+                std::vector<double> obj_values; std::vector<double> dual_inf_values; std::vector<double> constr_viol_values; std::vector<double> error_values; std::vector<double> der_error_values;
                 if (this->optimize(nlfile,x_sol,zL_sol,zU_sol,lambda_sol,iter_count,cpu_time,obj_sol,overall_error_sol,
                                    FINAL_DUAL_TOL,FINAL_DUAL_ACC_TOL,FINAL_DUAL_CONSTR_VIOL_TOL,set_max_iter,max_iter,
-                                   obj_values, dual_inf_values, constr_viol_values,error_values)){
+                                   obj_values, dual_inf_values, constr_viol_values,error_values,der_error_values)){
                     finalPosture = std::vector<double>(x_sol.size());
                     for (std::size_t i=0; i < x_sol.size(); ++i){
                         finalPosture.at(i)=x_sol[i];

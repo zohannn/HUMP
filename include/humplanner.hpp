@@ -1371,9 +1371,10 @@ private:
      * @param dual_inf_values
      * @param constr_viol_values
      * @param error_values
+     * @param der_error_values
      * @return
      */
-    bool optimize(string &nlfile, std::vector<Number>& x, std::vector<Number> &zL, std::vector<Number> &zU, std::vector<Number> &lambda, Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error, double tol, double acc_tol, double constr_viol_tol, bool set_max_iter, int max_iter, std::vector<Number> &obj_values, std::vector<Number> &dual_inf_values, std::vector<Number> &constr_viol_values, std::vector<Number> &error_values);
+    bool optimize(string &nlfile, std::vector<Number>& x, std::vector<Number> &zL, std::vector<Number> &zU, std::vector<Number> &lambda, Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error, double tol, double acc_tol, double constr_viol_tol, bool set_max_iter, int max_iter, std::vector<Number> &obj_values, std::vector<Number> &dual_inf_values, std::vector<Number> &constr_viol_values, std::vector<Number> &error_values, std::vector<Number> &der_error_values);
 
     /**
      * @brief optimize_warm_start
@@ -1395,10 +1396,11 @@ private:
      * @param dual_inf_values
      * @param constr_viol_values
      * @param error_values
+     * @param der_error_values
      * @return
      */
-    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error, double tol, double acc_tol, double constr_viol_tol,bool set_max_iter,int max_iter,std::vector<Number>& obj_values, std::vector<Number>& dual_inf_values,
-                             std::vector<Number>& constr_viol_values,std::vector<Number>& error_values);
+    bool optimize_warm_start(string &nlfile, std::vector<Number>& x, std::vector<Number>& zL, std::vector<Number>& zU, std::vector<Number>& lambda, Index &iter_count, Number &cpu_time, Number &obj, Number &overall_error, double tol, double acc_tol, double constr_viol_tol, bool set_max_iter, int max_iter, std::vector<Number>& obj_values, std::vector<Number>& dual_inf_values,
+                             std::vector<Number>& constr_viol_values, std::vector<Number>& error_values, std::vector<Number> &der_error_values);
 
 
     /**
@@ -1467,9 +1469,10 @@ private:
      * @param dual_inf_values
      * @param constr_viol_values
      * @param error_values
+     * @param der_error_values
      * @return
      */
-    bool singleArmFinalPosture(int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda, int &iterations, double &time, double &obj, double &overall_error, std::vector<double> &obj_values, std::vector<double> &dual_inf_values, std::vector<double> &constr_viol_values, std::vector<double> &error_values);
+    bool singleArmFinalPosture(int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double>& finalPosture, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda, int &iterations, double &time, double &obj, double &overall_error, std::vector<double> &obj_values, std::vector<double> &dual_inf_values, std::vector<double> &constr_viol_values, std::vector<double> &error_values, std::vector<double> &der_error_values);
 
     /**
      * @brief writeFilesFinalPosture
@@ -1505,9 +1508,10 @@ private:
      * @param dual_inf_values
      * @param constr_viol_values
      * @param error_values
+     * @param der_error_values
      * @return
      */
-    bool singleArmBouncePosture(int steps, int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double>& bouncePosture, std::vector<double> &x, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda_dual, int &iterations, double &time, double &obj, double &overall_error, std::vector<double> &obj_values, std::vector<double> &dual_inf_values, std::vector<double> &constr_viol_values, std::vector<double> &error_values);
+    bool singleArmBouncePosture(int steps, int mov_type, int pre_post, hump_params& params, std::vector<double> initPosture, std::vector<double> finalPosture, std::vector<double>& bouncePosture, std::vector<double> &x, std::vector<double> &zL, std::vector<double> &zU, std::vector<double> &lambda_dual, int &iterations, double &time, double &obj, double &overall_error, std::vector<double> &obj_values, std::vector<double> &dual_inf_values, std::vector<double> &constr_viol_values, std::vector<double> &error_values, std::vector<double> &der_error_values);
 
     /**
      * @brief writeFilesBouncePosture
