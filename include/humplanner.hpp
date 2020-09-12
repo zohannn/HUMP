@@ -427,9 +427,13 @@ private:
     vector<objectPtr> obstacles_left; /**< obstacles in the scenario (dual-arm left) */
     // humanoid info
     std::vector<double> shPose; /**< pose of the shoulder of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw */
+    Matrix3d shoulderOr; /**< rotation matrix of the shoulder point **/
     std::vector<double> elPose; /**< pose of the elbow of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
+    Matrix3d elbowOr; /**< rotation matrix of the elbow point **/
     std::vector<double> wrPose; /**< pose of the wrist of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
+    Matrix3d wristOr; /**< rotation matrix of the wrist point **/
     std::vector<double> haPose; /**< pose of the hand of the humanoid: shPose(0)=x, shPose(1)=y, shPose(2)=z, shPose(3)=roll, shPose(4)=pitch, shPose(5)=yaw  */
+    Matrix3d handOr; /**< rotation matrix of the hand point **/
     Matrix4d matWorldToRightArm; /**< transformation matrix from the fixed world frame and the reference frame of the right arm (positions are in [mm]) */
     Matrix4d matRightHand;/**< trabsformation matrix from the last joint of the right arm and the palm of the right hand (positions are in [mm]) */
     std::vector<double> minRightLimits; /**< minimum right limits */
@@ -933,11 +937,19 @@ private:
                             std::vector<double>& minLeftArmLimits, std::vector<double>& maxLeftArmLimits, bool final);
 
     /**
-     * @brief This method writes down the initial posture of the arm
+     * @brief writeArmInitPose
      * @param stream
+     * @param arm_code
      * @param initArmPosture
      */
-    void writeArmInitPose(std::ofstream& stream,std::vector<double>& initArmPosture);
+    void writeArmInitPose(std::ofstream& stream, int arm_code, std::vector<double>& initArmPosture);
+
+    /**
+     * @brief writeDualArmInitPose
+     * @param stream
+     * @param initAuxPosture
+     */
+    void writeDualArmInitPose(std::ofstream& stream,std::vector<double>& initAuxPosture);
 
     /**
      * @brief writeDualArmInitPose
@@ -1291,6 +1303,13 @@ private:
     void writeObjective(ofstream &stream, bool final);
 
     /**
+     * @brief writeDualObjective
+     * @param stream
+     * @param final
+     */
+    void writeDualObjective(ofstream &stream, bool final);
+
+    /**
      * @brief writeBodyConstraints
      * @param stream
      * @param warm_start
@@ -1330,6 +1349,14 @@ private:
      * @param rpy
      */
     void getRotAxis(vector<double>& xt, int id,std::vector<double>rpy);
+
+    /**
+     * @brief getRotAxis
+     * @param xt
+     * @param id
+     * @param Rot
+     */
+    void getRotAxis(vector<double>& xt, int id,Matrix3d &Rot);
 
     /**
      * @brief getRand
@@ -1639,6 +1666,14 @@ private:
      */
     void getShoulderOr(int arm, vector<double> &posture,vector<double> &orient);
 
+    /**
+     * @brief getShoulderOr
+     * @param arm
+     * @param posture
+     * @param orient_mat
+     */
+    void getShoulderOr(int arm, vector<double> &posture,Matrix3d &orient_mat);
+
 
     /**
      * @brief getElbowPos
@@ -1648,7 +1683,6 @@ private:
      */
     void getElbowPos(int arm,vector<double> &posture,vector<double> &pos);
 
-
     /**
      * @brief getElbowOr
      * @param arm
@@ -1656,6 +1690,14 @@ private:
      * @param orient
      */
     void getElbowOr(int arm, vector<double> &posture,vector<double> &orient);
+
+    /**
+     * @brief getElbowOr
+     * @param arm
+     * @param posture
+     * @param orient_mat
+     */
+    void getElbowOr(int arm, vector<double> &posture,Matrix3d &orient_mat);
 
     /**
      * @brief getWristPos
@@ -1674,6 +1716,14 @@ private:
     void getWristOr(int arm, vector<double> &posture,vector<double> &orient);
 
     /**
+     * @brief getWristOr
+     * @param arm
+     * @param posture
+     * @param orient_mat
+     */
+    void getWristOr(int arm, vector<double> &posture,Matrix3d &orient_mat);
+
+    /**
      * @brief getHandPos
      * @param arm
      * @param posture
@@ -1688,6 +1738,22 @@ private:
      * @param orient
      */
     void getHandOr(int arm, vector<double> &posture,vector<double> &orient);
+
+    /**
+     * @brief getHandOr
+     * @param arm
+     * @param posture
+     * @param orient_mat
+     */
+    void getHandOr(int arm, vector<double> &posture,Matrix3d &orient_mat);
+
+    /**
+     * @brief getSwivelAngle
+     * @param arm
+     * @param posture
+     * @return
+     */
+    double getSwivelAngle(int arm, vector<double>& posture);
 
 
     //bool singleArmInvKinematics(hump_params& params,std::vector<double> &init_posture,std::vector<double>& hand_pose,std::vector<double>& goal_posture);

@@ -702,10 +702,27 @@ void HUMPlanner::writeDualArmLimits(std::ofstream& stream, std::vector<double>& 
     }
 }
 
-void HUMPlanner::writeArmInitPose(ofstream &stream, std::vector<double> &initArmPosture)
+void HUMPlanner::writeArmInitPose(ofstream &stream, int arm_code, std::vector<double> &initArmPosture)
 {
+    // initial configuration
+    std::vector<double> hand_pos; this->getHandPos(arm_code,initArmPosture,hand_pos);
+    Matrix3d hand_or; this->getHandOr(arm_code, initArmPosture,hand_or);
+    std::vector<double> xh; this->getRotAxis(xh,0,hand_or);
+    std::vector<double> yh; this->getRotAxis(yh,1,hand_or);
+    std::vector<double> zh; this->getRotAxis(zh,2,hand_or);
+    std::vector<double> elbow_pos; this->getElbowPos(arm_code,initArmPosture,elbow_pos);
+    Matrix3d elbow_or; this->getElbowOr(arm_code, initArmPosture,elbow_or);
+    std::vector<double> xe; this->getRotAxis(xe,0,elbow_or);
+    std::vector<double> ye; this->getRotAxis(ye,1,elbow_or);
+    std::vector<double> ze; this->getRotAxis(ze,2,elbow_or);
+    std::vector<double> wrist_pos; this->getWristPos(arm_code,initArmPosture,wrist_pos);
+    Matrix3d wrist_or; this->getWristOr(arm_code, initArmPosture,wrist_or);
+    std::vector<double> xw; this->getRotAxis(xw,0,wrist_or);
+    std::vector<double> yw; this->getRotAxis(yw,1,wrist_or);
+    std::vector<double> zw; this->getRotAxis(zw,2,wrist_or);
+    double swivel_init = this->getSwivelAngle(arm_code, initArmPosture);
 
-    stream << string("# INITIAL POSE \n");
+    stream << string("# INITIAL CONFIGURATION \n");
     stream << string("param thet_init := \n");
 
     for (std::size_t i=0; i < initArmPosture.size(); ++i){
@@ -718,6 +735,130 @@ void HUMPlanner::writeArmInitPose(ofstream &stream, std::vector<double> &initArm
         }
     }
 
+    // hand position
+    stream << string("param Hand_init := \n");
+    string hand_pos_x =  boost::str(boost::format("%.2f") % (hand_pos.at(0))); boost::replace_all(hand_pos_x,",",".");
+    stream << to_string(1)+string(" ")+hand_pos_x+string("\n");
+    string hand_pos_y =  boost::str(boost::format("%.2f") % (hand_pos.at(1))); boost::replace_all(hand_pos_y,",",".");
+    stream << to_string(2)+string(" ")+hand_pos_y+string("\n");
+    string hand_pos_z =  boost::str(boost::format("%.2f") % (hand_pos.at(2))); boost::replace_all(hand_pos_z,",",".");
+    stream << to_string(3)+string(" ")+hand_pos_z+string(";\n");
+
+    // hand orientation
+    stream << string("param x_H_init := \n");
+    string hand_or_x0 =  boost::str(boost::format("%.2f") % (xh[0])); boost::replace_all(hand_or_x0,",",".");
+    stream << to_string(1)+string(" ")+hand_or_x0+string("\n");
+    string hand_or_x1 =  boost::str(boost::format("%.2f") % (xh[1])); boost::replace_all(hand_or_x1,",",".");
+    stream << to_string(2)+string(" ")+hand_or_x1+string("\n");
+    string hand_or_x2 =  boost::str(boost::format("%.2f") % (xh[2])); boost::replace_all(hand_or_x2,",",".");
+    stream << to_string(3)+string(" ")+hand_or_x2+string(";\n");
+
+    stream << string("param y_H_init := \n");
+    string hand_or_y0 =  boost::str(boost::format("%.2f") % (yh[0])); boost::replace_all(hand_or_y0,",",".");
+    stream << to_string(1)+string(" ")+hand_or_y0+string("\n");
+    string hand_or_y1 =  boost::str(boost::format("%.2f") % (yh[1])); boost::replace_all(hand_or_y1,",",".");
+    stream << to_string(2)+string(" ")+hand_or_y1+string("\n");
+    string hand_or_y2 =  boost::str(boost::format("%.2f") % (yh[2])); boost::replace_all(hand_or_y2,",",".");
+    stream << to_string(3)+string(" ")+hand_or_y2+string(";\n");
+
+    stream << string("param z_H_init := \n");
+    string hand_or_z0 =  boost::str(boost::format("%.2f") % (zh[0])); boost::replace_all(hand_or_z0,",",".");
+    stream << to_string(1)+string(" ")+hand_or_z0+string("\n");
+    string hand_or_z1 =  boost::str(boost::format("%.2f") % (zh[1])); boost::replace_all(hand_or_z1,",",".");
+    stream << to_string(2)+string(" ")+hand_or_z1+string("\n");
+    string hand_or_z2 =  boost::str(boost::format("%.2f") % (zh[2])); boost::replace_all(hand_or_z2,",",".");
+    stream << to_string(3)+string(" ")+hand_or_z2+string(";\n");
+
+    // elbow position
+    stream << string("param Elbow_init := \n");
+    string elbow_pos_x =  boost::str(boost::format("%.2f") % (elbow_pos.at(0))); boost::replace_all(elbow_pos_x,",",".");
+    stream << to_string(1)+string(" ")+elbow_pos_x+string("\n");
+    string elbow_pos_y =  boost::str(boost::format("%.2f") % (elbow_pos.at(1))); boost::replace_all(elbow_pos_y,",",".");
+    stream << to_string(2)+string(" ")+elbow_pos_y+string("\n");
+    string elbow_pos_z =  boost::str(boost::format("%.2f") % (elbow_pos.at(2))); boost::replace_all(elbow_pos_z,",",".");
+    stream << to_string(3)+string(" ")+elbow_pos_z+string(";\n");
+
+    // elbow orientation
+    stream << string("param x_E_init := \n");
+    string elbow_or_x0 =  boost::str(boost::format("%.2f") % (xe[0])); boost::replace_all(elbow_or_x0,",",".");
+    stream << to_string(1)+string(" ")+elbow_or_x0+string("\n");
+    string elbow_or_x1 =  boost::str(boost::format("%.2f") % (xe[1])); boost::replace_all(elbow_or_x1,",",".");
+    stream << to_string(2)+string(" ")+elbow_or_x1+string("\n");
+    string elbow_or_x2 =  boost::str(boost::format("%.2f") % (xe[2])); boost::replace_all(elbow_or_x2,",",".");
+    stream << to_string(3)+string(" ")+elbow_or_x2+string(";\n");
+
+    stream << string("param y_E_init := \n");
+    string elbow_or_y0 =  boost::str(boost::format("%.2f") % (ye[0])); boost::replace_all(elbow_or_y0,",",".");
+    stream << to_string(1)+string(" ")+elbow_or_y0+string("\n");
+    string elbow_or_y1 =  boost::str(boost::format("%.2f") % (ye[1])); boost::replace_all(elbow_or_y1,",",".");
+    stream << to_string(2)+string(" ")+elbow_or_y1+string("\n");
+    string elbow_or_y2 =  boost::str(boost::format("%.2f") % (ye[2])); boost::replace_all(elbow_or_y2,",",".");
+    stream << to_string(3)+string(" ")+elbow_or_y2+string(";\n");
+
+    stream << string("param z_E_init := \n");
+    string elbow_or_z0 =  boost::str(boost::format("%.2f") % (ze[0])); boost::replace_all(elbow_or_z0,",",".");
+    stream << to_string(1)+string(" ")+elbow_or_z0+string("\n");
+    string elbow_or_z1 =  boost::str(boost::format("%.2f") % (ze[1])); boost::replace_all(elbow_or_z1,",",".");
+    stream << to_string(2)+string(" ")+elbow_or_z1+string("\n");
+    string elbow_or_z2 =  boost::str(boost::format("%.2f") % (ze[2])); boost::replace_all(elbow_or_z2,",",".");
+    stream << to_string(3)+string(" ")+elbow_or_z2+string(";\n");
+
+    // wrist position
+    stream << string("param Wrist_init := \n");
+    string wrist_pos_x =  boost::str(boost::format("%.2f") % (wrist_pos.at(0))); boost::replace_all(wrist_pos_x,",",".");
+    stream << to_string(1)+string(" ")+elbow_pos_x+string("\n");
+    string wrist_pos_y =  boost::str(boost::format("%.2f") % (wrist_pos.at(1))); boost::replace_all(wrist_pos_y,",",".");
+    stream << to_string(2)+string(" ")+wrist_pos_y+string("\n");
+    string wrist_pos_z =  boost::str(boost::format("%.2f") % (wrist_pos.at(2))); boost::replace_all(wrist_pos_z,",",".");
+    stream << to_string(3)+string(" ")+wrist_pos_z+string(";\n");
+
+    // wrist orientation
+    stream << string("param x_W_init := \n");
+    string wrist_or_x0 =  boost::str(boost::format("%.2f") % (xw[0])); boost::replace_all(wrist_or_x0,",",".");
+    stream << to_string(1)+string(" ")+wrist_or_x0+string("\n");
+    string wrist_or_x1 =  boost::str(boost::format("%.2f") % (xw[1])); boost::replace_all(wrist_or_x1,",",".");
+    stream << to_string(2)+string(" ")+wrist_or_x1+string("\n");
+    string wrist_or_x2 =  boost::str(boost::format("%.2f") % (xw[2])); boost::replace_all(wrist_or_x2,",",".");
+    stream << to_string(3)+string(" ")+wrist_or_x2+string(";\n");
+
+    stream << string("param y_W_init := \n");
+    string wrist_or_y0 =  boost::str(boost::format("%.2f") % (yw[0])); boost::replace_all(wrist_or_y0,",",".");
+    stream << to_string(1)+string(" ")+wrist_or_y0+string("\n");
+    string wrist_or_y1 =  boost::str(boost::format("%.2f") % (yw[1])); boost::replace_all(wrist_or_y1,",",".");
+    stream << to_string(2)+string(" ")+wrist_or_y1+string("\n");
+    string wrist_or_y2 =  boost::str(boost::format("%.2f") % (yw[2])); boost::replace_all(wrist_or_y2,",",".");
+    stream << to_string(3)+string(" ")+wrist_or_y2+string(";\n");
+
+    stream << string("param z_W_init := \n");
+    string wrist_or_z0 =  boost::str(boost::format("%.2f") % (zw[0])); boost::replace_all(wrist_or_z0,",",".");
+    stream << to_string(1)+string(" ")+wrist_or_z0+string("\n");
+    string wrist_or_z1 =  boost::str(boost::format("%.2f") % (zw[1])); boost::replace_all(wrist_or_z1,",",".");
+    stream << to_string(2)+string(" ")+wrist_or_z1+string("\n");
+    string wrist_or_z2 =  boost::str(boost::format("%.2f") % (zw[2])); boost::replace_all(wrist_or_z2,",",".");
+    stream << to_string(3)+string(" ")+wrist_or_z2+string(";\n");
+
+    // swivel angle
+    stream << string("param swivel_init := ");
+    string swivel_init_str =  boost::str(boost::format("%.2f") % (swivel_init)); boost::replace_all(swivel_init_str,",",".");
+    stream << swivel_init_str+string(";\n");
+
+
+}
+
+void HUMPlanner::writeDualArmInitPose(std::ofstream& stream,std::vector<double>& initAuxPosture)
+{
+    stream << string("# INITIAL CONFIGURATION \n");
+    stream << string("param thet_init := \n");
+
+    for (std::size_t i=0; i < initAuxPosture.size(); ++i){
+        string initArmstr =  boost::str(boost::format("%.2f") % (initAuxPosture.at(i)));
+        boost::replace_all(initArmstr,",",".");
+        if (i == initAuxPosture.size()-1){
+            stream << to_string(i+1)+string(" ")+initArmstr+string(";\n");
+        }else{
+            stream << to_string(i+1)+string(" ")+initArmstr+string("\n");
+        }
+    }
 }
 
 void HUMPlanner::writeDualArmInitPose(std::ofstream& stream,std::vector<double>& initRightArmPosture,std::vector<double>& initLeftArmPosture)
@@ -3089,11 +3230,25 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("else	if ( i=4 ) then  ")+tolArm2+string("\n");
         stream << string(";  \n");
 
+        stream << string("# Elbow orientation \n");
+        stream << string("var x_E {j in 1..3} = T_W_3 [j,1]; \n");
+        stream << string("var y_E {j in 1..3} = T_W_3 [j,2]; \n");
+        stream << string("var z_E {j in 1..3} = T_W_3 [j,3]; \n");
+        stream << string("var Rot_E {j in 1..3,k in 1..3} = T_W_3 [j,k]; \n \n");
+
+        stream << string("# Wrist position \n");
         stream << string("var Wrist {i in 1..4} = #xyz+radius \n");
         stream << string("if ( i<4 ) then 	T_W_5[i,4] \n");
         stream << string("else	if ( i=4 ) then  ")+tolArm3+string("\n");
         stream << string(";  \n");
 
+        stream << string("# Wrist orientation \n");
+        stream << string("var x_W {j in 1..3} = T_W_5 [j,1]; \n");
+        stream << string("var y_W {j in 1..3} = T_W_5 [j,2]; \n");
+        stream << string("var z_W {j in 1..3} = T_W_5 [j,3]; \n");
+        stream << string("var Rot_W {j in 1..3,k in 1..3} = T_W_5 [j,k]; \n \n");
+
+        stream << string("# Hand position \n");
         stream << string("var Hand {i in 1..4} = #xyz+radius \n");
         stream << string("if ( i<4 ) then 	T_W_H[i,4] \n");
         stream << string("else	if ( i=4 ) then  ")+tolArm4+string("\n");
@@ -3103,7 +3258,19 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("var x_H {j in 1..3} = T_W_H [j,1]; \n");
         stream << string("var y_H {j in 1..3} = T_W_H [j,2]; \n");
         stream << string("var z_H {j in 1..3} = T_W_H [j,3]; \n");
-        stream << string("var Rot_H {j in 1..3,k in 1..3} = T_W_H [j,k]; \n");
+        stream << string("var Rot_H {j in 1..3,k in 1..3} = T_W_H [j,k]; \n \n");
+
+        stream << string("# Swivel angle \n");
+        stream << string("param basez {j in 1..3} = T_WorldToArm [j,3]; \n");
+        stream << string("var WS {j in 1..3} = Wrist [j] - Shoulder [j]; \n");
+        stream << string("var v_WS {j in 1..3} = WS [j]/ sqrt(sum{i in 1..3}(WS [i])^2); \n");
+        stream << string("var ES {j in 1..3} = Elbow [j] - Shoulder [j]; \n");
+        stream << string("var p {j in 1..3} = (1.00 - (v_WS [j])^2)*ES [j]; \n");
+        stream << string("var s1 = sum{i in 1..3} (basez [i] * p [i]); \n");
+        stream << string("var s2 = ((basez [2] * p [3]) - (basez [3] * p [2])) * v_WS [1] "
+                         "+ ((basez [3] * p [1]) - (basez [1] * p [3])) * v_WS [2] "
+                         "+ ((basez [1] * p [2]) - (basez [2] * p [1])) * v_WS [3]; \n");
+        stream << string("var swivel = atan2(s2,s1); \n");
 
     }else{
         stream << string("var Shoulder {i in 1..4,j in Iterations} = #xyz+radius \n");
@@ -3116,11 +3283,25 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("else	if ( i=4 ) then  ")+tolArm2+string("\n");
         stream << string(";  \n");
 
+        stream << string("# Elbow orientation \n");
+        stream << string("var x_E {j in 1..3,i in Iterations} = T_W_3 [j,1,i]; \n");
+        stream << string("var y_E {j in 1..3,i in Iterations} = T_W_3 [j,2,i]; \n");
+        stream << string("var z_E {j in 1..3,i in Iterations} = T_W_3 [j,3,i]; \n");
+        stream << string("var Rot_E {j in 1..3,k in 1..3,i in Iterations} = T_W_3 [j,k,i]; \n \n");
+
+        stream << string("# Wrist position \n");
         stream << string("var Wrist {i in 1..4,j in Iterations} = #xyz+radius \n");
         stream << string("if ( i<4 ) then 	T_W_5[i,4,j] \n");
         stream << string("else	if ( i=4 ) then  ")+tolArm3+string("\n");
         stream << string(";  \n");
 
+        stream << string("# Wrist orientation \n");
+        stream << string("var x_W {j in 1..3,i in Iterations} = T_W_5 [j,1,i]; \n");
+        stream << string("var y_W {j in 1..3,i in Iterations} = T_W_5 [j,2,i]; \n");
+        stream << string("var z_W {j in 1..3,i in Iterations} = T_W_5 [j,3,i]; \n");
+        stream << string("var Rot_W {j in 1..3,k in 1..3,i in Iterations} = T_W_5 [j,k,i]; \n \n");
+
+        stream << string("# Hand position \n");
         stream << string("var Hand {i in 1..4,j in Iterations} = #xyz+radius \n");
         stream << string("if ( i<4 ) then 	T_W_H[i,4,j] \n");
         stream << string("else	if ( i=4 ) then  ")+tolArm4+string("\n");
@@ -3130,7 +3311,19 @@ void HUMPlanner::writeArmDirKin(ofstream &stream, Matrix4d &matWorldToArm, Matri
         stream << string("var x_H {j in 1..3,i in Iterations} = T_W_H [j,1,i]; \n");
         stream << string("var y_H {j in 1..3,i in Iterations} = T_W_H [j,2,i]; \n");
         stream << string("var z_H {j in 1..3,i in Iterations} = T_W_H [j,3,i]; \n");
-        stream << string("var Rot_H {j in 1..3,k in 1..3,i in Iterations} = T_W_H [j,k,i]; \n");
+        stream << string("var Rot_H {j in 1..3,k in 1..3,i in Iterations} = T_W_H [j,k,i]; \n \n");
+
+        stream << string("# Swivel angle \n");
+        stream << string("param basez {j in 1..3} = T_WorldToArm [j,3]; \n");
+        stream << string("var WS {j in 1..3,i in Iterations} = Wrist [j,i] - Shoulder [j,i]; \n");
+        stream << string("var v_WS {j in 1..3,i in Iterations} = WS [j,i]/ sqrt(sum{i1 in 1..3}(WS [i1,i])^2); \n");
+        stream << string("var ES {j in 1..3,i in Iterations} = Elbow [j,i] - Shoulder [j,i]; \n");
+        stream << string("var p {j in 1..3,i in Iterations} = (1.00 - (v_WS [j,i])^2)*ES [j,i]; \n");
+        stream << string("var s1 {i in Iterations} = sum{j in 1..3} (basez [j] * p [j,i]); \n");
+        stream << string("var s2 {i in Iterations} = ((basez [2] * p [3,i]) - (basez [3] * p [2,i])) * v_WS [1,i] "
+                         "+ ((basez [3] * p [1,i]) - (basez [1] * p [3,i])) * v_WS [2,i] "
+                         "+ ((basez [1] * p [2,i]) - (basez [2] * p [1,i])) * v_WS [3,i]; \n");
+        stream << string("var swivel {i in Iterations} = atan2(s2[i],s1[i]); \n");
     }
 }
 
@@ -6203,6 +6396,26 @@ void HUMPlanner::writeObjective(ofstream &stream, bool final)
     stream << string("#		       Objective function          # \n");
     stream << string("#  \n");
     if(final){
+        // joints-space objective function
+         stream << string("minimize z: sum {j in nJoints} (lambda[j]*(thet_init[j]-theta[j])^2); \n");
+        // operational-space objective function (TO DO)
+        // stream << string("minimize z: ( sum{i in 1..3} (Elbow[i] - Elbow_init[i])^2 + sum{i in 1..3} (0*(x_E[i] - x_E_init[i]))^2 + sum{i in 1..3} (0*(z_E[i] - z_E_init[i]))^2 "
+        //                  "+ sum{i in 1..3} (Wrist[i] - Wrist_init[i])^2 + sum{i in 1..3} (0*(x_W[i] - x_W_init[i]))^2 + sum{i in 1..3} (0*(z_W[i] - z_W_init[i]))^2); \n ");
+
+    }else{
+        stream << string("minimize z: sum {j in nJoints} (lambda[j]*(thet_init[j]-theta_b[j])^2); \n");
+    }
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+
+}
+
+void HUMPlanner::writeDualObjective(ofstream &stream, bool final)
+{
+    stream << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
+    stream << string("#  \n");
+    stream << string("#		       Objective function          # \n");
+    stream << string("#  \n");
+    if(final){
         stream << string("minimize z: sum {j in nJoints} (lambda[j]*(thet_init[j]-theta[j])^2); \n");
     }else{
         stream << string("minimize z: sum {j in nJoints} (lambda[j]*(thet_init[j]-theta_b[j])^2); \n");
@@ -6298,6 +6511,16 @@ void HUMPlanner::getRotAxis(vector<double> &xt, int id, std::vector<double> rpy)
 {
     Matrix3d Rot;
     this->RPY_matrix(rpy,Rot);
+    Vector3d v = Rot.col(id);
+
+    // get the components of the axis
+    xt.push_back(v(0)); // x
+    xt.push_back(v(1)); // y
+    xt.push_back(v(2)); // z
+}
+
+void HUMPlanner::getRotAxis(vector<double> &xt, int id, Matrix3d &Rot)
+{
     Vector3d v = Rot.col(id);
 
     // get the components of the axis
@@ -6424,7 +6647,7 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
         break;
     }
     std::vector<double> minArmLimits(minLimits.begin(),minLimits.begin()+joints_arm);
-    std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);
+    std::vector<double> maxArmLimits(maxLimits.begin(),maxLimits.begin()+joints_arm);  
 
    //------------------------- Write the dat file --------------------------------------------------
     string filename("FinalPosture.dat");
@@ -6449,8 +6672,8 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     this->write_dHO(PostureDat,dHO);
     // joint limits
     //this->writeArmLimits(PostureDat,minArmLimits,maxArmLimits,true);
-    // initial pose of the arm
-    this->writeArmInitPose(PostureDat,initArmPosture);
+    // initial configuration of the arm
+    this->writeArmInitPose(PostureDat,arm_code,initArmPosture);
     // final posture of the fingers
     this->writeFingerFinalPose(PostureDat,finalHand);
     // joint expense factors of the arm
@@ -6578,8 +6801,21 @@ bool HUMPlanner::writeFilesFinalPosture(hump_params& params,int mov_type, int pr
     // joint limits
     this->writeArmLimits(PostureMod,minArmLimits,maxArmLimits,true);
 
-    PostureMod << string("# Initial posture \n");
+    PostureMod << string("# Initial configuration \n");
     PostureMod << string("param thet_init {i in 1..")+to_string(joints_arm)+string("} ; \n");
+    PostureMod << string("param Hand_init {i in 1..3} ; \n");
+    PostureMod << string("param x_H_init {i in 1..3} ; \n");
+    PostureMod << string("param y_H_init {i in 1..3} ; \n");
+    PostureMod << string("param z_H_init {i in 1..3} ; \n");
+    PostureMod << string("param Elbow_init {i in 1..3} ; \n");
+    PostureMod << string("param x_E_init {i in 1..3} ; \n");
+    PostureMod << string("param y_E_init {i in 1..3} ; \n");
+    PostureMod << string("param z_E_init {i in 1..3} ; \n");
+    PostureMod << string("param Wrist_init {i in 1..3} ; \n");
+    PostureMod << string("param x_W_init {i in 1..3} ; \n");
+    PostureMod << string("param y_W_init {i in 1..3} ; \n");
+    PostureMod << string("param z_W_init {i in 1..3} ; \n");
+    PostureMod << string("param swivel_init; \n");
 
     PostureMod << string("# Final finger posture \n");
     PostureMod << string("param joint_fingers {i in 1..")+to_string(finalHand.size())+string("} ; \n");
@@ -7039,7 +7275,7 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
      // joint limits
      // this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
-     this->writeArmInitPose(PostureDat,initAuxPosture);
+     this->writeArmInitPose(PostureDat,arm_code,initAuxPosture);
      // final pose of the arm
      PostureDat << string("# FINAL POSE \n");
      PostureDat << string("param thet_final := \n");
@@ -7257,6 +7493,20 @@ bool HUMPlanner::writeFilesBouncePosture(int steps,hump_params& params,int mov_t
 
      PostureMod << string("# Initial posture \n");
      PostureMod << string("param thet_init {i in 1..")+to_string(initAuxPosture.size())+string("} ; \n");
+     PostureMod << string("param Hand_init {i in 1..3} ; \n");
+     PostureMod << string("param x_H_init {i in 1..3} ; \n");
+     PostureMod << string("param y_H_init {i in 1..3} ; \n");
+     PostureMod << string("param z_H_init {i in 1..3} ; \n");
+     PostureMod << string("param Elbow_init {i in 1..3} ; \n");
+     PostureMod << string("param x_E_init {i in 1..3} ; \n");
+     PostureMod << string("param y_E_init {i in 1..3} ; \n");
+     PostureMod << string("param z_E_init {i in 1..3} ; \n");
+     PostureMod << string("param Wrist_init {i in 1..3} ; \n");
+     PostureMod << string("param x_W_init {i in 1..3} ; \n");
+     PostureMod << string("param y_W_init {i in 1..3} ; \n");
+     PostureMod << string("param z_W_init {i in 1..3} ; \n");
+     PostureMod << string("param swivel_init; \n");
+
      PostureMod << string("# Final posture \n");
      PostureMod << string("param thet_final {i in 1..")+to_string(finalAuxPosture.size())+string("} ; \n");
      PostureMod << string("# Final finger posture \n");
@@ -9815,8 +10065,8 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
         break;
     }
 
+    // initial configuration
     std::vector<double> initArmPosture(initPosture.begin(),initPosture.begin()+joints_arm);
-
 
     double Lu; double Ll; double Lh;
     switch(arm_code){
@@ -9943,6 +10193,25 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
                     time = cpu_time;
                     obj = obj_sol;
                     overall_error = overall_error_sol;
+                    // ------------- print
+                        std::cout << "# Initial posture #" << std::endl;
+                        for (size_t i=0; i < initArmPosture.size(); ++i) {
+                            std::cout << initArmPosture.at(i) << " ";
+                        }
+                        std::cout << std::endl;
+                        std::cout << "# Final posture #" << std::endl;
+                        for (size_t i=0; i < finalPosture.size(); ++i) {
+                            std::cout << finalPosture.at(i) << " ";
+                        }
+                        std::cout << std::endl;
+                        std::cout << "# Squared norm of the difference #" << std::endl;
+                        std::vector<double> difference(finalPosture.size());
+                        std::vector<double> sqr_difference(finalPosture.size());
+                        std::transform(initArmPosture.begin(), initArmPosture.end(), finalPosture.begin(), difference.begin(), std::minus<double>());
+                        std::transform( difference.begin(), difference.end(), difference.begin(), sqr_difference.begin(), std::multiplies<double>());
+                        double sqr_norm = std::accumulate(sqr_difference.begin(), sqr_difference.end(), 0.0);
+                        std::cout << "Squared norm of the difference = " << sqr_norm << std::endl;
+                    // ---------------- end print
                     return true;
                 }else{return false;}
             }catch(const std::exception &exc){
@@ -14269,7 +14538,7 @@ bool HUMPlanner::writeFilesDualFinalPosture(hump_dual_params& params,int dual_mo
     PostureMod << string("; \n\n");
 
     // objective function
-    this->writeObjective(PostureMod,true);
+    this->writeDualObjective(PostureMod,true);
 
 
     // constraints
@@ -14732,7 +15001,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
      // joint limits
      // this->writeArmLimits(PostureDat,minAuxLimits,maxAuxLimits,false);
      // initial pose of the arm
-     this->writeArmInitPose(PostureDat,initAuxPosture);
+     this->writeDualArmInitPose(PostureDat,initAuxPosture);
      // final pose of the arm
      PostureDat << string("# FINAL POSE \n");
      PostureDat << string("param thet_final := \n");
@@ -15201,7 +15470,7 @@ bool HUMPlanner::writeFilesDualBouncePosture(int steps,hump_dual_params& params,
       }
       PostureMod << string("; \n\n");
       // objective function
-      this->writeObjective(PostureMod,false);
+      this->writeDualObjective(PostureMod,false);
       // constraints
       PostureMod << string("# *+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*# \n");
       PostureMod << string("#  \n");
@@ -16573,8 +16842,6 @@ bool HUMPlanner::getRPY(std::vector<double>& rpy, Matrix3d& Rot)
 
 void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture)
 {
-
-
     Matrix4d T;
     Matrix4d T_aux;
     Matrix4d mat_world;
@@ -16583,13 +16850,9 @@ void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture
     this->shPose.clear(); this->elPose.clear(); this->wrPose.clear(); this->haPose.clear();
 
     vector<double> shoulderPos = vector<double>(3);
-    Matrix3d shoulderOr;
     vector<double> elbowPos = vector<double>(3);
-    Matrix3d elbowOr;
     vector<double> wristPos = vector<double>(3);
-    Matrix3d wristOr;
     vector<double> handPos = vector<double>(3);
-    Matrix3d handOr;
 
     switch (arm) {
     case 1: // right arm
@@ -16613,8 +16876,7 @@ void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture
 
         if (i==0){
             // get the shoulder
-
-            shoulderOr = T.block(0,0,3,3);
+            this->shoulderOr = T.block(0,0,3,3);
             v = T.block(0,3,3,1);
             //position
             shoulderPos[0] = v[0];
@@ -16632,7 +16894,7 @@ void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture
         }else if (i==2){
 
             // get the elbow
-            elbowOr = T.block(0,0,3,3);
+            this->elbowOr = T.block(0,0,3,3);
             v = T.block(0,3,3,1);
             //position
             elbowPos[0] = v[0];
@@ -16650,7 +16912,7 @@ void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture
         }else if (i==4){
 
             // get the wrist
-            wristOr = T.block(0,0,3,3);
+            this->wristOr = T.block(0,0,3,3);
             v = T.block(0,3,3,1);
             // position
             wristPos[0] = v[0];
@@ -16671,7 +16933,7 @@ void HUMPlanner::directKinematicsSingleArm(int arm, std::vector<double>& posture
             //get the hand
             T = T * mat_hand;
 
-            handOr = T.block(0,0,3,3);
+            this->handOr = T.block(0,0,3,3);
             v = T.block(0,3,3,1);
             // position
             handPos[0] = v[0];
@@ -16706,18 +16968,11 @@ void HUMPlanner::getShoulderOr(int arm, vector<double> &posture, vector<double> 
     orient = { this->shPose.at(3), this->shPose.at(4), this->shPose.at(5)};
 }
 
-void HUMPlanner::getWristPos(int arm, vector<double> &posture, vector<double> &pos)
+void HUMPlanner::getShoulderOr(int arm, vector<double> &posture, Matrix3d &orient_mat)
 {
     std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
     this->directKinematicsSingleArm(arm,aux_posture);
-    pos = { this->wrPose.at(0), this->wrPose.at(1), this->wrPose.at(2)};
-}
-
-void HUMPlanner::getWristOr(int arm, vector<double> &posture, vector<double> &orient)
-{
-    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
-    this->directKinematicsSingleArm(arm,aux_posture);
-    orient = { this->wrPose.at(3), this->wrPose.at(4), this->wrPose.at(5)};
+    orient_mat = this->shoulderOr;
 }
 
 void HUMPlanner::getElbowPos(int arm, vector<double> &posture, vector<double> &pos)
@@ -16734,6 +16989,34 @@ void HUMPlanner::getElbowOr(int arm, vector<double> &posture, vector<double> &or
     orient = { this->elPose.at(3), this->elPose.at(4), this->elPose.at(5)};
 }
 
+void HUMPlanner::getElbowOr(int arm, vector<double> &posture, Matrix3d &orient_mat)
+{
+    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
+    this->directKinematicsSingleArm(arm,aux_posture);
+    orient_mat = this->elbowOr;
+}
+
+void HUMPlanner::getWristPos(int arm, vector<double> &posture, vector<double> &pos)
+{
+    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
+    this->directKinematicsSingleArm(arm,aux_posture);
+    pos = { this->wrPose.at(0), this->wrPose.at(1), this->wrPose.at(2)};
+}
+
+void HUMPlanner::getWristOr(int arm, vector<double> &posture, vector<double> &orient)
+{
+    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
+    this->directKinematicsSingleArm(arm,aux_posture);
+    orient = { this->wrPose.at(3), this->wrPose.at(4), this->wrPose.at(5)};
+}
+
+void HUMPlanner::getWristOr(int arm, vector<double> &posture, Matrix3d &orient_mat)
+{
+    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
+    this->directKinematicsSingleArm(arm,aux_posture);
+    orient_mat = this->wristOr;
+}
+
 void HUMPlanner::getHandPos(int arm, vector<double> &posture, vector<double> &pos)
 {
     std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
@@ -16746,6 +17029,53 @@ void HUMPlanner::getHandOr(int arm, vector<double> &posture, vector<double> &ori
     std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
     this->directKinematicsSingleArm(arm,aux_posture);
     orient = { this->haPose.at(3), this->haPose.at(4), this->haPose.at(5)};
+}
+
+void HUMPlanner::getHandOr(int arm, vector<double> &posture, Matrix3d &orient_mat)
+{
+    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
+    this->directKinematicsSingleArm(arm,aux_posture);
+    orient_mat = this->handOr;
+}
+
+double HUMPlanner::getSwivelAngle(int arm, vector<double>& posture)
+{
+    std::vector<double> aux_posture(posture.begin(),posture.begin()+joints_arm);
+    this->directKinematicsSingleArm(arm,aux_posture);
+
+    // see Su2018 DOI:10.1177/1729881418814695
+    // see Zanchettin2011 DOI:10.1109/ICRA.2011.5979654
+    Vector3d basePos;
+    Vector3d shoulderPos; shoulderPos << this->shPose.at(0), this->shPose.at(1), this->shPose.at(2);
+    Vector3d elbowPos; elbowPos << this->elPose.at(0), this->elPose.at(1), this->elPose.at(2);
+    Vector3d wristPos; wristPos << this->wrPose.at(0), this->wrPose.at(1), this->wrPose.at(2);
+    //Vector3d handPos;
+
+    Matrix4d T;
+    Matrix4d mat_world;
+    switch (arm) {
+    case 1: // right arm
+        mat_world = this->matWorldToRightArm;
+        break;
+    case 2: //left arm
+        mat_world = this->matWorldToLeftArm;
+        break;
+    }
+    T = mat_world;
+    // get the base
+    Vector3d v; Vector3d basez;
+    v = T.block(0,3,3,1);
+    basez = T.block(0,2,3,1);
+    basePos << v[0], v[1], v[2];
+
+    Vector3d WS = (wristPos-shoulderPos); Vector3d v_WS = WS/(WS.norm());
+    Vector3d ES = (elbowPos-shoulderPos); //Vector3d v_ES = ES/(ES.norm());
+    Matrix3d I = Matrix3d::Identity();
+    Vector3d p = (I - v_WS*v_WS.transpose())*ES;
+    double x = (basez.transpose()*p);
+    double y = v_WS.transpose()*(basez.cross(p));
+    double alpha = atan2(y,x);
+    return alpha;
 }
 
 /*
