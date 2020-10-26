@@ -10193,6 +10193,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
                     time = cpu_time;
                     obj = obj_sol;
                     overall_error = overall_error_sol;
+                    /**
                     // ------------- print
                         std::cout << "# Initial posture #" << std::endl;
                         for (size_t i=0; i < initArmPosture.size(); ++i) {
@@ -10212,6 +10213,7 @@ bool HUMPlanner::singleArmFinalPosture(int mov_type,int pre_post,hump_params& pa
                         double sqr_norm = std::accumulate(sqr_difference.begin(), sqr_difference.end(), 0.0);
                         std::cout << "Squared norm of the difference = " << sqr_norm << std::endl;
                     // ---------------- end print
+                    **/
                     return true;
                 }else{return false;}
             }catch(const std::exception &exc){
