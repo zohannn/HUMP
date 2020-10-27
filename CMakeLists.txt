@@ -93,7 +93,6 @@ if(TEST)
     target_link_libraries(${PROJECT_TEST_NAME} gtest gtest_main)
     target_link_libraries(${PROJECT_TEST_NAME} HUMP)
     add_test (NAME Tests_on_point COMMAND ${PROJECT_TEST_NAME})
-
 endif()
 
 
