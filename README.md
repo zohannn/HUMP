@@ -5,7 +5,7 @@ Human-like single-arm and dual-arm motion is planned with a naturalistic obstacl
 The purpose of this document is to provide a brief installation guide of the library, while more technical details are described in the [Wiki pages](https://github.com/zohannn/HUMP/wiki). 
 
 ## Installation guide
-Folloe the instructions to guide your installation of the HUMP library.
+Follow the instructions to guide your installation of the HUMP library.
 
 ### Dependencies
 1. Install the [Eigen libraries](http://eigen.tuxfamily.org/index.php?title=Main_Page).
@@ -19,6 +19,8 @@ In Linux Mint anf Ubuntu, you can type:
 sudo apt-get install libboost-all-dev
 ```
 3. Install [Coinipopt](https://coin-or.github.io/Ipopt/) at the link [https://github.com/zohannn/CoinIpopt](https://github.com/zohannn/CoinIpopt)
+
+4. Download a licensed version of [AMPL](https://ampl.com/) into the folder `/home/${USER}/AMPL` 
 
 Then, prepare your installation folders
 ```Bash
