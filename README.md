@@ -42,3 +42,8 @@ mkdir Release
 cd -DCMAKE_BUILD_TYPE=Release ..
 make
 make doc
+```
+
+## Upgrades
+* The HUMP has been upgraded by [Sara Sá](https://github.com/sarasa22) to support the collaborative robot Sawyer by Rethink Robotics&copy; (see [https://github.com/sarasa22/HUMP](https://github.com/sarasa22/HUMP))  
+* The HUMP has been upgraded by [JoaoQPereira](https://github.com/JoaoQPereira) to support the collaborative robot UR5 by Universal Robots&copy; and integrate planing trajectories through a set of waypoints (see [https://github.com/JoaoQPereira/HUMP](https://github.com/JoaoQPereira/HUMP)) 
