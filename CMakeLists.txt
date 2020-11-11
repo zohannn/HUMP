@@ -101,9 +101,11 @@ target_link_libraries(${PROJECT_NAME_STR} gfortran)# this has to be the last one
 ##############################################################################
 if(TEST AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     # gtest
-    add_subdirectory(test/lib/gtest-1.6.0)
-    include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})	
     enable_testing ()
+    find_package(GTest REQUIRED)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    include_directories(${GTEST_INCLUDE_DIRS})
+    SET( TEST_LIBRARIES ${GTEST_LIBRARIES} )
 
     ## Object tests
     set(PROJECT_OBJECT_TEST_NAME ${PROJECT_NAME_STR}_object_tests)
@@ -111,7 +113,7 @@ if(TEST AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     #file(GLOB TEST_HPP_FILES ${PROJECT_SOURCE_DIR}/test/include/*.hpp)
     #add_executable(${PROJECT_TEST_NAME} ${TEST_CPP_FILES} ${TEST_HPP_FILES})
     add_executable(${PROJECT_OBJECT_TEST_NAME} ${TEST_CPP_FILES})
-    target_link_libraries(${PROJECT_OBJECT_TEST_NAME} gtest gtest_main)
+    target_link_libraries(${PROJECT_OBJECT_TEST_NAME} ${TEST_LIBRARIES})
     target_link_libraries(${PROJECT_OBJECT_TEST_NAME} HUMP)
     set_target_properties(${PROJECT_OBJECT_TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/test")
     add_test (NAME Tests_on_objects COMMAND test/${PROJECT_OBJECT_TEST_NAME})

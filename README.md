@@ -20,7 +20,9 @@ sudo apt-get install libboost-all-dev
 ```
 3. Install [Coinipopt](https://coin-or.github.io/Ipopt/) at the link [https://github.com/zohannn/CoinIpopt](https://github.com/zohannn/CoinIpopt)
 
-4. Download a licensed version of [AMPL](https://ampl.com/) into the folder `/home/${USER}/AMPL` 
+4. Install [Google Test](https://github.com/zohannn/googletest)
+
+5. Download a licensed version of [AMPL](https://ampl.com/) into the folder `/home/${USER}/AMPL` 
 
 Then, prepare your installation folders
 ```Bash
