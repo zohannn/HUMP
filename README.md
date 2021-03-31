@@ -1,6 +1,7 @@
 # HUMP: a Human-like Upper-limb Motion Planner
 This library is designed to generate human-like trajectories of the arms and the hands of humanoid robots.
-Human-like single-arm and dual-arm motion is planned with a naturalistic obstacles-avoidance mechanism.
+Human-like single-arm and dual-arm motion is planned with a naturalistic obstacles-avoidance mechanism. The description of the planner and the results of different experimental tests are published in *Gulletta, G., Silva, E. C. e, Erlhagen, W., Meulenbroek, R., Costa, M. F. P., & Bicho, E. (2021). A Human-like Upper-limb Motion Planner: Generating naturalistic movements for humanoid robots. International Journal of Advanced Robotic Systems.* [https://doi.org/10.1177/1729881421998585](https://doi.org/10.1177/1729881421998585)
+ 
 ## Overview
 The purpose of this document is to provide a brief installation guide of the library, while more technical details are described in the [Wiki pages](https://github.com/zohannn/HUMP/wiki). 
 
