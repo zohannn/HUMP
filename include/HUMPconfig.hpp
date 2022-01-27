@@ -34,7 +34,7 @@
     #define ASSERT(x)
 #else
     #define ASSERT(x) \
-             if (! (x)) \
+            if (! (x)) \
             { \
                cout << "ERROR!! Assert " << #x << " failed\n"; \
                cout << " on line " << __LINE__  << "\n"; \
