@@ -34,7 +34,8 @@ cd HUMP
 ### Debug
 ```Bash
 mkdir Debug
-cd -DCMAKE_BUILD_TYPE=Debug ..
+cd Debug
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 make test
 make doc
@@ -42,7 +43,8 @@ make doc
 ### Release
 ```Bash
 mkdir Release
-cd -DCMAKE_BUILD_TYPE=Release ..
+cd Release
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 make doc
 ```
